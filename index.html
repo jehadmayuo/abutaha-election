@@ -943,7 +943,7 @@ $$('label.radio-pill[data-loctype]').forEach(p => {
 
 function validId(s){ return /^\d{9}$/.test(s); }
 function validIssueYear(s){ if(!/^\d{4}$/.test(s)) return false; const n = +s; return n>=1950 && n<=2026; }
-function validPhonePal(s){ return /^05[69]\d{7}$/.test(s); }
+function validPhonePal(s){ return /^05[0-9]\d{7}$/.test(s); }
 
 function setEligBadge(id, age, minAge){
   const el = document.getElementById(id); if(!el) return;
@@ -979,11 +979,12 @@ $('#btnNext2').addEventListener('click', ()=>{
   const age = ageFromDob(dob);
   let ok = true;
   const words = name.split(/\s+/).filter(Boolean);
-  if(words.length < 4 || !hasAbuTaha(name)){
-    $('#f-name .err').textContent = 'يجب أن يحتوي الاسم على "أبو طه" وأن يتكوّن من ٤ كلمات على الأقل.';
+  if(words.length < 3){
+    $('#f-name .err').textContent = 'يجب إدخال الاسم الرباعي (3 كلمات على الأقل).';
     setErr('f-name', true); ok=false;
   } else setErr('f-name', false);
-  if(!gen){ setErr('f-gender', true); ok=false; } else setErr('f-gender', false);
+  // Gender is optional
+  setErr('f-gender', false);
   if(age==null){ $('#f-dob .err').textContent='أدخل تاريخ ميلاد صحيح.'; setErr('f-dob', true); ok=false; }
   else if(age < 18){ $('#f-dob .err').textContent='يجب ألّا يقلّ عمر الناخب عن ١٨ سنة.'; setErr('f-dob', true); ok=false; }
   else setErr('f-dob', false);
@@ -1044,40 +1045,56 @@ function buildSummary(){
 $$('[data-back-to]').forEach(b => b.addEventListener('click', ()=> regGo(Number(b.dataset.backTo))));
 
 $('#btnSubmitReg').addEventListener('click', ()=>{
-  const id = normalizeDigits($('#r_id').value).trim();
-  const yr = normalizeDigits($('#r_issue').value).trim();
-  const name = $('#r_name').value.trim();
-  const gen = ($$('input[name=r_gender]').find(r=>r.checked)||{}).value;
-  const dob = $('#r_dob').value;
-  const t = ($$('input[name=r_loctype]').find(r=>r.checked)||{}).value;
-  const voters = getVoters();
-  if(voters.some(v => v.id===id)){ toast('هذه الهوية مسجّلة مسبقاً','err'); return; }
-  // Include OCR/image data directly
-  const ocrData = OCR_STORE.voter || {};
-  const rec = {
-    id, issueYear:yr, name, gender:gen,
-    dob,
-    locType:t,
-    gov: t==='pal' ? $('#r_gov').value : '',
-    city: t==='pal' ? $('#r_city').value.trim() : (t==='48' ? $('#r_city48').value.trim() : ''),
-    country: t==='ab' ? $('#r_country').value.trim() : '',
-    phone: t==='pal' ? normalizeDigits($('#r_phone_pal').value) : $('#r_phone_free').value.trim(),
-    createdAt: Date.now(),
-    idImage: ocrData.imgData || null,
-    ocrStatus: ocrData.ocrStatus || 'pending',
-    ocrExtracted: ocrData.ocrExtracted || {},
-  };
-  voters.push(rec); setVoters(voters);
-  // Sync to Supabase
-  syncVotersToSupabase([rec]);
-  // Reset OCR store
-  OCR_STORE.voter = null;
-  closeModal('modalRegister');
-  toast('تم تسجيلك بنجاح ✅ يمكنك الآن المشاركة في الانتخابات.', 'ok');
-  renderAdmin();
-  // Update public stats
-  const pv=document.getElementById('pubStatVoters');
-  if(pv) pv.textContent=getVoters().length;
+  try {
+    const id = normalizeDigits($('#r_id').value).trim();
+    const yr = normalizeDigits($('#r_issue').value).trim();
+    const name = $('#r_name').value.trim();
+    const gen = ($$('input[name=r_gender]').find(r=>r.checked)||{}).value || '';
+    const dob = $('#r_dob').value;
+    const t = ($$('input[name=r_loctype]').find(r=>r.checked)||{}).value || '';
+
+    // Final safety checks before submitting
+    if(!validId(id)){ toast('رقم الهوية يجب أن يكون 9 أرقام','err'); regGo(1); return; }
+    if(!validIssueYear(yr)){ toast('سنة الإصدار غير صحيحة','err'); regGo(1); return; }
+    if(!name || name.split(/\s+/).filter(Boolean).length < 3){ toast('الاسم يجب أن يكون 3 كلمات على الأقل','err'); regGo(2); return; }
+    if(!dob){ toast('تاريخ الميلاد مطلوب','err'); regGo(2); return; }
+    if(!t){ toast('اختر مكان الإقامة','err'); regGo(3); return; }
+
+    const voters = getVoters();
+    if(voters.some(v => v.id===id)){ toast('هذه الهوية مسجّلة مسبقاً','err'); return; }
+
+    const ocrData = OCR_STORE.voter || {};
+    const rec = {
+      id, issueYear:yr, name, gender:gen,
+      dob,
+      locType:t,
+      gov: t==='pal' ? ($('#r_gov').value || '') : '',
+      city: t==='pal' ? ($('#r_city').value || '').trim() : (t==='48' ? ($('#r_city48').value || '').trim() : ''),
+      country: t==='ab' ? ($('#r_country').value || '').trim() : '',
+      phone: t==='pal' ? normalizeDigits($('#r_phone_pal').value) : ($('#r_phone_free').value || '').trim(),
+      createdAt: Date.now(),
+      idImage: ocrData.imgData || null,
+      ocrStatus: ocrData.ocrStatus || 'pending',
+      ocrExtracted: ocrData.ocrExtracted || {},
+    };
+
+    voters.push(rec);
+    setVoters(voters);
+
+    // Sync to Supabase (non-blocking)
+    try { syncVotersToSupabase([rec]); } catch(e) { console.warn('Supabase sync skipped:', e.message); }
+
+    OCR_STORE.voter = null;
+    closeModal('modalRegister');
+    toast('✅ تم تسجيلك بنجاح — يمكنك الآن المشاركة في الانتخابات', 'ok');
+    renderAdmin();
+
+    const pv = document.getElementById('pubStatVoters');
+    if(pv) pv.textContent = getVoters().length;
+  } catch(err){
+    console.error('Registration error:', err);
+    toast('حدث خطأ — يُرجى المحاولة مرة أخرى', 'err');
+  }
 });
 
 /* ---------- CANDIDATE LOGIN ---------- */
