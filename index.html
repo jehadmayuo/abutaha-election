@@ -1728,46 +1728,78 @@ async function syncMsgsToSupabase(msgs){
 /* ========== CLAUDE OCR ========== */
 const OCR_STORE = {};
 
+// ══════════════════════════════════════════════
+// OCR SERVER — abutaha-ocr-server.vercel.app
+// OCR.space (Primary) + Google Vision (Fallback)
+// ══════════════════════════════════════════════
+const OCR_API_URL = 'https://abutaha-ocr-server.vercel.app/api/verify-id';
+
 async function runClaudeOCR(file, storeKey, enteredName, enteredId){
   const badgeId = storeKey==='voter'?'r_ocr_badge':'cand_ocr_badge';
   const badge = document.getElementById(badgeId);
-  if(badge){ badge.style.display='flex'; badge.className='ocr-badge reading'; badge.textContent='🤖 جاري تحليل صورة الهوية...'; }
+  if(badge){ badge.style.display='flex'; badge.className='ocr-badge reading'; badge.textContent='🤖 جاري التحقق من الهوية...'; }
+
   try{
-    const b64 = await fileToB64(file);
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':'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','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001', max_tokens:400,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},
-          {type:'text',text:'استخرج من هذه الوثيقة: الاسم الكامل، رقم الهوية (9 أرقام)، تاريخ الميلاد، نوع الوثيقة. أجب بـ JSON فقط: {"name":"","id":"","dob":"","doc_type":"","confidence":"high/medium/low"}'}
-        ]}]
-      })
+    // Send to our OCR server
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('entered_name', enteredName || '');
+    formData.append('entered_id', enteredId || '');
+
+    const response = await fetch(OCR_API_URL, {
+      method: 'POST',
+      body: formData,
     });
-    const data = await res.json();
-    const txt = data.content[0].text.replace(/```json|```/g,'').trim();
-    let extracted = {};
-    try{ extracted = JSON.parse(txt); }catch(e){}
-    OCR_STORE[storeKey] = {extracted, imgData: await fileToDataURL(file)};
-    const nameSim = simScore(extracted.name||'', enteredName||'');
-    const idOk = (extracted.id||'') === (enteredId||'');
-    const verified = extracted.confidence==='high' && nameSim>=0.5 && idOk;
-    OCR_STORE[storeKey].ocrStatus = verified?'verified':'suspicious';
-    OCR_STORE[storeKey].ocrExtracted = extracted;
+
+    if(!response.ok) throw new Error('Server error: ' + response.status);
+
+    const result = await response.json();
+
+    // Store result
+    OCR_STORE[storeKey] = {
+      extracted: {
+        name: result.extracted_name || '',
+        id: result.extracted_id || '',
+        dob: result.extracted_dob || '',
+        doc_type: result.doc_type || '',
+      },
+      status: result.status === 'verified' ? 'verified' : 'suspicious',
+      ocrStatus: result.status || 'pending',
+      ocrExtracted: result,
+      imgData: OCR_STORE[storeKey]?.imgData || null,
+    };
+
+    // Update badge
     if(badge){
-      badge.className = 'ocr-badge '+(verified?'ok':'warn');
-      badge.textContent = verified ? '✓ تم التحقق — البيانات مطابقة' : '⚠ ستُراجع يدوياً من اللجنة';
+      if(result.status === 'verified'){
+        badge.className = 'ocr-badge ok';
+        badge.textContent = result.message || '✅ تم التحقق — البيانات مطابقة';
+      } else {
+        badge.className = 'ocr-badge warn';
+        badge.textContent = result.message || '⚠ ستُراجع يدوياً من اللجنة';
+      }
     }
-    // Auto-fill if empty
-    if(extracted.confidence==='high'){
-      const ni=document.getElementById('r_id'), nn=document.getElementById('r_name');
-      if(ni&&!ni.value&&extracted.id) ni.value=extracted.id;
-      if(nn&&!nn.value&&extracted.name) nn.value=extracted.name;
+
+    // Auto-fill if fields are empty
+    if(result.extracted_name){
+      const nameInp = document.getElementById('r_name') || document.getElementById('n_name');
+      if(nameInp && !nameInp.value.trim()) nameInp.value = result.extracted_name;
     }
-  }catch(err){
-    OCR_STORE[storeKey] = {imgData: await fileToDataURL(file), ocrStatus:'pending'};
-    if(badge){ badge.className='ocr-badge warn'; badge.textContent='⚠ الصورة محفوظة — ستُراجع يدوياً'; }
+    if(result.extracted_id){
+      const idInp = document.getElementById('r_id') || document.getElementById('n_id');
+      if(idInp && !idInp.value.trim()){
+        idInp.value = result.extracted_id;
+      }
+    }
+
+  } catch(err){
+    if(!OCR_STORE[storeKey]) OCR_STORE[storeKey] = {};
+    OCR_STORE[storeKey].ocrStatus = 'pending';
+    if(badge){
+      badge.className = 'ocr-badge warn';
+      badge.textContent = '⚠ الصورة محفوظة — ستُراجع يدوياً من اللجنة';
+    }
+    console.error('OCR error:', err.message);
   }
 }
 
