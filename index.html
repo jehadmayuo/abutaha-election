@@ -1320,49 +1320,114 @@ function renderAdmin(){
     const ocrLbl = {verified:'✓ موثّق',suspicious:'⚠ مشبوه',pending:'⏳ قيد المراجعة',rejected:'✗ مرفوض'};
     const ocrSt = v.ocrStatus||'pending';
     const isApproved = v.approved === true;
-    const statusBadge = isApproved
-      ? `<span class="badge ok">✅ معتمد</span>`
-      : `<span class="${ocrMap[ocrSt]||'badge'}">${ocrLbl[ocrSt]||'⏳ قيد المراجعة'}</span>`;
+    const isRejected = v.ocrStatus === 'rejected';
+    var statusBadge;
+    if(isApproved){
+      statusBadge = '<span class="badge ok">✅ معتمد</span>';
+    } else if(isRejected){
+      statusBadge = '<span class="badge bad">✗ مرفوض</span>';
+    } else {
+      statusBadge = '<span class="' + (ocrMap[ocrSt]||'badge') + '">' + (ocrLbl[ocrSt]||'⏳ قيد المراجعة') + '</span>';
+    }
     const ocrCell = statusBadge;
     const docTypeMap = {pa_id:'🪪 هوية',passport:'🛂 جواز',driving_license:'🚗 رخصة',birth_certificate:'📋 ميلاد',temp_id:'📄 مؤقتة',other:'📑 أخرى'};
     const docLbl = docTypeMap[v.docType||'other']||'-';
-    const actions = isApproved
-      ? `<div style="display:flex;gap:4px;flex-wrap:wrap">
-          <span class="badge ok" style="font-size:11px">✓ معتمد</span>
-          <button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-del-voter="${v.id}">🗑 حذف</button>
-        </div>`
-      : `<div style="display:flex;gap:4px;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" style="background:rgba(20,122,63,.15);color:var(--success);font-weight:700" data-verify-voter="${v.id}">✓ قبول</button>
-          <button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="${v.id}">✗ رفض</button>
-          <button class="btn btn-ghost btn-sm" data-del-voter="${v.id}">🗑 حذف</button>
-        </div>`;
+    var actions;
+    if(isApproved){
+      actions = '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
+        '<button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="' + v.id + '">✗ إلغاء الاعتماد</button>' +
+        '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
+        '</div>';
+    } else if(isRejected){
+      actions = '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
+        '<button class="btn btn-ghost btn-sm" style="background:rgba(20,122,63,.15);color:var(--success);font-weight:700" data-verify-voter="' + v.id + '">✓ إعادة قبول</button>' +
+        '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
+        '</div>';
+    } else {
+      actions = '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
+        '<button class="btn btn-ghost btn-sm" style="background:rgba(20,122,63,.15);color:var(--success);font-weight:700" data-verify-voter="' + v.id + '">✓ قبول</button>' +
+        '<button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="' + v.id + '">✗ رفض</button>' +
+        '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
+        '</div>';
+    }
     tr.innerHTML = `<td>${i+1}</td><td>${imgCell}</td><td><strong>${escapeHtml(v.name)}</strong><div class="small muted">${escapeHtml(v.phone)}</div></td><td dir="ltr">${escapeHtml(v.id)}</td><td>${elig}</td><td>${ocrCell}</td><td>${escapeHtml(loc)}</td><td>${new Date(v.createdAt).toLocaleDateString('ar-EG')}</td><td>${actions}</td>`;
     if(ocrSt==='suspicious') tr.style.background='rgba(185,28,28,.05)';
     vt.appendChild(tr);
   });
-  $$('[data-del-voter]', vt).forEach(b => b.addEventListener('click', ()=>{
-    if(!confirm('حذف هذا الناخب؟')) return;
-    const arr = getVoters().filter(x => x.id !== b.dataset.delVoter);
-    setVoters(arr); renderAdmin();
+  $$('[data-del-voter]', vt).forEach(b => b.addEventListener('click', function(){
+    var voterId = b.dataset.delVoter;
+    var ok = window.confirm('هل أنت متأكد من حذف هذا الناخب؟');
+    if(!ok) return;
+    try {
+      var arr = getVoters().filter(function(x){ return x.id !== voterId; });
+      save(K.voters, arr);
+      // Also delete from Supabase
+      try {
+        if(typeof SUPA !== 'undefined'){
+          SUPA.from('voters').delete().eq('national_id', voterId).then(function(){
+            console.log('Voter deleted from Supabase');
+          });
+        }
+      } catch(e){ console.warn('Supabase delete:', e); }
+      renderAdmin();
+      toast('🗑 تم حذف الناخب','ok');
+      // Update public stats
+      var pv = document.getElementById('pubStatVoters');
+      if(pv) pv.textContent = getVoters().length;
+    } catch(err){
+      console.error('Delete error:', err);
+      toast('خطأ في الحذف: '+err.message,'err');
+    }
   }));
-  $$('[data-verify-voter]', vt).forEach(b => b.addEventListener('click', ()=>{
-    const arr = getVoters();
-    const v = arr.find(x=>x.id===b.dataset.verifyVoter);
-    if(v){
+  $$('[data-verify-voter]', vt).forEach(b => b.addEventListener('click', function(){
+    try {
+      var voterId = b.dataset.verifyVoter;
+      var arr = getVoters();
+      var v = arr.find(function(x){ return x.id === voterId; });
+      if(!v){ toast('الناخب غير موجود','err'); return; }
       v.ocrStatus = 'verified';
       v.approved = true;
       v.approvedAt = Date.now();
       v.approvedBy = 'admin';
-      setVoters(arr);
-      renderAdmin();
-      toast('✅ تم اعتماد الناخب وإضافته للنظام','ok');
+      // Direct save to localStorage (bypass any wrappers)
+      save(K.voters, arr);
+      // Try Supabase update separately
+      try {
+        if(typeof SUPA !== 'undefined'){
+          SUPA.from('voters').update({ocr_status:'verified'}).eq('national_id', voterId).then(function(){});
+        }
+      } catch(e){}
+      // Force complete re-render
+      setTimeout(function(){ renderAdmin(); }, 50);
+      toast('✅ تم اعتماد الناخب','ok');
+    } catch(err){
+      console.error('Verify error:', err);
+      toast('خطأ: '+err.message,'err');
     }
   }));
-  $$('[data-reject-voter]', vt).forEach(b => b.addEventListener('click', ()=>{
-    if(!confirm('رفض هذا الناخب؟')) return;
-    const arr = getVoters();
-    const v = arr.find(x=>x.id===b.dataset.rejectVoter);
-    if(v){ v.ocrStatus='rejected'; setVoters(arr); renderAdmin(); toast('تم رفض الناخب',''); }
+  $$('[data-reject-voter]', vt).forEach(b => b.addEventListener('click', function(){
+    try {
+      var voterId = b.dataset.rejectVoter;
+      if(!window.confirm('هل أنت متأكد من رفض هذا الناخب؟')) return;
+      var arr = getVoters();
+      var v = arr.find(function(x){ return x.id === voterId; });
+      if(!v){ toast('الناخب غير موجود','err'); return; }
+      v.ocrStatus = 'rejected';
+      v.approved = false;
+      v.rejectedAt = Date.now();
+      // Direct save
+      save(K.voters, arr);
+      try {
+        if(typeof SUPA !== 'undefined'){
+          SUPA.from('voters').update({ocr_status:'rejected'}).eq('national_id', voterId).then(function(){});
+        }
+      } catch(e){}
+      setTimeout(function(){ renderAdmin(); }, 50);
+      toast('✗ تم رفض الناخب','err');
+    } catch(err){
+      console.error('Reject error:', err);
+      toast('خطأ: '+err.message,'err');
+    }
   }));
 
   const ct = $('#candsTable tbody'); ct.innerHTML = '';
