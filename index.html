@@ -252,6 +252,8 @@
 .ocr-badge.idle{background:var(--surface-2);color:var(--text-muted);border:1px solid var(--border)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
 </head>
 <body>
 
@@ -1044,56 +1046,68 @@ function buildSummary(){
 
 $$('[data-back-to]').forEach(b => b.addEventListener('click', ()=> regGo(Number(b.dataset.backTo))));
 
-$('#btnSubmitReg').addEventListener('click', ()=>{
+$('#btnSubmitReg').addEventListener('click', function(){
   try {
-    const id = normalizeDigits($('#r_id').value).trim();
-    const yr = normalizeDigits($('#r_issue').value).trim();
-    const name = $('#r_name').value.trim();
-    const gen = ($$('input[name=r_gender]').find(r=>r.checked)||{}).value || '';
-    const dob = $('#r_dob').value;
-    const t = ($$('input[name=r_loctype]').find(r=>r.checked)||{}).value || '';
+    var id = normalizeDigits($('#r_id').value).trim();
+    var yr = normalizeDigits($('#r_issue').value).trim();
+    var name = $('#r_name').value.trim();
+    var genEl = $$('input[name=r_gender]').find(function(r){return r.checked;});
+    var gen = genEl ? genEl.value : '';
+    var dob = $('#r_dob').value;
+    var tEl = $$('input[name=r_loctype]').find(function(r){return r.checked;});
+    var t = tEl ? tEl.value : '';
 
-    // Final safety checks before submitting
-    if(!validId(id)){ toast('رقم الهوية يجب أن يكون 9 أرقام','err'); regGo(1); return; }
-    if(!validIssueYear(yr)){ toast('سنة الإصدار غير صحيحة','err'); regGo(1); return; }
-    if(!name || name.split(/\s+/).filter(Boolean).length < 3){ toast('الاسم يجب أن يكون 3 كلمات على الأقل','err'); regGo(2); return; }
-    if(!dob){ toast('تاريخ الميلاد مطلوب','err'); regGo(2); return; }
-    if(!t){ toast('اختر مكان الإقامة','err'); regGo(3); return; }
+    if(!id || id.length !== 9){ toast('رقم الهوية يجب أن يكون 9 أرقام','err'); return; }
+    if(!name){ toast('الاسم مطلوب','err'); return; }
+    if(!dob){ toast('تاريخ الميلاد مطلوب','err'); return; }
+    if(!t){ toast('اختر مكان الإقامة','err'); return; }
 
-    const voters = getVoters();
-    if(voters.some(v => v.id===id)){ toast('هذه الهوية مسجّلة مسبقاً','err'); return; }
+    var voters = getVoters();
+    if(voters.some(function(v){return v.id===id;})){
+      toast('هذه الهوية مسجّلة مسبقاً','err');
+      return;
+    }
 
-    const ocrData = OCR_STORE.voter || {};
-    const rec = {
-      id, issueYear:yr, name, gender:gen,
-      dob,
-      locType:t,
+    var ocrData = (typeof OCR_STORE !== 'undefined' && OCR_STORE.voter) ? OCR_STORE.voter : {};
+    var rec = {
+      id: id,
+      issueYear: yr,
+      name: name,
+      gender: gen,
+      dob: dob,
+      locType: t,
       gov: t==='pal' ? ($('#r_gov').value || '') : '',
       city: t==='pal' ? ($('#r_city').value || '').trim() : (t==='48' ? ($('#r_city48').value || '').trim() : ''),
       country: t==='ab' ? ($('#r_country').value || '').trim() : '',
-      phone: t==='pal' ? normalizeDigits($('#r_phone_pal').value) : ($('#r_phone_free').value || '').trim(),
+      phone: t==='pal' ? normalizeDigits($('#r_phone_pal').value || '') : ($('#r_phone_free').value || '').trim(),
       createdAt: Date.now(),
       idImage: ocrData.imgData || null,
       ocrStatus: ocrData.ocrStatus || 'pending',
-      ocrExtracted: ocrData.ocrExtracted || {},
+      ocrExtracted: ocrData.ocrExtracted || {}
     };
 
     voters.push(rec);
-    setVoters(voters);
+    save(K.voters, voters);
 
-    // Sync to Supabase (non-blocking)
-    try { syncVotersToSupabase([rec]); } catch(e) { console.warn('Supabase sync skipped:', e.message); }
+    // Try Supabase sync separately - don't let it break the flow
+    if(typeof syncVotersToSupabase === 'function'){
+      try { syncVotersToSupabase([rec]); } catch(e){ console.warn('Supabase:', e); }
+    }
 
-    OCR_STORE.voter = null;
+    if(typeof OCR_STORE !== 'undefined') OCR_STORE.voter = null;
+
     closeModal('modalRegister');
-    toast('✅ تم تسجيلك بنجاح — يمكنك الآن المشاركة في الانتخابات', 'ok');
-    renderAdmin();
+    toast('✅ تم تسجيلك بنجاح','ok');
 
-    const pv = document.getElementById('pubStatVoters');
+    if(typeof renderAdmin === 'function') renderAdmin();
+
+    var pv = document.getElementById('pubStatVoters');
     if(pv) pv.textContent = getVoters().length;
+
   } catch(err){
     console.error('Registration error:', err);
-    toast('حدث خطأ — يُرجى المحاولة مرة أخرى', 'err');
+    console.error('Error details:', err.message, err.stack);
+    toast('خطأ: ' + (err.message || 'غير معروف'), 'err');
   }
 });
 
@@ -1751,7 +1765,7 @@ const OCR_STORE = {};
 // ══════════════════════════════════════════════
 const OCR_API_URL = 'https://abutaha-ocr-server.vercel.app/api/verify-id';
 
-async function runClaudeOCR(file, storeKey, enteredName, enteredId){
+window.runClaudeOCR = async function(file, storeKey, enteredName, enteredId){
   const badgeId = storeKey==='voter'?'r_ocr_badge':'cand_ocr_badge';
   const badge = document.getElementById(badgeId);
   if(badge){ badge.style.display='flex'; badge.className='ocr-badge reading'; badge.textContent='🤖 جاري التحقق من الهوية...'; }
@@ -1818,7 +1832,7 @@ async function runClaudeOCR(file, storeKey, enteredName, enteredId){
     }
     console.error('OCR error:', err.message);
   }
-}
+};
 
 function fileToB64(f){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(f); }); }
 function fileToDataURL(f){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsDataURL(f); }); }
@@ -1832,7 +1846,7 @@ function simScore(a,b){
   return m/Math.max(wa.length,wb.length);
 }
 
-function handleVoterIDImg(inp){
+window.handleVoterIDImg = function(inp){
   const f=inp.files[0]; if(!f) return;
   if(f.size>10*1024*1024){ toast('الصورة أكبر من 10 ميجابايت','err'); inp.value=''; return; }
   const thumb=document.getElementById('r_idimg_thumb');
@@ -1869,7 +1883,7 @@ function handleVoterIDImg(inp){
     });
   };
   reader.readAsDataURL(f);
-}
+};
 
 // OCR data now included directly in submit handler
 
