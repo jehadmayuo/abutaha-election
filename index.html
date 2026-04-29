@@ -252,8 +252,7 @@
 .ocr-badge.idle{background:var(--surface-2);color:var(--text-muted);border:1px solid var(--border)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
+
 </head>
 <body>
 
@@ -563,6 +562,18 @@
             <div class="hint">صيغة حرّة. يُنصح بإضافة رمز الدولة. سيُستخدم للتواصل عبر واتساب.</div>
             <div class="err">أدخل رقم تواصل صالح (٥ أرقام على الأقل).</div>
           </div>
+        </div>
+        <div class="field" style="margin-top:10px" id="f-doctype">
+          <label>نوع الوثيقة *</label>
+          <select id="r_doctype" class="input" style="width:100%">
+            <option value="">— اختر نوع الوثيقة —</option>
+            <option value="pa_id">🪪 هوية وطنية فلسطينية</option>
+            <option value="passport">🛂 جواز سفر</option>
+            <option value="driving_license">🚗 رخصة قيادة</option>
+            <option value="birth_certificate">📋 شهادة ميلاد</option>
+            <option value="temp_id">📄 بطاقة تعريف مؤقتة</option>
+            <option value="other">📑 وثيقة أخرى</option>
+          </select>
         </div>
         <div class="field" style="margin-top:10px" id="f-idimg">
           <label>صورة إثبات الهوية <span class="muted small">(اختياري - يُنصح به)</span></label>
@@ -1083,7 +1094,9 @@ $('#btnSubmitReg').addEventListener('click', function(){
       createdAt: Date.now(),
       idImage: ocrData.imgData || null,
       ocrStatus: ocrData.ocrStatus || 'pending',
-      ocrExtracted: ocrData.ocrExtracted || {}
+      ocrExtracted: ocrData.ocrExtracted || {},
+      docType: (document.getElementById('r_doctype') || {}).value || 'other',
+      approved: false
     };
 
     voters.push(rec);
@@ -1306,12 +1319,23 @@ function renderAdmin(){
     const ocrMap = {verified:'badge ok',suspicious:'badge bad',pending:'badge',rejected:'badge bad'};
     const ocrLbl = {verified:'✓ موثّق',suspicious:'⚠ مشبوه',pending:'⏳ قيد المراجعة',rejected:'✗ مرفوض'};
     const ocrSt = v.ocrStatus||'pending';
-    const ocrCell = `<span class="${ocrMap[ocrSt]||'badge'}">${ocrLbl[ocrSt]||'⏳ قيد المراجعة'}</span>`;
-    const actions = `<div style="display:flex;gap:4px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" style="background:rgba(20,122,63,.15);color:var(--success)" data-verify-voter="${v.id}">✓ قبول</button>
-      <button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="${v.id}">✗ رفض</button>
-      <button class="btn btn-ghost btn-sm" data-del-voter="${v.id}">حذف</button>
-    </div>`;
+    const isApproved = v.approved === true;
+    const statusBadge = isApproved
+      ? `<span class="badge ok">✅ معتمد</span>`
+      : `<span class="${ocrMap[ocrSt]||'badge'}">${ocrLbl[ocrSt]||'⏳ قيد المراجعة'}</span>`;
+    const ocrCell = statusBadge;
+    const docTypeMap = {pa_id:'🪪 هوية',passport:'🛂 جواز',driving_license:'🚗 رخصة',birth_certificate:'📋 ميلاد',temp_id:'📄 مؤقتة',other:'📑 أخرى'};
+    const docLbl = docTypeMap[v.docType||'other']||'-';
+    const actions = isApproved
+      ? `<div style="display:flex;gap:4px;flex-wrap:wrap">
+          <span class="badge ok" style="font-size:11px">✓ معتمد</span>
+          <button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-del-voter="${v.id}">🗑 حذف</button>
+        </div>`
+      : `<div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" style="background:rgba(20,122,63,.15);color:var(--success);font-weight:700" data-verify-voter="${v.id}">✓ قبول</button>
+          <button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="${v.id}">✗ رفض</button>
+          <button class="btn btn-ghost btn-sm" data-del-voter="${v.id}">🗑 حذف</button>
+        </div>`;
     tr.innerHTML = `<td>${i+1}</td><td>${imgCell}</td><td><strong>${escapeHtml(v.name)}</strong><div class="small muted">${escapeHtml(v.phone)}</div></td><td dir="ltr">${escapeHtml(v.id)}</td><td>${elig}</td><td>${ocrCell}</td><td>${escapeHtml(loc)}</td><td>${new Date(v.createdAt).toLocaleDateString('ar-EG')}</td><td>${actions}</td>`;
     if(ocrSt==='suspicious') tr.style.background='rgba(185,28,28,.05)';
     vt.appendChild(tr);
@@ -1324,7 +1348,15 @@ function renderAdmin(){
   $$('[data-verify-voter]', vt).forEach(b => b.addEventListener('click', ()=>{
     const arr = getVoters();
     const v = arr.find(x=>x.id===b.dataset.verifyVoter);
-    if(v){ v.ocrStatus='verified'; setVoters(arr); renderAdmin(); toast('تم قبول الناخب ✅','ok'); }
+    if(v){
+      v.ocrStatus = 'verified';
+      v.approved = true;
+      v.approvedAt = Date.now();
+      v.approvedBy = 'admin';
+      setVoters(arr);
+      renderAdmin();
+      toast('✅ تم اعتماد الناخب وإضافته للنظام','ok');
+    }
   }));
   $$('[data-reject-voter]', vt).forEach(b => b.addEventListener('click', ()=>{
     if(!confirm('رفض هذا الناخب؟')) return;
@@ -1765,26 +1797,38 @@ const OCR_STORE = {};
 // ══════════════════════════════════════════════
 const OCR_API_URL = 'https://abutaha-ocr-server.vercel.app/api/verify-id';
 
-window.runClaudeOCR = async function(file, storeKey, enteredName, enteredId){
+window.runClaudeOCR = async function(file, storeKey, enteredName, enteredId, docType){
   const badgeId = storeKey==='voter'?'r_ocr_badge':'cand_ocr_badge';
   const badge = document.getElementById(badgeId);
-  if(badge){ badge.style.display='flex'; badge.className='ocr-badge reading'; badge.textContent='🤖 جاري التحقق من الهوية...'; }
+  if(badge){
+    badge.style.display='flex';
+    badge.className='ocr-badge reading';
+    badge.textContent='🤖 جاري قراءة الوثيقة...';
+  }
 
   try{
-    // Send to our OCR server
     const formData = new FormData();
     formData.append('image', file);
     formData.append('entered_name', enteredName || '');
     formData.append('entered_id', enteredId || '');
+    formData.append('doc_type', docType || 'other');
+
+    console.log('[OCR] Sending to:', OCR_API_URL, 'docType:', docType);
 
     const response = await fetch(OCR_API_URL, {
       method: 'POST',
       body: formData,
     });
 
-    if(!response.ok) throw new Error('Server error: ' + response.status);
+    console.log('[OCR] Response status:', response.status);
+
+    if(!response.ok){
+      const errText = await response.text().catch(()=>'?');
+      throw new Error('Server '+response.status+': '+errText.substring(0,100));
+    }
 
     const result = await response.json();
+    console.log('[OCR] Result:', result);
 
     // Store result
     OCR_STORE[storeKey] = {
@@ -1874,8 +1918,10 @@ window.handleVoterIDImg = function(inp){
     // Run OCR with current name/id values
     const name=document.getElementById('r_name')?.value?.trim()||'';
     const id=document.getElementById('r_id')?.value?.trim()||'';
+    const docType=document.getElementById('r_doctype')?.value||'other';
     // Run OCR in background - don't block UI
-    runClaudeOCR(f,'voter',name,id).catch(()=>{
+    runClaudeOCR(f,'voter',name,id,docType).catch((err)=>{
+      console.error('OCR failed:', err);
       if(badge){
         badge.className='ocr-badge warn';
         badge.textContent='⚠ الصورة محفوظة — ستُراجع يدوياً من اللجنة';
