@@ -576,7 +576,7 @@
           </select>
         </div>
         <div class="field" style="margin-top:10px" id="f-idimg">
-          <label>صورة إثبات الهوية <span class="muted small">(اختياري - يُنصح به)</span></label>
+          <label>صورة إثبات الهوية <span style="color:var(--danger)">*</span></label>
           <div class="id-upload-wrap" id="r_idimg_wrap" onclick="document.getElementById('r_idimg').click()">
             <input type="file" id="r_idimg" accept="image/*" onchange="handleVoterIDImg(this)">
             <div id="r_idimg_txt" style="color:var(--text-muted);font-size:13px">
@@ -1022,15 +1022,31 @@ $('#btnNext3').addEventListener('click', ()=>{
   if(ok) regGo(4);
 });
 
-$('#btnNext4').addEventListener('click', ()=>{
-  const t = ($$('input[name=r_loctype]').find(r=>r.checked)||{}).value;
-  let ok = true;
+$('#btnNext4').addEventListener('click', function(){
+  var t = ($$('input[name=r_loctype]').find(function(r){return r.checked;})||{}).value;
+  var ok = true;
   if(t==='pal'){
-    const p = normalizeDigits($('#r_phone_pal').value).trim();
+    var p = normalizeDigits($('#r_phone_pal').value).trim();
     if(!validPhonePal(p)){ setErr('f-phone-pal', true); ok=false; } else setErr('f-phone-pal', false);
   } else {
-    const p = $('#r_phone_free').value.trim();
-    if(p.replace(/\D/g,'').length < 5){ setErr('f-phone-free', true); ok=false; } else setErr('f-phone-free', false);
+    var p2 = $('#r_phone_free').value.trim();
+    if(p2.replace(/\D/g,'').length < 5){ setErr('f-phone-free', true); ok=false; } else setErr('f-phone-free', false);
+  }
+  // Require doc type
+  var dt = (document.getElementById('r_doctype')||{}).value || '';
+  if(!dt){
+    toast('يجب اختيار نوع الوثيقة','err');
+    var dtEl = document.getElementById('f-doctype');
+    if(dtEl) dtEl.scrollIntoView({behavior:'smooth', block:'center'});
+    ok = false;
+  }
+  // Require image
+  var hasImg = (typeof OCR_STORE !== 'undefined' && OCR_STORE.voter && OCR_STORE.voter.imgData);
+  if(!hasImg){
+    toast('يجب رفع صورة إثبات الهوية','err');
+    var imgEl = document.getElementById('f-idimg');
+    if(imgEl) imgEl.scrollIntoView({behavior:'smooth', block:'center'});
+    ok = false;
   }
   if(ok){ buildSummary(); regGo(5); }
 });
@@ -1072,6 +1088,22 @@ $('#btnSubmitReg').addEventListener('click', function(){
     if(!name){ toast('الاسم مطلوب','err'); return; }
     if(!dob){ toast('تاريخ الميلاد مطلوب','err'); return; }
     if(!t){ toast('اختر مكان الإقامة','err'); return; }
+
+    // Check that document type is selected
+    var docType = (document.getElementById('r_doctype') || {}).value || '';
+    if(!docType){
+      toast('يجب اختيار نوع الوثيقة','err');
+      regGo(4);
+      return;
+    }
+    
+    // Check that image was uploaded (REQUIRED)
+    var ocrCheck = (typeof OCR_STORE !== 'undefined' && OCR_STORE.voter && OCR_STORE.voter.imgData) ? true : false;
+    if(!ocrCheck){
+      toast('يجب رفع صورة إثبات الهوية','err');
+      regGo(4);
+      return;
+    }
 
     var voters = getVoters();
     if(voters.some(function(v){return v.id===id;})){
@@ -1955,9 +1987,47 @@ function simScore(a,b){
   return m/Math.max(wa.length,wb.length);
 }
 
-window.handleVoterIDImg = function(inp){
+// Compress image before upload (critical for mobile)
+async function compressImage(file, maxWidth, quality){
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    var reader = new FileReader();
+    reader.onload = function(e){
+      img.onload = function(){
+        var canvas = document.createElement('canvas');
+        var ratio = Math.min(maxWidth/img.width, maxWidth/img.height, 1);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function(blob){
+          if(!blob){ resolve(file); return; }
+          var compressed = new File([blob], file.name, {type:'image/jpeg', lastModified:Date.now()});
+          console.log('[Compress] Original:', file.size, 'Compressed:', compressed.size);
+          resolve(compressed);
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = function(){ resolve(file); };
+      img.src = e.target.result;
+    };
+    reader.onerror = function(){ resolve(file); };
+    reader.readAsDataURL(file);
+  });
+}
+
+window.handleVoterIDImg = async function(inp){
   const f=inp.files[0]; if(!f) return;
-  if(f.size>10*1024*1024){ toast('الصورة أكبر من 10 ميجابايت','err'); inp.value=''; return; }
+  if(f.size>20*1024*1024){ toast('الصورة أكبر من 20 ميجابايت','err'); inp.value=''; return; }
+  
+  // Compress if larger than 1MB
+  let file = f;
+  if(f.size > 1024 * 1024){
+    toast('⚙️ جاري ضغط الصورة...','');
+    try {
+      file = await compressImage(f, 1600, 0.85);
+    } catch(e){ console.error('Compress error:', e); }
+  }
+  
   const thumb=document.getElementById('r_idimg_thumb');
   const txt=document.getElementById('r_idimg_txt');
   const reader=new FileReader();
@@ -1984,8 +2054,8 @@ window.handleVoterIDImg = function(inp){
     const name=document.getElementById('r_name')?.value?.trim()||'';
     const id=document.getElementById('r_id')?.value?.trim()||'';
     const docType=document.getElementById('r_doctype')?.value||'other';
-    // Run OCR in background - don't block UI
-    runClaudeOCR(f,'voter',name,id,docType).catch((err)=>{
+    // Run OCR with the COMPRESSED file (not original)
+    runClaudeOCR(file,'voter',name,id,docType).catch((err)=>{
       console.error('OCR failed:', err);
       if(badge){
         badge.className='ocr-badge warn';
@@ -1993,8 +2063,8 @@ window.handleVoterIDImg = function(inp){
       }
     });
   };
-  reader.readAsDataURL(f);
-};
+  reader.readAsDataURL(file);
+};;
 
 // OCR data now included directly in submit handler
 
