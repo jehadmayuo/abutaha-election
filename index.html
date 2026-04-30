@@ -204,7 +204,9 @@
   .alert.success{background:rgba(20,122,63,.08);color:var(--success);border:1px solid rgba(20,122,63,.25)}
 
   /* TOAST */
-  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow);padding:12px 18px;border-radius:10px;display:none;font-weight:600;font-size:14px;max-width:90vw;text-align:center}
+  #toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;width:90%;max-width:500px;pointer-events:none}
+#toast > div{pointer-events:auto;animation:toastSlideDown .3s ease-out}
+@keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
   #toast.show{display:block;animation:pop .2s ease-out}
 
   /* FOOTER */
@@ -770,7 +772,7 @@ const K = {
 
 const PHASES = [
   {key:'reg',  label:'تسجيل الناخبين',     defaultActive:true},
-  {key:'nom',  label:'الترشّح (٣ أيام)',     defaultActive:false},
+  {key:'nom',  label:'الترشّح (٣ أيام)',     defaultActive:true},
   {key:'camp', label:'الدعاية الانتخابية',  defaultActive:false},
   {key:'vote', label:'التصويت (يومان)',     defaultActive:false},
   {key:'res',  label:'إعلان النتائج',       defaultActive:false},
@@ -1173,9 +1175,7 @@ $('#btnCandLogin').addEventListener('click', ()=>{
     $('#f-cl-id .err').textContent = 'لا يحقّ لك الترشّح: يجب ألّا يقلّ العمر عن ٤٠ سنة.';
     setErr('f-cl-id', true); return;
   }
-  if(!isActive('nom') && !getCands().some(c=>c.id===id)){
-    toast('مرحلة الترشّح مغلقة حالياً','err'); return;
-  }
+  // Allow login - phase enforced at save time
   save(K.candSession, {id});
   closeModal('modalCandLogin');
   showCandDashboard(id);
