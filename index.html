@@ -388,7 +388,7 @@
         <h3>قائمة المرشّحين</h3>
         <div class="table-wrap" style="margin-top:8px">
           <table id="candsTable">
-            <thead><tr><th>#</th><th>الاسم</th><th>الهوية</th><th>الأهلية (٤٠+)</th><th>الجوال</th><th>أصوات</th><th></th></tr></thead>
+            <thead><tr><th>#</th><th>الاسم</th><th>الصفة</th><th>المهنة</th><th>التعليم</th><th>الأهلية</th><th>التعهدات</th><th>أصوات</th><th></th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -1213,7 +1213,97 @@ function showCandDashboard(id){
         <label>كلمة المرشّح (اختياري)</label>
         <textarea id="candBio" rows="3" maxlength="240" placeholder="أدخل تعريفاً موجزاً عنك ورؤيتك...">${escapeHtml(cand && cand.bio || '')}</textarea>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
+
+      <!-- ════════════════════════════════════════════
+           بيانات المرشّح الإضافية (المؤهلات والصفة)
+           ════════════════════════════════════════════ -->
+      <div style="border-top:1px dashed var(--border);margin-top:18px;padding-top:14px">
+        <h4 style="margin:0 0 12px;color:var(--primary)">🎓 المؤهلات والصفة الاجتماعية</h4>
+
+        <div class="field">
+          <label>الصفة الاجتماعية</label>
+          <select id="candSocialRole" class="input" style="width:100%">
+            <option value="">— اختر الصفة —</option>
+            <option value="reformer" ${cand && cand.socialRole==='reformer'?'selected':''}>🤝 رجل إصلاح</option>
+            <option value="religious" ${cand && cand.socialRole==='religious'?'selected':''}>🕌 رجل دين</option>
+            <option value="social_mediator" ${cand && cand.socialRole==='social_mediator'?'selected':''}>👥 مصلح اجتماعي</option>
+            <option value="dispute_mediator" ${cand && cand.socialRole==='dispute_mediator'?'selected':''}>⚖️ وسيط نزاعات</option>
+            <option value="tribal_figure" ${cand && cand.socialRole==='tribal_figure'?'selected':''}>👳 وجه عشائري</option>
+            <option value="other" ${cand && cand.socialRole==='other'?'selected':''}>📋 أخرى</option>
+          </select>
+        </div>
+
+        <div class="field" style="margin-top:10px">
+          <label>المستوى التعليمي</label>
+          <select id="candEducation" class="input" style="width:100%">
+            <option value="">— اختر المستوى —</option>
+            <option value="primary" ${cand && cand.education==='primary'?'selected':''}>ابتدائي</option>
+            <option value="preparatory" ${cand && cand.education==='preparatory'?'selected':''}>إعدادي</option>
+            <option value="secondary" ${cand && cand.education==='secondary'?'selected':''}>ثانوي / توجيهي</option>
+            <option value="diploma" ${cand && cand.education==='diploma'?'selected':''}>دبلوم</option>
+            <option value="bachelor" ${cand && cand.education==='bachelor'?'selected':''}>بكالوريوس</option>
+            <option value="master" ${cand && cand.education==='master'?'selected':''}>ماجستير</option>
+            <option value="phd" ${cand && cand.education==='phd'?'selected':''}>دكتوراه</option>
+            <option value="other" ${cand && cand.education==='other'?'selected':''}>أخرى</option>
+          </select>
+        </div>
+
+        <div class="field" style="margin-top:10px">
+          <label>المهنة</label>
+          <input type="text" id="candProfession" class="input" maxlength="80" placeholder="معلم / طبيب / تاجر / مهندس..." value="${escapeHtml(cand && cand.profession || '')}" />
+        </div>
+
+        <div class="field" style="margin-top:10px">
+          <label>خبرات العمل المجتمعي</label>
+          <textarea id="candExperience" rows="3" maxlength="400" placeholder="اذكر خبراتك ومناصبك السابقة في خدمة العائلة والمجتمع...">${escapeHtml(cand && cand.experience || '')}</textarea>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════
+           الشروط والتعهدات الإلزامية
+           ════════════════════════════════════════════ -->
+      <div style="border-top:1px dashed var(--border);margin-top:18px;padding-top:14px">
+        <h4 style="margin:0 0 12px;color:var(--primary)">📋 الشروط والتعهدات</h4>
+        <div class="alert info small" style="margin-bottom:12px">يجب الموافقة على جميع الشروط أدناه لاعتماد الترشّح</div>
+
+        <label class="cand-pledge" style="display:block;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer">
+          <input type="checkbox" id="pledge1" ${cand && cand.pledge1?'checked':''} style="margin-left:8px">
+          <b>أنا من أبناء عائلة أبو طه الأصليين</b>
+          <div class="small muted" style="margin-top:4px;margin-right:24px">وأتعهد بصحة انتسابي</div>
+        </label>
+
+        <label class="cand-pledge" style="display:block;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px">
+          <input type="checkbox" id="pledge2" checked disabled style="margin-left:8px">
+          <b>عمري 40 سنة أو أكثر</b>
+          <div class="small muted" style="margin-top:4px;margin-right:24px">✓ تم التحقق آلياً</div>
+        </label>
+
+        <label class="cand-pledge" style="display:block;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer">
+          <input type="checkbox" id="pledge3" ${cand && cand.pledge3?'checked':''} style="margin-left:8px">
+          <b>حسن السيرة والسلوك</b>
+          <div class="small muted" style="margin-top:4px;margin-right:24px">سمعتي طيبة بين أبناء العائلة</div>
+        </label>
+
+        <label class="cand-pledge" style="display:block;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer">
+          <input type="checkbox" id="pledge4" ${cand && cand.pledge4?'checked':''} style="margin-left:8px">
+          <b>أتعهد بالتفرّغ لخدمة العائلة</b>
+          <div class="small muted" style="margin-top:4px;margin-right:24px">في السراء والضراء</div>
+        </label>
+
+        <label class="cand-pledge" style="display:block;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer">
+          <input type="checkbox" id="pledge5" ${cand && cand.pledge5?'checked':''} style="margin-left:8px">
+          <b>أقبل نتيجة الانتخاب نهائياً</b>
+          <div class="small muted" style="margin-top:4px;margin-right:24px">وأتعهد بالالتزام بقرار الأغلبية</div>
+        </label>
+
+        <label class="cand-pledge" style="display:block;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer">
+          <input type="checkbox" id="pledge6" ${cand && cand.pledge6?'checked':''} style="margin-left:8px">
+          <b>جميع بياناتي صحيحة</b>
+          <div class="small muted" style="margin-top:4px;margin-right:24px">وأتحمل المسؤولية عن أي معلومة مزيفة</div>
+        </label>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
         <button class="btn btn-primary" id="btnSaveCand" type="button">حفظ التعديلات</button>
         ${!cand ? `<span class="alert warn small" style="margin:0">سيتم إنشاء بطاقتك عند فتح مرحلة الترشّح.</span>` : ''}
       </div>
@@ -1238,17 +1328,52 @@ function showCandDashboard(id){
       reader.readAsDataURL(f);
     });
   }
-  $('#btnSaveCand').addEventListener('click', ()=>{
-    const cs = getCands(); let c = cs.find(x=>x.id===id);
-    if(!c){
-      if(!isActive('nom')){ toast('مرحلة الترشّح مغلقة','err'); return; }
-      c = { id, name:voter.name, phone:voter.phone, photo:'', bio:'', createdAt:Date.now() };
-      cs.push(c);
+  $('#btnSaveCand').addEventListener('click', function(){
+    try {
+      // Validate required pledges (1, 3, 4, 5, 6 — pledge2 is auto-checked)
+      var p1 = document.getElementById('pledge1');
+      var p3 = document.getElementById('pledge3');
+      var p4 = document.getElementById('pledge4');
+      var p5 = document.getElementById('pledge5');
+      var p6 = document.getElementById('pledge6');
+
+      if(!p1 || !p1.checked){ toast('يجب الإقرار بالانتساب لعائلة أبو طه','err'); return; }
+      if(!p3 || !p3.checked){ toast('يجب الإقرار بحسن السيرة والسلوك','err'); return; }
+      if(!p4 || !p4.checked){ toast('يجب التعهد بالتفرّغ لخدمة العائلة','err'); return; }
+      if(!p5 || !p5.checked){ toast('يجب قبول نتيجة الانتخاب نهائياً','err'); return; }
+      if(!p6 || !p6.checked){ toast('يجب الإقرار بصحة جميع البيانات','err'); return; }
+
+      var cs = getCands();
+      var c = cs.find(function(x){ return x.id === id; });
+      if(!c){
+        if(!isActive('nom')){ toast('مرحلة الترشّح مغلقة','err'); return; }
+        c = { id:id, name:voter.name, phone:voter.phone, photo:'', bio:'', createdAt:Date.now() };
+        cs.push(c);
+      }
+
+      c.bio = ($('#candBio').value || '').trim();
+      c.socialRole = (document.getElementById('candSocialRole') || {}).value || '';
+      c.education = (document.getElementById('candEducation') || {}).value || '';
+      c.profession = ((document.getElementById('candProfession') || {}).value || '').trim();
+      c.experience = ((document.getElementById('candExperience') || {}).value || '').trim();
+      c.pledge1 = !!p1.checked;
+      c.pledge2 = true;
+      c.pledge3 = !!p3.checked;
+      c.pledge4 = !!p4.checked;
+      c.pledge5 = !!p5.checked;
+      c.pledge6 = !!p6.checked;
+      c.pledgesAcceptedAt = Date.now();
+
+      save(K.cands, cs);
+      // Sync to Supabase (non-blocking)
+      try { if(typeof syncCandsToSupabase === 'function') syncCandsToSupabase([c]); } catch(e){}
+
+      toast('✅ تم حفظ التعديلات والتعهدات','ok');
+      renderCandidates();
+    } catch(err){
+      console.error('Save candidate error:', err);
+      toast('خطأ في الحفظ: ' + err.message, 'err');
     }
-    c.bio = $('#candBio').value.trim();
-    setCands(cs);
-    toast('تم حفظ التعديلات ✅','ok');
-    renderCandidates();
   });
   dash.scrollIntoView({behavior:'smooth'});
 }
@@ -1469,13 +1594,56 @@ function renderAdmin(){
     const v = voters.find(x=>x.id===c.id);
     const a = v ? ageFromDob(v.dob) : null;
     const elig = (a!=null && a>=40) ? `<span class="badge ok">مؤهَّل</span>` : `<span class="badge bad">غير مؤهَّل</span>`;
-    tr.innerHTML = `<td>${i+1}</td><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.id)}</td><td>${elig}</td><td>${escapeHtml(c.phone)}</td><td>${tally[c.id]||0}</td><td><button class="btn btn-ghost btn-sm" data-del-cand="${c.id}">حذف</button></td>`;
+    var roleMap = {reformer:'🤝 رجل إصلاح',religious:'🕌 رجل دين',social_mediator:'👥 مصلح اجتماعي',dispute_mediator:'⚖️ وسيط نزاعات',tribal_figure:'👳 وجه عشائري',other:'📋 أخرى'};
+    var eduMap = {primary:'ابتدائي',preparatory:'إعدادي',secondary:'ثانوي',diploma:'دبلوم',bachelor:'بكالوريوس',master:'ماجستير',phd:'دكتوراه',other:'أخرى'};
+    var pledgeCount = (c.pledge1?1:0)+(c.pledge2?1:0)+(c.pledge3?1:0)+(c.pledge4?1:0)+(c.pledge5?1:0)+(c.pledge6?1:0);
+    var pledgeBadge = pledgeCount===6
+      ? '<span class="badge ok">✓ كامل (6/6)</span>'
+      : '<span class="badge bad">'+pledgeCount+'/6</span>';
+    tr.innerHTML = '<td>'+(i+1)+'</td>'+
+      '<td><b>'+escapeHtml(c.name)+'</b><div class="small muted" dir="ltr">'+escapeHtml(c.id)+'</div></td>'+
+      '<td>'+(roleMap[c.socialRole]||'-')+'</td>'+
+      '<td>'+escapeHtml(c.profession||'-')+'</td>'+
+      '<td>'+(eduMap[c.education]||'-')+'</td>'+
+      '<td>'+elig+'</td>'+
+      '<td>'+pledgeBadge+'</td>'+
+      '<td>'+(tally[c.id]||0)+'</td>'+
+      '<td><button class="btn btn-ghost btn-sm" data-view-cand="'+c.id+'">👁 عرض</button> <button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-del-cand="'+c.id+'">🗑 حذف</button></td>';
     ct.appendChild(tr);
   });
-  $$('[data-del-cand]', ct).forEach(b => b.addEventListener('click', ()=>{
-    if(!confirm('حذف هذا المرشّح؟')) return;
-    const arr = getCands().filter(x => x.id !== b.dataset.delCand);
-    setCands(arr); renderAdmin(); renderCandidates(); renderResults();
+  $$('[data-del-cand]', ct).forEach(b => b.addEventListener('click', function(){
+    if(!window.confirm('حذف هذا المرشّح؟')) return;
+    var candId = b.dataset.delCand;
+    var arr = getCands().filter(function(x){ return x.id !== candId; });
+    save(K.cands, arr);
+    try { if(typeof SUPA!=='undefined') SUPA.from('candidates').delete().eq('national_id', candId).then(function(){}); } catch(e){}
+    renderAdmin(); renderCandidates(); renderResults();
+    toast('🗑 تم حذف المرشّح','ok');
+  }));
+
+  $$('[data-view-cand]', ct).forEach(b => b.addEventListener('click', function(){
+    var candId = b.dataset.viewCand;
+    var c = getCands().find(function(x){ return x.id === candId; });
+    if(!c) return;
+    var roleMap = {reformer:'🤝 رجل إصلاح',religious:'🕌 رجل دين',social_mediator:'👥 مصلح اجتماعي',dispute_mediator:'⚖️ وسيط نزاعات',tribal_figure:'👳 وجه عشائري',other:'📋 أخرى'};
+    var eduMap = {primary:'ابتدائي',preparatory:'إعدادي',secondary:'ثانوي',diploma:'دبلوم',bachelor:'بكالوريوس',master:'ماجستير',phd:'دكتوراه',other:'أخرى'};
+    var info = '👤 الاسم: '+(c.name||'-')+
+      '\n🆔 الهوية: '+(c.id||'-')+
+      '\n📞 الجوال: '+(c.phone||'-')+
+      '\n\n📋 المعلومات المهنية:\n'+
+      '🎯 الصفة: '+(roleMap[c.socialRole]||'-')+
+      '\n💼 المهنة: '+(c.profession||'-')+
+      '\n🎓 التعليم: '+(eduMap[c.education]||'-')+
+      '\n\n🌟 الخبرات:\n'+(c.experience||'-')+
+      '\n\n💬 كلمة المرشّح:\n'+(c.bio||'-')+
+      '\n\n✅ التعهدات: '+
+      (c.pledge1?'\n✓ من أبناء العائلة':'')+
+      (c.pledge2?'\n✓ العمر 40+':'')+
+      (c.pledge3?'\n✓ حسن السيرة':'')+
+      (c.pledge4?'\n✓ التفرّغ للخدمة':'')+
+      (c.pledge5?'\n✓ قبول النتيجة':'')+
+      (c.pledge6?'\n✓ صحة البيانات':'');
+    alert(info);
   }));
 
   // messages list
