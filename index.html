@@ -342,7 +342,7 @@
         </div>
         <button class="btn btn-accent" id="ctaCandidate" type="button" style="display:none">تسجيل</button>
         <button class="btn" id="ctaCandidates" type="button" style="display:none">عرض</button>
-        <button class="btn" id="ctaContact" type="button">📨 اقتراحات وشكاوى</button>
+        <button class="btn" id="ctaContact" type="button">📨 اتصل بنا</button>
       </div>
     </section>
 
@@ -518,15 +518,34 @@
         <div id="dataQualityBox" style="margin-top:14px"></div>
       </div>
       
-      <!-- ║ Card 6: Export Center ║ -->
+      <!-- ║ Card 6: REPORTS CENTER ║ -->
       <div class="card" style="margin-top:18px">
-        <h3>📥 مركز التصدير والتقارير</h3>
-        <p class="small muted">تصدير بيانات الإحصاء بصيغ مختلفة</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-          <button class="btn btn-primary btn-sm" id="btnExportCSV" type="button">📊 تصدير CSV (Excel)</button>
-          <button class="btn btn-ghost btn-sm" id="btnExportJSON" type="button">📄 تصدير JSON</button>
-          <button class="btn btn-ghost btn-sm" id="btnPrintReport" type="button">🖨 طباعة تقرير</button>
+        <h3>📥 مركز التقارير والتصدير</h3>
+        <p class="small muted">تصدير بيانات الإحصاء وتقارير مفصّلة بصيغ مختلفة</p>
+        
+        <!-- Group 1: Bulk exports -->
+        <div style="margin-top:14px;padding-top:8px">
+          <h4 style="font-size:14px;color:var(--primary);margin-bottom:8px">📊 تقارير عامة</h4>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" id="btnExportCSV" type="button">📊 تصدير CSV (Excel)</button>
+            <button class="btn btn-ghost btn-sm" id="btnExportJSON" type="button">📄 تصدير JSON</button>
+            <button class="btn btn-accent btn-sm" id="btnPrintReport" type="button">🖨 تقرير عام (PDF/A4)</button>
+          </div>
         </div>
+        
+        <!-- Group 2: Individual report -->
+        <div style="margin-top:18px;padding-top:14px;border-top:1px dashed var(--border)">
+          <h4 style="font-size:14px;color:var(--primary);margin-bottom:8px">📋 تقرير مفصّل لفرد محدّد</h4>
+          <p class="small muted" style="margin-bottom:10px">طباعة بطاقة شاملة لمسجَّل واحد بكل تفاصيله</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <div style="flex:1;min-width:200px">
+              <label style="font-size:12px;display:block;margin-bottom:4px">رقم الهوية</label>
+              <input type="text" id="indReportId" class="input" inputmode="numeric" maxlength="9" placeholder="9 أرقام" />
+            </div>
+            <button class="btn btn-primary btn-sm" id="btnIndReport" type="button">🖨 طباعة بطاقة الفرد</button>
+          </div>
+        </div>
+        
         <div id="exportStatus" style="margin-top:10px;font-size:13px;color:var(--text-muted)"></div>
       </div>
       
@@ -582,7 +601,7 @@
         </div>
       </div>
 
-      <div class="card" style="margin-top:18px">
+      <div class="card" style="margin-top:18px;display:none">
         <h3>📨 صندوق الاقتراحات والملاحظات</h3>
         <p class="small muted">ملاحظات أبناء العائلة حول الإحصاء. تظهر هنا فقط للإدارة.</p>
         <div id="msgList" style="margin-top:10px"></div>
@@ -845,6 +864,80 @@
       <!-- Step 4: Contact + Family -->
       <div data-step-pane="4" class="hidden">
 
+        <!-- ═══ EDUCATION & PROFESSION ═══ -->
+        <div style="background:rgba(168,132,67,.05);border:1px dashed var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+          <h4 style="margin:0 0 12px;color:var(--primary);font-size:15px">🎓 المؤهل والمهنة</h4>
+          
+          <div class="field" style="margin-bottom:10px">
+            <label>المؤهل العلمي</label>
+            <select id="r_education" class="input">
+              <option value="">— اختر المؤهل —</option>
+              <option value="primary">ابتدائي</option>
+              <option value="middle">إعدادي</option>
+              <option value="secondary">ثانوي / توجيهي</option>
+              <option value="diploma">دبلوم متوسط</option>
+              <option value="bachelor">بكالوريوس</option>
+              <option value="master">ماجستير</option>
+              <option value="phd">دكتوراه</option>
+              <option value="other">أخرى</option>
+              <option value="none">لم يتلقَّ تعليماً</option>
+            </select>
+          </div>
+          
+          <div class="field" style="margin-bottom:10px">
+            <label>حالة العمل</label>
+            <select id="r_work_status" class="input">
+              <option value="">— اختر —</option>
+              <option value="employed">موظف</option>
+              <option value="freelance">عمل حر</option>
+              <option value="business">صاحب عمل</option>
+              <option value="unemployed">لا يعمل</option>
+              <option value="student">طالب</option>
+              <option value="retired">متقاعد</option>
+              <option value="housewife">ربة منزل</option>
+            </select>
+          </div>
+          
+          <div class="field" style="margin:0">
+            <label>المهنة (اختياري)</label>
+            <input type="text" id="r_profession" class="input" placeholder="مثال: مهندس، طبيب، تاجر..." maxlength="60" />
+          </div>
+        </div>
+
+        <!-- ═══ HEALTH STATUS - REGISTRANT ═══ -->
+        <div style="background:rgba(20,122,63,.05);border:1px dashed var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+          <h4 style="margin:0 0 12px;color:var(--primary);font-size:15px">🩺 الحالة الصحية</h4>
+          
+          <div class="field" style="margin-bottom:10px">
+            <label>هل لديك حالة صحية أو مرض مزمن أو إعاقة؟</label>
+            <select id="r_health" class="input">
+              <option value="no">لا، بصحة جيدة</option>
+              <option value="yes">نعم، لديّ حالة صحية</option>
+            </select>
+            <textarea id="r_health_details" class="input" rows="2" placeholder="اذكر تفاصيل الحالة الصحية..." style="display:none;margin-top:8px;width:100%;resize:vertical"></textarea>
+          </div>
+        </div>
+
+        <!-- ═══ FAMILY MEMBER HEALTH ═══ -->
+        <div style="background:rgba(168,132,67,.05);border:1px dashed var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+          <h4 style="margin:0 0 12px;color:var(--primary);font-size:15px">👨‍👩‍👧 صحة أفراد الأسرة</h4>
+          
+          <div class="field" style="margin-bottom:10px">
+            <label>هل يعاني أحد أفراد أسرتك من مرض مزمن أو إصابة أو إعاقة؟</label>
+            <select id="r_family_health" class="input">
+              <option value="no">لا</option>
+              <option value="yes">نعم</option>
+            </select>
+            <textarea id="r_family_health_details" class="input" rows="2" placeholder="اذكر العلاقة (ابن/بنت/أم...) ونوع الحالة الصحية" style="display:none;margin-top:8px;width:100%;resize:vertical"></textarea>
+          </div>
+          
+          <div class="field" id="r_needs_block" style="display:none;margin:10px 0 0;padding-top:10px;border-top:1px dashed var(--border)">
+            <label>الاحتياجات الخاصة (إن وجدت)</label>
+            <textarea id="r_needs" class="input" rows="2" placeholder="مثل: أدوية، أجهزة طبية، مساعدات، علاج..." style="width:100%;resize:vertical"></textarea>
+            <div class="hint">اذكر ما تحتاجه الأسرة من مساعدات تتعلق بالحالة الصحية</div>
+          </div>
+        </div>
+
         <!-- ═══ FAMILY DATA SECTION ═══ -->
         <div class="field" style="margin-bottom:14px">
           <label>الحالة الاجتماعية <span style="color:var(--danger)">*</span></label>
@@ -870,6 +963,18 @@
           <button type="button" id="btnAddSpouse" class="btn btn-ghost btn-sm" style="display:none;margin-top:6px">
             ➕ إضافة زوجة أخرى
           </button>
+          
+          <!-- Spouse health condition -->
+          <div id="spouseHealthBlock" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)">
+            <div class="field" style="margin:0">
+              <label>هل لدى الزوج/ة حالة صحية أو مرض مزمن؟</label>
+              <select id="r_health_spouse" class="input">
+                <option value="no">لا، بصحة جيدة</option>
+                <option value="yes">نعم، لديه/ها حالة صحية</option>
+              </select>
+              <textarea id="r_health_spouse_details" class="input" rows="2" placeholder="اذكر تفاصيل الحالة الصحية..." style="display:none;margin-top:8px;width:100%;resize:vertical"></textarea>
+            </div>
+          </div>
 
           <!-- Children counts -->
           <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
@@ -884,6 +989,206 @@
           </div>
           <div class="hint" style="margin-top:8px;color:var(--text-muted)">
             💡 ملاحظة: لتجنب احتساب الأبناء مرتين، يكفي أن يدخل أحد الزوجين هذه البيانات.
+          </div>
+        </div>
+        
+        <!-- ═══ HEALTH CONDITIONS SECTION ═══ -->
+        <div style="background:rgba(245,158,11,.06);border-radius:12px;padding:14px;margin-bottom:14px;border:1px dashed #f59e0b">
+          <h4 style="margin:0 0 10px;color:#92400e;font-size:16px">🏥 الحالة الصحية والاحتياجات</h4>
+          
+          <div class="field">
+            <label>هل لديك أنت حالة صحية أو مرض مزمن؟</label>
+            <select id="r_health_self" class="input">
+              <option value="no">لا، بصحة جيدة</option>
+              <option value="yes">نعم، لديّ حالة صحية</option>
+            </select>
+            <textarea id="r_health_self_details" class="input" rows="2" placeholder="اذكر تفاصيل الحالة الصحية (مرض مزمن، إعاقة، إصابة...)" style="display:none;margin-top:8px;width:100%;resize:vertical"></textarea>
+          </div>
+          
+          <div class="field" style="margin-top:10px">
+            <label>هل يعاني أحد أفراد الأسرة (الأبناء) من أمراض أو إعاقات؟</label>
+            <select id="r_family_health" class="input">
+              <option value="no">لا، الجميع بصحة جيدة</option>
+              <option value="yes">نعم، أحد أفراد الأسرة لديه حالة صحية</option>
+            </select>
+            <textarea id="r_family_health_details" class="input" rows="2" placeholder="اذكر تفاصيل الحالة الصحية..." style="display:none;margin-top:8px;width:100%;resize:vertical"></textarea>
+          </div>
+          
+          <div class="field" style="margin-top:10px">
+            <label>هل لديكم احتياجات خاصة بسبب الحالة الصحية؟</label>
+            <textarea id="r_family_needs" class="input" rows="2" placeholder="مثال: أدوية مزمنة، أجهزة طبية، علاج طبيعي، رعاية خاصة..." style="width:100%;resize:vertical"></textarea>
+            <div class="hint">اختياري - يساعدنا في تنظيم أي مساعدة عائلية إذا لزم</div>
+          </div>
+        </div>
+        
+        <!-- ═══ EDUCATION & PROFESSION SECTION ═══ -->
+        <div style="background:rgba(20,122,63,.05);border-radius:12px;padding:14px;margin-bottom:14px;border:1px dashed var(--success)">
+          <h4 style="margin:0 0 10px;color:var(--success);font-size:16px">🎓 التعليم والمهنة</h4>
+          
+          <div class="field">
+            <label>المؤهل العلمي</label>
+            <select id="r_education" class="input">
+              <option value="">— اختر المؤهل —</option>
+              <option value="none">لا يوجد</option>
+              <option value="primary">ابتدائي</option>
+              <option value="preparatory">إعدادي</option>
+              <option value="secondary">ثانوي / توجيهي</option>
+              <option value="diploma">دبلوم</option>
+              <option value="bachelor">بكالوريوس</option>
+              <option value="master">ماجستير</option>
+              <option value="phd">دكتوراه</option>
+              <option value="religious">شهادة دينية / حافظ</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
+          
+          <div class="field" style="margin-top:10px">
+            <label>التخصص (إن وُجد)</label>
+            <input type="text" id="r_specialization" class="input" placeholder="مثال: هندسة مدنية، طب عام، شريعة..." />
+          </div>
+          
+          <div class="field" style="margin-top:10px">
+            <label>الحالة الوظيفية</label>
+            <select id="r_work_status" class="input">
+              <option value="">— اختر الحالة —</option>
+              <option value="employed">موظف (قطاع عام أو خاص)</option>
+              <option value="self_employed">عمل حر / صاحب مهنة</option>
+              <option value="business_owner">صاحب عمل / تجارة</option>
+              <option value="unemployed">لا يعمل حالياً</option>
+              <option value="student">طالب</option>
+              <option value="retired">متقاعد</option>
+              <option value="housewife">ربّة منزل</option>
+            </select>
+          </div>
+          
+          <div class="field" style="margin-top:10px" id="profession-field">
+            <label>المهنة (إن كنت تعمل)</label>
+            <input type="text" id="r_profession" class="input" placeholder="مثال: مهندس، طبيب، معلم، تاجر..." />
+          </div>
+        </div>
+        
+        <!-- ═══ RESIDENCE SECTION ═══ -->
+        <div style="background:rgba(168,132,67,.05);border-radius:12px;padding:14px;margin-bottom:14px;border:1px dashed var(--primary)">
+          <h4 style="margin:0 0 10px;color:var(--primary);font-size:16px">📍 مكان الإقامة</h4>
+          
+          <div class="field">
+            <label>الدولة</label>
+            <select id="r_country" class="input">
+              <option value="">— اختر الدولة —</option>
+              <option value="palestine">🇵🇸 فلسطين</option>
+              <option value="jordan">🇯🇴 الأردن</option>
+              <option value="saudi">🇸🇦 السعودية</option>
+              <option value="uae">🇦🇪 الإمارات</option>
+              <option value="egypt">🇪🇬 مصر</option>
+              <option value="kuwait">🇰🇼 الكويت</option>
+              <option value="qatar">🇶🇦 قطر</option>
+              <option value="lebanon">🇱🇧 لبنان</option>
+              <option value="syria">🇸🇾 سوريا</option>
+              <option value="turkey">🇹🇷 تركيا</option>
+              <option value="germany">🇩🇪 ألمانيا</option>
+              <option value="usa">🇺🇸 الولايات المتحدة</option>
+              <option value="canada">🇨🇦 كندا</option>
+              <option value="other">دولة أخرى</option>
+            </select>
+          </div>
+          
+          <div class="field" style="margin-top:10px">
+            <label>المدينة / المحافظة</label>
+            <input type="text" id="r_city" class="input" placeholder="مثال: غزة، رام الله، عمّان، الرياض..." />
+          </div>
+          
+          <div class="field" style="margin-top:10px">
+            <label>الحي / المنطقة (اختياري)</label>
+            <input type="text" id="r_neighborhood" class="input" placeholder="مثال: الرمال، البيرة، حي السلام..." />
+          </div>
+        </div>
+
+        
+        <!-- ═══ HEALTH STATUS - REGISTERED PERSON ═══ -->
+        <div class="field" style="margin-bottom:14px;background:var(--surface-2);border-radius:12px;padding:14px;border:1px dashed var(--border)">
+          <h4 style="margin:0 0 10px;color:var(--primary);font-size:15px">🩺 الحالة الصحية للمسجَّل</h4>
+          <select id="r_health_self" class="input" style="width:100%">
+            <option value="healthy">سليم - لا توجد حالات صحية خاصة</option>
+            <option value="chronic">مرض مزمن (سكري، ضغط، قلب...)</option>
+            <option value="injury">إصابة سابقة أو حالية</option>
+            <option value="disability">إعاقة (حركية، حسية، ذهنية)</option>
+            <option value="other">حالة أخرى</option>
+          </select>
+          <div id="r_health_self_details_block" style="display:none;margin-top:10px">
+            <label style="font-size:13px">تفاصيل الحالة الصحية:</label>
+            <input type="text" id="r_health_self_details" class="input" placeholder="اذكر الحالة باختصار..." />
+          </div>
+        </div>
+        
+        <!-- ═══ HEALTH STATUS - SPOUSE (visible if married) ═══ -->
+        <div class="field" id="spouseHealthBlock" style="display:none;margin-bottom:14px;background:var(--surface-2);border-radius:12px;padding:14px;border:1px dashed var(--border)">
+          <h4 style="margin:0 0 10px;color:var(--primary);font-size:15px">🩺 الحالة الصحية للزوج/ة</h4>
+          <select id="r_health_spouse" class="input" style="width:100%">
+            <option value="healthy">سليم/ة - لا توجد حالات صحية</option>
+            <option value="chronic">مرض مزمن</option>
+            <option value="injury">إصابة</option>
+            <option value="disability">إعاقة</option>
+            <option value="other">حالة أخرى</option>
+          </select>
+          <div id="r_health_spouse_details_block" style="display:none;margin-top:10px">
+            <label style="font-size:13px">تفاصيل الحالة الصحية:</label>
+            <input type="text" id="r_health_spouse_details" class="input" placeholder="اذكر الحالة باختصار..." />
+          </div>
+        </div>
+        
+        <!-- ═══ FAMILY MEMBERS HEALTH ═══ -->
+        <div class="field" style="margin-bottom:14px;background:var(--surface-2);border-radius:12px;padding:14px;border:1px dashed var(--border)">
+          <h4 style="margin:0 0 10px;color:var(--primary);font-size:15px">🩺 الحالة الصحية لأفراد الأسرة</h4>
+          <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer">
+            <input type="checkbox" id="r_family_health_yes" style="margin-top:4px" />
+            <span>هل يعاني أحد أفراد الأسرة من أمراض مزمنة، إصابات، أو إعاقات؟</span>
+          </label>
+          <div id="r_family_health_details_block" style="display:none;margin-top:12px">
+            <label style="font-size:13px">اذكر اسم الفرد ونوع الحالة الصحية:</label>
+            <textarea id="r_family_health_details" class="input" rows="3" placeholder="مثال: ابني محمد - مصاب بالسكري النوع الأول"></textarea>
+            <label style="font-size:13px;margin-top:10px;display:block">📦 الاحتياجات حسب الحالة (اختياري):</label>
+            <textarea id="r_family_needs" class="input" rows="2" placeholder="مثال: أدوية شهرية، جلسات علاج طبيعي، كرسي متحرك..."></textarea>
+          </div>
+        </div>
+        
+        <!-- ═══ EDUCATION + PROFESSION ═══ -->
+        <div class="field" style="margin-bottom:14px;background:var(--surface-2);border-radius:12px;padding:14px;border:1px dashed var(--border)">
+          <h4 style="margin:0 0 10px;color:var(--primary);font-size:15px">🎓 المؤهل العلمي والمهنة</h4>
+          
+          <div class="field" style="margin-bottom:10px">
+            <label>المؤهل العلمي</label>
+            <select id="r_education" class="input">
+              <option value="">— اختر المؤهل —</option>
+              <option value="none">بدون</option>
+              <option value="primary">ابتدائي</option>
+              <option value="middle">إعدادي</option>
+              <option value="secondary">ثانوي</option>
+              <option value="diploma">دبلوم</option>
+              <option value="bachelor">بكالوريوس</option>
+              <option value="master">ماجستير</option>
+              <option value="phd">دكتوراه</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
+          
+          <div class="field" style="margin-bottom:10px">
+            <label>المهنة / التخصّص</label>
+            <input type="text" id="r_profession" class="input" placeholder="مثال: مهندس مدني، طبيب، معلم..." />
+          </div>
+          
+          <div class="field" style="margin-bottom:0">
+            <label>حالة العمل</label>
+            <select id="r_work_status" class="input">
+              <option value="">— اختر الحالة —</option>
+              <option value="employed">يعمل - موظّف</option>
+              <option value="self_employed">يعمل - عمل حر</option>
+              <option value="business_owner">يعمل - صاحب عمل</option>
+              <option value="unemployed">لا يعمل - يبحث عن عمل</option>
+              <option value="student">طالب</option>
+              <option value="retired">متقاعد</option>
+              <option value="housewife">ربّة منزل</option>
+              <option value="unable">غير قادر على العمل (لظرف صحي/سن)</option>
+            </select>
           </div>
         </div>
 
@@ -923,7 +1228,7 @@
             <div id="r_idimg_txt" style="color:var(--text-muted);font-size:13px">
               <div style="font-size:22px;margin-bottom:4px">🪪</div>
               ارفع صورة الهوية / جواز السفر / رخصة القيادة
-              <div class="small" style="margin-top:3px">JPG / PNG — حتى 10MB</div>
+              <div class="small" style="margin-top:3px">JPG / PNG — حتى 15MB</div>
             </div>
             <img id="r_idimg_thumb" class="id-thumb" alt="">
           </div>
@@ -933,7 +1238,7 @@
           </div>
           <div class="upload-progress" id="r_upload_progress">
             <div class="upload-progress-label">
-              <span>📤 جاري ضغط ورفع الصورة...</span>
+              <span>📤 جاري رفع الصورة...</span>
               <span class="upload-progress-percent" id="r_upload_percent">0%</span>
             </div>
             <div class="upload-progress-bar">
@@ -1058,11 +1363,11 @@
 <div class="modal-back" id="modalContact">
   <div class="modal">
     <div class="modal-head">
-      <h3>📨 اقتراحات وشكاوى</h3>
+      <h3>📨 اتصل بنا</h3>
       <button class="icon-btn" data-close="modalContact" type="button">✕</button>
     </div>
     <div class="modal-body">
-      <div class="alert info small">شاركنا اقتراحاتك أو شكواك. ستظهر فقط لإدارة المنظومة. التواصل عبر فيسبوك أيضاً متاح أسفل الصفحة.</div>
+      <div class="alert info small">تواصل معنا لأي استفسار أو ملاحظة. التواصل عبر فيسبوك أيضاً متاح أسفل الصفحة.</div>
       <div class="row">
         <div class="field" id="f-c-name">
           <label>الاسم <span style="color:var(--danger)">*</span></label>
@@ -1075,12 +1380,10 @@
           <div class="err">يرجى إدخال رقم تواصل صالح.</div>
         </div>
       </div>
-      <div class="field" id="f-c-type">
-        <label>نوع الرسالة</label>
+      <div class="field" id="f-c-type" style="display:none">
+        <input type="hidden" name="c_type" value="استفسار" />
         <div class="radio-group" id="c_type_group">
-          <label class="radio-pill selected" data-ctype="اقتراح"><input type="radio" name="c_type" value="اقتراح" checked> اقتراح</label>
-          <label class="radio-pill" data-ctype="شكوى"><input type="radio" name="c_type" value="شكوى"> شكوى</label>
-          <label class="radio-pill" data-ctype="استفسار"><input type="radio" name="c_type" value="استفسار"> استفسار</label>
+          <label class="radio-pill selected" data-ctype="استفسار"><input type="radio" name="c_type" value="استفسار" checked> استفسار</label>
         </div>
       </div>
       <div class="field" id="f-c-msg">
@@ -2039,12 +2342,19 @@ function updateFamilyBlockVisibility(){
   var block = document.getElementById('familyDetailsBlock');
   var container = document.getElementById('spousesContainer');
   var btnAdd = document.getElementById('btnAddSpouse');
+  var spouseHealth = document.getElementById('spouseHealthBlock');
   if(!block || !container) return;
 
   if(marital === 'single' || marital === ''){
     block.style.display = 'none';
     container.innerHTML = '';
+    if(spouseHealth) spouseHealth.style.display = 'none';
     return;
+  }
+  
+  // Show spouse health for married/polygamous/widowed/divorced
+  if(spouseHealth){
+    spouseHealth.style.display = (marital !== 'single') ? 'block' : 'none';
   }
 
   block.style.display = 'block';
@@ -2061,6 +2371,84 @@ function updateFamilyBlockVisibility(){
 }
 
 // Bind events when DOM is ready (and re-bind on each modal open)
+
+
+// ════════ Toggle health detail textareas ════════
+function toggleHealthDetails(){
+  var pairs = [
+    ['r_health_self', 'r_health_self_details'],
+    ['r_health_spouse', 'r_health_spouse_details'],
+    ['r_family_health_select', 'r_family_health_details']
+  ];
+  pairs.forEach(function(p){
+    var sel = document.getElementById(p[0]);
+    var txt = document.getElementById(p[1]);
+    if(!sel || !txt) return;
+    txt.style.display = sel.value === 'yes' ? 'block' : 'none';
+  });
+}
+
+// ════════ Toggle profession field based on work status ════════
+function toggleProfessionField(){
+  var ws = document.getElementById('r_work_status');
+  var pf = document.getElementById('profession-field');
+  if(!ws || !pf) return;
+  var hide = ['unemployed','student','housewife','retired'];
+  pf.style.display = hide.indexOf(ws.value) >= 0 ? 'none' : 'block';
+}
+
+// ════════ Toggle spouse health block based on marital ════════
+function toggleSpouseHealthBlock(){
+  var marital = (document.getElementById('r_marital')||{}).value || '';
+  var blk = document.getElementById('spouseHealthBlock');
+  if(!blk) return;
+  // Show only if married/polygamous (need spouse health info)
+  blk.style.display = (marital === 'married' || marital === 'polygamous') ? 'block' : 'none';
+}
+
+// Initialize all toggles
+function initExtraFieldToggles(){
+  var ids = ['r_health_self', 'r_health_spouse', 'r_family_health_select'];
+  ids.forEach(function(id){
+    var el = document.getElementById(id);
+    if(el && !el.dataset.toggleBound){
+      el.addEventListener('change', toggleHealthDetails);
+      el.dataset.toggleBound = '1';
+    }
+  });
+  
+  var ws = document.getElementById('r_work_status');
+  if(ws && !ws.dataset.toggleBound){
+    ws.addEventListener('change', toggleProfessionField);
+    ws.dataset.toggleBound = '1';
+  }
+  
+  var marital = document.getElementById('r_marital');
+  if(marital && !marital.dataset.spouseHealthBound){
+    marital.addEventListener('change', toggleSpouseHealthBlock);
+    marital.dataset.spouseHealthBound = '1';
+  }
+  
+  // Apply initial state
+  toggleHealthDetails();
+  toggleProfessionField();
+  toggleSpouseHealthBlock();
+}
+
+// Bind on DOM ready and after modal opens
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(initExtraFieldToggles, 200); });
+} else {
+  setTimeout(initExtraFieldToggles, 200);
+}
+
+// Re-bind when register modal opens
+document.addEventListener('click', function(e){
+  if(e.target && (e.target.id === 'ctaRegister' || e.target.closest && e.target.closest('#ctaRegister') || e.target.closest && e.target.closest('[data-menu="register"]'))){
+    setTimeout(initExtraFieldToggles, 300);
+  }
+});
+
 function initFamilyFields(){
   var sel = document.getElementById('r_marital');
   if(sel && !sel.dataset.bound){
@@ -2072,13 +2460,92 @@ function initFamilyFields(){
     btn.addEventListener('click', function(){ addSpouseRow(); });
     btn.dataset.bound = '1';
   }
+  
+  // Health toggles - show details textarea when "yes" selected
+  var healthSelf = document.getElementById('r_health');
+  if(healthSelf && !healthSelf.dataset.bound){
+    healthSelf.addEventListener('change', function(){
+      var det = document.getElementById('r_health_details');
+      if(det) det.style.display = (healthSelf.value === 'yes') ? 'block' : 'none';
+    });
+    healthSelf.dataset.bound = '1';
+  }
+  
+  var healthSpouse = document.getElementById('r_spouse_health');
+  if(healthSpouse && !healthSpouse.dataset.bound){
+    healthSpouse.addEventListener('change', function(){
+      var det = document.getElementById('r_spouse_health_details');
+      if(det) det.style.display = (healthSpouse.value === 'yes') ? 'block' : 'none';
+    });
+    healthSpouse.dataset.bound = '1';
+  }
+  
+  var familyHealth = document.getElementById('r_family_health');
+  if(familyHealth && !familyHealth.dataset.bound){
+    familyHealth.addEventListener('change', function(){
+      var det = document.getElementById('r_family_health_details');
+      var needs = document.getElementById('r_needs_block');
+      if(det) det.style.display = (familyHealth.value === 'yes') ? 'block' : 'none';
+      if(needs) needs.style.display = (familyHealth.value === 'yes') ? 'block' : 'none';
+    });
+    familyHealth.dataset.bound = '1';
+  }
 }
+
+// ═══ Health field handlers ═══
+function initHealthFields(){
+  // Self health details
+  var healthSelf = document.getElementById('r_health_self');
+  if(healthSelf && !healthSelf.dataset.bound){
+    healthSelf.addEventListener('change', function(){
+      var block = document.getElementById('r_health_self_details_block');
+      if(block) block.style.display = (this.value && this.value !== 'healthy') ? 'block' : 'none';
+    });
+    healthSelf.dataset.bound = '1';
+  }
+  
+  // Spouse health details
+  var healthSp = document.getElementById('r_health_spouse');
+  if(healthSp && !healthSp.dataset.bound){
+    healthSp.addEventListener('change', function(){
+      var block = document.getElementById('r_health_spouse_details_block');
+      if(block) block.style.display = (this.value && this.value !== 'healthy') ? 'block' : 'none';
+    });
+    healthSp.dataset.bound = '1';
+  }
+  
+  // Family health checkbox
+  var famHealth = document.getElementById('r_family_health_yes');
+  if(famHealth && !famHealth.dataset.bound){
+    famHealth.addEventListener('change', function(){
+      var block = document.getElementById('r_family_health_details_block');
+      if(block) block.style.display = this.checked ? 'block' : 'none';
+    });
+    famHealth.dataset.bound = '1';
+  }
+}
+
+// Update marital change to show/hide spouse health
+var origUpdateFamilyBlockVis = updateFamilyBlockVisibility;
+updateFamilyBlockVisibility = function(){
+  origUpdateFamilyBlockVis();
+  // Show/hide spouse health based on marital
+  var marital = (document.getElementById('r_marital')||{}).value || '';
+  var spHealthBlock = document.getElementById('spouseHealthBlock');
+  if(spHealthBlock){
+    spHealthBlock.style.display = (marital && marital !== 'single') ? 'block' : 'none';
+  }
+};
 
 // Initialize on page load
 if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', initFamilyFields);
+  document.addEventListener('DOMContentLoaded', function(){
+    initFamilyFields();
+    initHealthFields();
+  });
 } else {
   initFamilyFields();
+  initHealthFields();
 }
 // Also initialize when reg modal opens
 document.addEventListener('click', function(e){
@@ -2089,9 +2556,12 @@ document.addEventListener('click', function(e){
 
 // Helper: get all family data
 function getFamilyData(){
-  var marital = (document.getElementById('r_marital') || {}).value || '';
-  var sons = parseInt((document.getElementById('r_sons_count') || {}).value || '0', 10) || 0;
-  var daughters = parseInt((document.getElementById('r_daughters_count') || {}).value || '0', 10) || 0;
+  var V = function(id){ return (document.getElementById(id) || {}).value || ''; };
+  var T = function(id){ return V(id).trim(); };
+  
+  var marital = V('r_marital');
+  var sons = parseInt(V('r_sons_count') || '0', 10) || 0;
+  var daughters = parseInt(V('r_daughters_count') || '0', 10) || 0;
   var spouses = [];
   document.querySelectorAll('#spousesContainer > div').forEach(function(row){
     var name = (row.querySelector('.spouse-name') || {}).value || '';
@@ -2102,7 +2572,33 @@ function getFamilyData(){
       spouses.push({name: name, id: id});
     }
   });
-  return { marital: marital, spouses: spouses, sonsUnder18: sons, daughtersUnder18: daughters };
+  
+  var healthSelf = V('r_health_self') || 'no';
+  var healthSpouse = V('r_health_spouse') || 'no';
+  var familyHealthSelect = V('r_family_health_select') || 'no';
+  
+  return {
+    marital: marital,
+    spouses: spouses,
+    sonsUnder18: sons,
+    daughtersUnder18: daughters,
+    health: {
+      self: healthSelf,
+      selfDetails: healthSelf === 'yes' ? T('r_health_self_details') : '',
+      spouse: healthSpouse,
+      spouseDetails: healthSpouse === 'yes' ? T('r_health_spouse_details') : '',
+      familyAffected: familyHealthSelect === 'yes',
+      familyDetails: familyHealthSelect === 'yes' ? T('r_family_health_details') : '',
+      familyNeeds: T('r_family_needs')
+    },
+    education: V('r_education'),
+    specialization: T('r_specialization'),
+    profession: T('r_profession'),
+    workStatus: V('r_work_status'),
+    country: V('r_country'),
+    city: T('r_city'),
+    neighborhood: T('r_neighborhood')
+  };
 }
 
 
@@ -2349,7 +2845,7 @@ function showCandDashboard(id){
         <div class="preview" id="candPhotoPreview">${cand && cand.photo && cand.photo.length > 100 ? `<img src="${cand.photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : escapeHtml((voter.name.trim().charAt(0)||'م'))}</div>
         <div class="meta">
           <div><b>الصورة الشخصية</b></div>
-          <div class="small">يُسمح برفع الصورة <b>مرّة واحدة فقط</b>. الحد الأقصى للحجم: <b>10 ميجابايت</b>.</div>
+          <div class="small">يُسمح برفع الصورة <b>مرّة واحدة فقط</b>. الحد الأقصى للحجم: <b>15 ميجابايت</b>.</div>
           ${photoLocked ? '<div class="alert success small" style="margin-top:6px">✓ الصورة الحالية مرفوعة. اضغط أدناه لتغييرها بصورة جديدة.</div>' : ''}
           <input type="file" id="candPhotoInput" accept="image/*" style="margin-top:8px;display:block"/>
           ${photoLocked ? '<div class="small muted" style="margin-top:4px">💡 ملاحظة: تغيير الصورة سيُسجَّل وستراجعه اللجنة.</div>' : ''}
@@ -2582,7 +3078,7 @@ function showCandDashboard(id){
     const inp = $('#candPhotoInput');
     if(inp) inp.addEventListener('change', async function(e){
       var f = e.target.files[0]; if(!f) return;
-      if(f.size > 10*1024*1024){ toast('حجم الصورة يجب ألا يتجاوز 10 ميجابايت','err'); inp.value=''; return; }
+      if(f.size > 15*1024*1024){ toast('حجم الصورة يجب ألا يتجاوز 15 ميجابايت','err'); inp.value=''; return; }
 
       console.log('[Photo] Uploaded:', f.name, 'Type:', f.type, 'Size:', f.size);
       toast('⏳ جاري معالجة الصورة...','');
@@ -2903,18 +3399,21 @@ function renderAdmin(){
     var actions;
     if(isApproved){
       actions = '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
+        '<button class="btn btn-ghost btn-sm" style="background:rgba(15,107,60,.15);color:var(--success)" onclick="window.printPersonReport(\''+v.id+'\')">🖨 طباعة</button>' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="' + v.id + '">✗ إلغاء الاعتماد</button>' +
         '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
         '</div>';
     } else if(isRejected){
       actions = '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(20,122,63,.15);color:var(--success);font-weight:700" data-verify-voter="' + v.id + '">✓ إعادة قبول</button>' +
+        '<button class="btn btn-ghost btn-sm" style="background:rgba(15,107,60,.15);color:var(--success)" onclick="window.printPersonReport(\''+v.id+'\')">🖨 طباعة</button>' +
         '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
         '</div>';
     } else {
       actions = '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(20,122,63,.15);color:var(--success);font-weight:700" data-verify-voter="' + v.id + '">✓ قبول</button>' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="' + v.id + '">✗ رفض</button>' +
+        '<button class="btn btn-ghost btn-sm" style="background:rgba(15,107,60,.15);color:var(--success)" onclick="window.printPersonReport(\''+v.id+'\')">🖨 طباعة</button>' +
         '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
         '</div>';
     }
@@ -3685,47 +4184,433 @@ function printReport(){
   var voters = (typeof getVoters === 'function') ? getVoters() : [];
   var stats = (typeof buildFamilyStats === 'function') ? buildFamilyStats() : {};
   
+  if(voters.length === 0){
+    toast('لا توجد بيانات لإنشاء التقرير', 'err');
+    return;
+  }
+  
   var w = window.open('', '_blank');
-  if(!w){ toast('يرجى السماح بفتح النوافذ المنبثقة', 'err'); return; }
+  if(!w){ toast('يرجى السماح بفتح النوافذ المنبثقة في المتصفح', 'err'); return; }
   
-  var html = '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تقرير الإحصاء</title>';
-  html += '<style>body{font-family:Cairo,Tajawal,Arial,sans-serif;padding:30px;color:#333} h1,h2{color:#8a6a1f} table{width:100%;border-collapse:collapse;margin:14px 0} th,td{border:1px solid #ddd;padding:8px;text-align:right} th{background:#f7f4ec} .stat{display:inline-block;margin:10px;padding:14px;background:#f7f4ec;border-radius:8px;min-width:140px;text-align:center} .stat .num{font-size:28px;font-weight:bold;color:#8a6a1f} .header{text-align:center;border-bottom:2px solid #8a6a1f;padding-bottom:14px;margin-bottom:20px} @media print{ .no-print{display:none} }</style>';
-  html += '</head><body>';
-  html += '<div class="header"><h1>منظومة الإحصاء المركزي - عائلة أبو طه 2026</h1><p>التقرير الإحصائي الشامل - '+new Date().toLocaleDateString('ar')+'</p></div>';
+  var maritalLabel = function(m, gender){
+    if(gender === 'female'){
+      return ({single:'عزباء',married:'متزوجة',polygamous:'-',divorced:'مطلقة',widowed:'أرملة'})[m] || '-';
+    }
+    return ({single:'أعزب',married:'متزوج',polygamous:'متعدد الزوجات',divorced:'مطلق',widowed:'أرمل'})[m] || '-';
+  };
   
+  var educationLabel = function(e){
+    return ({none:'لا يوجد',primary:'ابتدائي',preparatory:'إعدادي',secondary:'ثانوي/توجيهي',diploma:'دبلوم',bachelor:'بكالوريوس',master:'ماجستير',phd:'دكتوراه',religious:'شهادة دينية',other:'أخرى'})[e] || '-';
+  };
+  
+  var workLabel = function(w){
+    return ({employed:'موظف',self_employed:'عمل حر',business_owner:'صاحب عمل',unemployed:'لا يعمل',student:'طالب',retired:'متقاعد',housewife:'ربة منزل'})[w] || '-';
+  };
+  
+  var countryLabel = function(c){
+    return ({palestine:'🇵🇸 فلسطين',jordan:'🇯🇴 الأردن',saudi:'🇸🇦 السعودية',uae:'🇦🇪 الإمارات',egypt:'🇪🇬 مصر',kuwait:'🇰🇼 الكويت',qatar:'🇶🇦 قطر',lebanon:'🇱🇧 لبنان',syria:'🇸🇾 سوريا',turkey:'🇹🇷 تركيا',germany:'🇩🇪 ألمانيا',usa:'🇺🇸 أمريكا',canada:'🇨🇦 كندا',other:'دولة أخرى'})[c] || '-';
+  };
+  
+  var html = '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تقرير الإحصاء المركزي</title>';
+  html += '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">';
+  html += '<style>';
+  html += '@page{size:A4 portrait;margin:1.5cm}';
+  html += '*{box-sizing:border-box;margin:0;padding:0}';
+  html += 'body{font-family:Cairo,Tajawal,Arial,sans-serif;color:#333;font-size:11pt;line-height:1.6;background:white}';
+  html += '.page{max-width:21cm;margin:0 auto;padding:1cm}';
+  html += '@media print{.page{padding:0;max-width:none} .no-print{display:none !important} .page-break{page-break-after:always}}';
+  html += '.header{text-align:center;border-bottom:3px double #8a6a1f;padding-bottom:12px;margin-bottom:18px}';
+  html += '.header h1{color:#8a6a1f;font-size:20pt;font-weight:800;margin-bottom:4px}';
+  html += '.header .subtitle{color:#6b5638;font-size:11pt;margin-bottom:4px}';
+  html += '.header .date{color:#6b7280;font-size:9pt}';
+  html += 'h2{color:#8a6a1f;font-size:14pt;border-bottom:2px solid #8a6a1f;padding-bottom:4px;margin:18px 0 10px;font-weight:700}';
+  html += 'h3{color:#0f6b3c;font-size:12pt;margin:12px 0 6px;font-weight:700}';
+  html += '.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}';
+  html += '.stat{background:#f7f4ec;padding:10px;border-radius:6px;text-align:center;border:1px solid #e5e0d3}';
+  html += '.stat .num{font-size:18pt;font-weight:800;color:#8a6a1f;display:block}';
+  html += '.stat .lbl{font-size:9pt;color:#6b5638}';
+  html += 'table{width:100%;border-collapse:collapse;margin:8px 0;font-size:10pt}';
+  html += 'th{background:#8a6a1f;color:white;padding:6px;text-align:right;font-weight:700;border:1px solid #6b5638}';
+  html += 'td{border:1px solid #ddd;padding:5px 6px;text-align:right}';
+  html += 'tr:nth-child(even) td{background:#fafafa}';
+  html += '.footer{margin-top:30px;text-align:center;color:#888;font-size:9pt;border-top:1px solid #ddd;padding-top:10px}';
+  html += '.print-btn{padding:14px 28px;background:#8a6a1f;color:white;border:0;border-radius:8px;cursor:pointer;font-size:13pt;font-weight:700;font-family:Cairo;margin:20px auto;display:block}';
+  html += '.print-btn:hover{background:#6b5618}';
+  html += '</style></head><body><div class="page">';
+  
+  // Header
+  html += '<div class="header">';
+  html += '<h1>منظومة الإحصاء المركزي</h1>';
+  html += '<div class="subtitle">عائلة أبو طه - 2026</div>';
+  html += '<div class="subtitle"><b>التقرير الإحصائي الشامل</b></div>';
+  html += '<div class="date">تاريخ التقرير: ' + new Date().toLocaleDateString('ar-EG-u-nu-latn', {year:'numeric',month:'long',day:'numeric'}) + '</div>';
+  html += '</div>';
+  
+  // Summary stats
   html += '<h2>📊 الإحصائيات العامة</h2>';
-  html += '<div class="stat"><div class="num">'+(stats.totalVoters||0)+'</div><div>إجمالي المسجّلين</div></div>';
-  html += '<div class="stat"><div class="num">'+(stats.families||0)+'</div><div>إجمالي الأسر</div></div>';
-  html += '<div class="stat"><div class="num">'+(stats.totalSons||0)+'</div><div>ذكور دون 18</div></div>';
-  html += '<div class="stat"><div class="num">'+(stats.totalDaughters||0)+'</div><div>إناث دون 18</div></div>';
-  html += '<div class="stat"><div class="num">'+(stats.totalPopulation||0)+'</div><div>العدد الكلي</div></div>';
+  html += '<div class="stat-grid">';
+  html += '<div class="stat"><span class="num">'+(stats.totalVoters||voters.length)+'</span><span class="lbl">إجمالي المسجّلين</span></div>';
+  html += '<div class="stat"><span class="num">'+(stats.families||0)+'</span><span class="lbl">إجمالي الأسر</span></div>';
+  html += '<div class="stat"><span class="num">'+(stats.totalSons||0)+'</span><span class="lbl">ذكور دون 18</span></div>';
+  html += '<div class="stat"><span class="num">'+(stats.totalDaughters||0)+'</span><span class="lbl">إناث دون 18</span></div>';
+  html += '</div>';
   
-  html += '<h2>👨‍👩‍👧‍👦 توزيع الحالات الاجتماعية</h2>';
-  html += '<table><tr><th>الحالة</th><th>العدد</th></tr>';
-  html += '<tr><td>أعزب</td><td>'+(stats.single||0)+'</td></tr>';
-  html += '<tr><td>متزوج</td><td>'+(stats.married||0)+'</td></tr>';
-  html += '<tr><td>متعدد الزوجات</td><td>'+(stats.polygamous||0)+'</td></tr>';
-  html += '<tr><td>مطلق</td><td>'+(stats.divorced||0)+'</td></tr>';
-  html += '<tr><td>أرمل</td><td>'+(stats.widowed||0)+'</td></tr>';
-  html += '</table>';
+  // Population total
+  html += '<div style="background:#e8f5e9;padding:14px;border-radius:8px;text-align:center;margin:12px 0;border:2px solid #0f6b3c">';
+  html += '<div style="font-size:11pt;color:#147a3f">العدد الكلي للعائلة (بالغين + أبناء)</div>';
+  html += '<div style="font-size:24pt;font-weight:800;color:#0f6b3c">' + (stats.totalPopulation||0) + ' فرد</div>';
+  html += '</div>';
   
-  html += '<h2>📋 قائمة المسجّلين ('+voters.length+')</h2>';
-  html += '<table><tr><th>#</th><th>الاسم</th><th>رقم الهوية</th><th>الجنس</th><th>الحالة</th><th>الجوال</th></tr>';
-  voters.forEach(function(v, i){
-    var f = v.family || {};
-    var ml = ({single:'أعزب',married:'متزوج',polygamous:'متعدد',divorced:'مطلق',widowed:'أرمل'})[f.marital] || '-';
-    html += '<tr><td>'+(i+1)+'</td><td>'+escapeHtml(v.name||'-')+'</td><td>'+escapeHtml(v.id||'-')+'</td><td>'+(v.gender==='female'?'أنثى':'ذكر')+'</td><td>'+ml+'</td><td>'+escapeHtml(v.phone||'-')+'</td></tr>';
+  // Marital distribution
+  html += '<h2>👨‍👩‍👧 توزيع الحالة الاجتماعية</h2>';
+  html += '<table>';
+  html += '<tr><th>الحالة</th><th>العدد</th><th>النسبة</th></tr>';
+  var totalForPct = stats.totalVoters || voters.length || 1;
+  ['single','married','polygamous','divorced','widowed'].forEach(function(m){
+    var n = stats[m] || 0;
+    html += '<tr><td>'+maritalLabel(m,'male')+'</td><td>'+n+'</td><td>'+Math.round(n/totalForPct*100)+'%</td></tr>';
   });
   html += '</table>';
   
-  html += '<div style="margin-top:30px;text-align:center;color:#888;font-size:12px;border-top:1px solid #ddd;padding-top:14px">جميع الحقوق محفوظة لدى الموقع الرسمي لعائلة أبو طه © 2026</div>';
-  html += '<div class="no-print" style="margin-top:20px;text-align:center"><button onclick="window.print()" style="padding:10px 20px;background:#8a6a1f;color:white;border:0;border-radius:6px;cursor:pointer">🖨 طباعة التقرير</button></div>';
+  // Detailed list
+  html += '<div class="page-break"></div>';
+  html += '<h2>📋 قائمة تفصيلية بالمسجّلين ('+voters.length+')</h2>';
+  html += '<table>';
+  html += '<tr><th>#</th><th>الاسم الكامل</th><th>رقم الهوية</th><th>الجنس</th><th>الحالة</th><th>الجوال</th><th>الإقامة</th></tr>';
+  voters.forEach(function(v, i){
+    var f = v.family || {};
+    var country = f.country ? countryLabel(f.country).replace(/[🇵🇸🇯🇴🇸🇦🇦🇪🇪🇬🇰🇼🇶🇦🇱🇧🇸🇾🇹🇷🇩🇪🇺🇸🇨🇦]/g,'').trim() : '-';
+    html += '<tr>';
+    html += '<td>'+(i+1)+'</td>';
+    html += '<td>'+escapeHtml(v.name||'-')+'</td>';
+    html += '<td>'+escapeHtml(v.id||'-')+'</td>';
+    html += '<td>'+(v.gender==='female'?'أنثى':'ذكر')+'</td>';
+    html += '<td>'+maritalLabel(f.marital, v.gender)+'</td>';
+    html += '<td>'+escapeHtml(v.phone||'-')+'</td>';
+    html += '<td>'+country+'</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  
+  html += '<div class="footer">جميع الحقوق محفوظة لدى الموقع الرسمي لعائلة أبو طه © 2026</div>';
+  html += '<button class="print-btn no-print" onclick="window.print()">🖨 طباعة / حفظ PDF</button>';
+  html += '</div></body></html>';
+  
+  w.document.write(html);
+  w.document.close();
+  toast('✅ تم فتح التقرير - استخدم زر "طباعة / حفظ PDF" للحفظ بصيغة PDF', 'ok');
+}
+
+// ════════ INDIVIDUAL DETAILED REPORT ════════
+function printIndividualReport(voter){
+  if(!voter){ toast('لم يتم العثور على المسجَّل', 'err'); return; }
+  
+  var f = voter.family || {};
+  var h = f.health || {};
+  
+  var maritalLabel = function(m, gender){
+    if(gender === 'female'){
+      return ({single:'عزباء',married:'متزوجة',polygamous:'-',divorced:'مطلقة',widowed:'أرملة'})[m] || '-';
+    }
+    return ({single:'أعزب',married:'متزوج',polygamous:'متعدد الزوجات',divorced:'مطلق',widowed:'أرمل'})[m] || '-';
+  };
+  
+  var educationLabel = ({none:'لا يوجد',primary:'ابتدائي',preparatory:'إعدادي',secondary:'ثانوي/توجيهي',diploma:'دبلوم',bachelor:'بكالوريوس',master:'ماجستير',phd:'دكتوراه',religious:'شهادة دينية',other:'أخرى'})[f.education] || '—';
+  var workLabel = ({employed:'موظف',self_employed:'عمل حر',business_owner:'صاحب عمل/تجارة',unemployed:'لا يعمل حالياً',student:'طالب',retired:'متقاعد',housewife:'ربّة منزل'})[f.workStatus] || '—';
+  var countryLabel = ({palestine:'🇵🇸 فلسطين',jordan:'🇯🇴 الأردن',saudi:'🇸🇦 السعودية',uae:'🇦🇪 الإمارات',egypt:'🇪🇬 مصر',kuwait:'🇰🇼 الكويت',qatar:'🇶🇦 قطر',lebanon:'🇱🇧 لبنان',syria:'🇸🇾 سوريا',turkey:'🇹🇷 تركيا',germany:'🇩🇪 ألمانيا',usa:'🇺🇸 أمريكا',canada:'🇨🇦 كندا',other:'دولة أخرى'})[f.country] || '—';
+  
+  var totalFamily = 1 + (f.spouses||[]).length + (f.sonsUnder18||0) + (f.daughtersUnder18||0);
+  
+  var w = window.open('', '_blank');
+  if(!w){ toast('يرجى السماح بفتح النوافذ المنبثقة', 'err'); return; }
+  
+  var html = '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>بطاقة المسجَّل - ' + escapeHtml(voter.name) + '</title>';
+  html += '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">';
+  html += '<style>';
+  html += '@page{size:A4 portrait;margin:1.5cm}';
+  html += '*{box-sizing:border-box;margin:0;padding:0}';
+  html += 'body{font-family:Cairo,Tajawal,Arial,sans-serif;color:#333;font-size:11pt;line-height:1.7;background:white}';
+  html += '.page{max-width:21cm;margin:0 auto;padding:1cm}';
+  html += '@media print{.page{padding:0;max-width:none} .no-print{display:none !important}}';
+  html += '.header{text-align:center;border-bottom:3px double #8a6a1f;padding-bottom:14px;margin-bottom:20px}';
+  html += '.header h1{color:#8a6a1f;font-size:18pt;font-weight:800;margin-bottom:4px}';
+  html += '.header .sub{color:#6b5638;font-size:11pt}';
+  html += '.section{margin:18px 0;padding:14px;background:#fbfaf6;border-radius:8px;border-right:4px solid #8a6a1f;page-break-inside:avoid}';
+  html += '.section h2{color:#8a6a1f;font-size:13pt;margin-bottom:10px;font-weight:700;border-bottom:1px dashed #8a6a1f;padding-bottom:4px}';
+  html += '.field{display:flex;padding:5px 0;border-bottom:1px dotted #ddd}';
+  html += '.field:last-child{border-bottom:0}';
+  html += '.label{flex:0 0 38%;font-weight:600;color:#6b5638}';
+  html += '.value{flex:1;color:#333}';
+  html += '.value.empty{color:#aaa;font-style:italic}';
+  html += '.alert{background:#fef3c7;border:2px solid #f59e0b;padding:10px;border-radius:6px;margin:8px 0;color:#92400e}';
+  html += '.success-box{background:#d1fae5;border:2px solid #0f6b3c;padding:10px;border-radius:6px;margin:8px 0;color:#065f46;text-align:center;font-weight:700}';
+  html += '.footer{margin-top:30px;text-align:center;color:#888;font-size:9pt;border-top:1px solid #ddd;padding-top:10px}';
+  html += '.print-btn{padding:14px 28px;background:#8a6a1f;color:white;border:0;border-radius:8px;cursor:pointer;font-size:13pt;font-weight:700;font-family:Cairo;margin:20px auto;display:block}';
+  html += '.spouses-list{margin-top:6px}';
+  html += '.spouse-item{background:white;padding:6px 10px;margin:4px 0;border-radius:4px;border:1px solid #ddd}';
+  html += '</style></head><body><div class="page">';
+  
+  // Header
+  html += '<div class="header">';
+  html += '<h1>منظومة الإحصاء المركزي - عائلة أبو طه 2026</h1>';
+  html += '<div class="sub">بطاقة بيانات تفصيلية للمسجَّل</div>';
+  html += '</div>';
+  
+  // Personal info
+  html += '<div class="section">';
+  html += '<h2>👤 البيانات الشخصية</h2>';
+  html += '<div class="field"><div class="label">الاسم الكامل:</div><div class="value">'+escapeHtml(voter.name||'')+'</div></div>';
+  html += '<div class="field"><div class="label">رقم الهوية:</div><div class="value">'+escapeHtml(voter.id||'')+'</div></div>';
+  html += '<div class="field"><div class="label">سنة إصدار الهوية:</div><div class="value">'+escapeHtml(voter.idIssueYear||'-')+'</div></div>';
+  html += '<div class="field"><div class="label">الجنس:</div><div class="value">'+(voter.gender==='female'?'أنثى':'ذكر')+'</div></div>';
+  html += '<div class="field"><div class="label">رقم الجوال:</div><div class="value '+(!voter.phone?'empty':'')+'">'+escapeHtml(voter.phone||'لم يُحدّد')+'</div></div>';
+  html += '<div class="field"><div class="label">حالة الاعتماد:</div><div class="value"><b style="color:'+(voter.approved?'#0f6b3c':'#92400e')+'">'+(voter.approved?'✓ معتمد':'⏳ قيد المراجعة')+'</b></div></div>';
+  html += '</div>';
+  
+  // Residence
+  html += '<div class="section">';
+  html += '<h2>📍 مكان الإقامة</h2>';
+  html += '<div class="field"><div class="label">الدولة:</div><div class="value '+(!f.country?'empty':'')+'">'+(countryLabel||'لم يُحدّد')+'</div></div>';
+  html += '<div class="field"><div class="label">المدينة / المحافظة:</div><div class="value '+(!f.city?'empty':'')+'">'+escapeHtml(f.city||'لم يُحدّد')+'</div></div>';
+  html += '<div class="field"><div class="label">الحي / المنطقة:</div><div class="value '+(!f.neighborhood?'empty':'')+'">'+escapeHtml(f.neighborhood||'لم يُحدّد')+'</div></div>';
+  html += '</div>';
+  
+  // Family
+  html += '<div class="section">';
+  html += '<h2>👨‍👩‍👧‍👦 بيانات الأسرة</h2>';
+  html += '<div class="field"><div class="label">الحالة الاجتماعية:</div><div class="value">'+maritalLabel(f.marital, voter.gender)+'</div></div>';
+  
+  if(f.spouses && f.spouses.length > 0){
+    var spLabel = voter.gender === 'female' ? 'الزوج' : 'الزوجة';
+    html += '<div class="field"><div class="label">'+spLabel+(f.spouses.length>1?'/الزوجات':'')+':</div><div class="value"><div class="spouses-list">';
+    f.spouses.forEach(function(sp, idx){
+      html += '<div class="spouse-item"><b>'+escapeHtml(sp.name||'-')+'</b>'+(sp.id?' — رقم الهوية: '+escapeHtml(sp.id):'')+'</div>';
+    });
+    html += '</div></div></div>';
+  }
+  
+  html += '<div class="field"><div class="label">الأبناء الذكور (دون 18):</div><div class="value">'+(f.sonsUnder18||0)+'</div></div>';
+  html += '<div class="field"><div class="label">البنات (دون 18):</div><div class="value">'+(f.daughtersUnder18||0)+'</div></div>';
+  html += '<div class="field"><div class="label">عدد أفراد الأسرة الكلي:</div><div class="value"><b>'+totalFamily+' فرد</b></div></div>';
+  html += '</div>';
+  
+  // Education & Work
+  html += '<div class="section">';
+  html += '<h2>🎓 التعليم والمهنة</h2>';
+  html += '<div class="field"><div class="label">المؤهل العلمي:</div><div class="value">'+educationLabel+'</div></div>';
+  if(f.specialization){
+    html += '<div class="field"><div class="label">التخصص:</div><div class="value">'+escapeHtml(f.specialization)+'</div></div>';
+  }
+  html += '<div class="field"><div class="label">الحالة الوظيفية:</div><div class="value">'+workLabel+'</div></div>';
+  if(f.profession){
+    html += '<div class="field"><div class="label">المهنة:</div><div class="value">'+escapeHtml(f.profession)+'</div></div>';
+  }
+  html += '</div>';
+  
+  // Health
+  html += '<div class="section">';
+  html += '<h2>🏥 الحالة الصحية والاحتياجات</h2>';
+  if(h.self === 'yes'){
+    html += '<div class="alert"><b>الحالة الصحية للمسجَّل:</b> '+escapeHtml(h.selfDetails||'غير محددة')+'</div>';
+  } else {
+    html += '<div class="success-box">✓ المسجَّل بصحة جيدة</div>';
+  }
+  if((f.marital === 'married' || f.marital === 'polygamous') && h.spouse === 'yes'){
+    var spLabel2 = voter.gender === 'female' ? 'الزوج' : 'الزوجة';
+    html += '<div class="alert"><b>الحالة الصحية لـ'+spLabel2+':</b> '+escapeHtml(h.spouseDetails||'غير محددة')+'</div>';
+  }
+  if(h.familyAffected){
+    html += '<div class="alert"><b>أحد أفراد الأسرة لديه حالة صحية:</b> '+escapeHtml(h.familyDetails||'غير محددة')+'</div>';
+  }
+  if(h.familyNeeds && h.familyNeeds.trim()){
+    html += '<div style="background:#dbeafe;border:2px solid #1e40af;padding:10px;border-radius:6px;margin:8px 0;color:#1e3a8a"><b>الاحتياجات الخاصة:</b> '+escapeHtml(h.familyNeeds)+'</div>';
+  }
+  if(h.self !== 'yes' && h.spouse !== 'yes' && !h.familyAffected && !(h.familyNeeds && h.familyNeeds.trim())){
+    html += '<p style="color:#0f6b3c;text-align:center;margin-top:8px">✓ الأسرة بصحة جيدة، لا توجد احتياجات صحية خاصة</p>';
+  }
+  html += '</div>';
+  
+  // Footer
+  html += '<div class="footer">';
+  html += 'تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-EG-u-nu-latn',{year:'numeric',month:'long',day:'numeric'});
+  html += '<br>جميع الحقوق محفوظة لدى الموقع الرسمي لعائلة أبو طه © 2026';
+  html += '</div>';
+  
+  html += '<button class="print-btn no-print" onclick="window.print()">🖨 طباعة / حفظ PDF</button>';
+  html += '</div></body></html>';
+  
+  w.document.write(html);
+  w.document.close();
+  toast('✅ تم فتح بطاقة المسجَّل', 'ok');
+}
+
+// Wrapper to find voter by ID and call individual report
+function generateIndividualReport(){
+  var idEl = document.getElementById('indReportId');
+  if(!idEl) return;
+  var id = normalizeDigits((idEl.value||'').trim());
+  if(!/^\d{9}$/.test(id)){
+    toast('رقم الهوية يجب أن يكون 9 أرقام', 'err');
+    return;
+  }
+  var voters = (typeof getVoters === 'function') ? getVoters() : [];
+  var v = voters.find(function(x){ return x.id === id; });
+  if(!v){
+    toast('لم يتم العثور على مسجَّل بهذا الرقم', 'err');
+    return;
+  }
+  printIndividualReport(v);
+}
+
+
+
+// ════════ Per-Person Detailed Report ════════
+function printPersonReport(voterId){
+  var voters = (typeof getVoters === 'function') ? getVoters() : [];
+  var v = voters.find(function(x){return x.id === voterId;});
+  if(!v){ toast('لم يتم العثور على المسجّل','err'); return; }
+  
+  var f = v.family || {};
+  var h = f.health || {};
+  
+  var w = window.open('', '_blank');
+  if(!w){ toast('يرجى السماح بفتح النوافذ المنبثقة', 'err'); return; }
+  
+  var eduLabels = {primary:'ابتدائي',middle:'إعدادي',secondary:'ثانوي / توجيهي',diploma:'دبلوم متوسط',bachelor:'بكالوريوس',master:'ماجستير',phd:'دكتوراه',other:'أخرى',none:'لم يتلقَّ تعليماً'};
+  var workLabels = {employed:'موظف',freelance:'عمل حر',business:'صاحب عمل',unemployed:'لا يعمل',student:'طالب',retired:'متقاعد',housewife:'ربة منزل'};
+  var maritalLabels = {single:'أعزب',married:'متزوج',polygamous:'متعدد الزوجات',divorced:'مطلق',widowed:'أرمل'};
+  if(v.gender === 'female'){
+    maritalLabels = {single:'عزباء',married:'متزوجة',divorced:'مطلقة',widowed:'أرملة',polygamous:'-'};
+  }
+  
+  var spouseLabel = v.gender === 'female' ? 'الزوج' : 'الزوجة';
+  var totalFamily = 1 + (f.spouses||[]).length + (f.sonsUnder18||0) + (f.daughtersUnder18||0);
+  
+  var html = '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>سجل '+escapeHtml(v.name)+'</title>';
+  html += '<style>';
+  html += '@page { size: A4; margin: 1.5cm 1.2cm; }';
+  html += '@media print { .no-print { display: none !important } body { -webkit-print-color-adjust: exact; print-color-adjust: exact } }';
+  html += 'body { font-family: "Cairo","Tajawal","Arial",sans-serif; color: #333; line-height: 1.7; max-width: 18cm; margin: 0 auto; padding: 0; }';
+  html += '.cover { text-align: center; padding: 30px 0 20px; border-bottom: 3px solid #8a6a1f; margin-bottom: 25px; }';
+  html += '.cover .title { color: #8a6a1f; font-size: 22px; font-weight: 800; margin-bottom: 4px; }';
+  html += '.cover .subtitle { color: #0f6b3c; font-size: 16px; }';
+  html += '.cover .meta { color: #6b7280; font-size: 11px; margin-top: 8px; }';
+  html += '.section { margin: 18px 0; padding: 14px; background: #f7f4ec; border-radius: 8px; border-right: 4px solid #8a6a1f; page-break-inside: avoid; }';
+  html += '.section h2 { color: #8a6a1f; font-size: 16px; margin: 0 0 10px; font-weight: 700; }';
+  html += '.row { display: flex; padding: 5px 0; border-bottom: 1px dashed #e5e0d3; font-size: 13px; }';
+  html += '.row:last-child { border-bottom: 0; }';
+  html += '.row .label { font-weight: 700; color: #555; min-width: 130px; }';
+  html += '.row .value { flex: 1; color: #222; }';
+  html += '.badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }';
+  html += '.badge-ok { background: #dcfce7; color: #166534; }';
+  html += '.badge-warn { background: #fef3c7; color: #92400e; }';
+  html += '.spouse-card { background: white; padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid #e5e0d3; }';
+  html += '.summary-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }';
+  html += '.stat { text-align: center; padding: 10px 6px; background: white; border-radius: 6px; border: 1px solid #e5e0d3; }';
+  html += '.stat .num { font-size: 18px; font-weight: 800; color: #8a6a1f; }';
+  html += '.stat .label { font-size: 10px; color: #6b7280; }';
+  html += '.toolbar { position: fixed; top: 10px; left: 10px; background: white; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.1); z-index: 9999; }';
+  html += '.toolbar button { background: #8a6a1f; color: white; border: 0; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: inherit; margin-left: 5px; }';
+  html += '.footer-page { text-align: center; color: #999; font-size: 10px; margin-top: 25px; padding-top: 10px; border-top: 1px solid #e5e0d3; }';
+  html += '</style></head><body>';
+  
+  // Toolbar
+  html += '<div class="toolbar no-print">';
+  html += '<button onclick="window.print()">🖨 طباعة / حفظ PDF</button>';
+  html += '<button onclick="window.close()" style="background:#6b7280">✕ إغلاق</button>';
+  html += '</div>';
+  
+  // Cover
+  html += '<div class="cover">';
+  html += '<div class="title">السجل الإحصائي الشامل</div>';
+  html += '<div class="subtitle">'+escapeHtml(v.name)+'</div>';
+  html += '<div class="meta">رقم الهوية: '+escapeHtml(v.id||'-')+' • '+new Date().toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'})+'</div>';
+  html += '</div>';
+  
+  // Personal info
+  html += '<div class="section">';
+  html += '<h2>👤 البيانات الشخصية</h2>';
+  html += '<div class="row"><div class="label">الاسم الكامل:</div><div class="value">'+escapeHtml(v.name||'-')+'</div></div>';
+  html += '<div class="row"><div class="label">رقم الهوية:</div><div class="value">'+escapeHtml(v.id||'-')+'</div></div>';
+  html += '<div class="row"><div class="label">سنة الإصدار:</div><div class="value">'+escapeHtml(v.issueYear||v.idIssueYear||'-')+'</div></div>';
+  html += '<div class="row"><div class="label">الجنس:</div><div class="value">'+(v.gender==='female'?'أنثى':'ذكر')+'</div></div>';
+  if(v.dob) html += '<div class="row"><div class="label">تاريخ الميلاد:</div><div class="value">'+escapeHtml(v.dob)+'</div></div>';
+  html += '<div class="row"><div class="label">رقم الجوال:</div><div class="value">'+escapeHtml(v.phone||'-')+'</div></div>';
+  html += '<div class="row"><div class="label">الحالة الاجتماعية:</div><div class="value">'+(maritalLabels[f.marital]||'غير محدد')+'</div></div>';
+  html += '<div class="row"><div class="label">حالة الاعتماد:</div><div class="value">'+(v.approved ? '<span class="badge badge-ok">معتمد</span>' : '<span class="badge badge-warn">قيد المراجعة</span>')+'</div></div>';
+  html += '</div>';
+  
+  // Address
+  html += '<div class="section">';
+  html += '<h2>📍 مكان الإقامة</h2>';
+  var locType = ({pal:'الضفة الغربية / غزة','48':'أراضي 48',ab:'خارج فلسطين'})[v.locType] || '-';
+  html += '<div class="row"><div class="label">المنطقة:</div><div class="value">'+locType+'</div></div>';
+  if(v.gov) html += '<div class="row"><div class="label">المحافظة:</div><div class="value">'+escapeHtml(v.gov)+'</div></div>';
+  if(v.country) html += '<div class="row"><div class="label">الدولة:</div><div class="value">'+escapeHtml(v.country)+'</div></div>';
+  if(v.city || v.city48) html += '<div class="row"><div class="label">المدينة / البلدة:</div><div class="value">'+escapeHtml(v.city||v.city48||'-')+'</div></div>';
+  html += '</div>';
+  
+  // Education & Profession
+  html += '<div class="section">';
+  html += '<h2>🎓 المؤهل والمهنة</h2>';
+  html += '<div class="row"><div class="label">المؤهل العلمي:</div><div class="value">'+(eduLabels[f.education]||'غير محدد')+'</div></div>';
+  html += '<div class="row"><div class="label">حالة العمل:</div><div class="value">'+(workLabels[f.workStatus]||'غير محدد')+'</div></div>';
+  html += '<div class="row"><div class="label">المهنة:</div><div class="value">'+escapeHtml(f.profession||'-')+'</div></div>';
+  html += '</div>';
+  
+  // Family info
+  if(f.marital && f.marital !== 'single'){
+    html += '<div class="section">';
+    html += '<h2>👨‍👩‍👧 بيانات الأسرة</h2>';
+    
+    if(f.spouses && f.spouses.length > 0){
+      f.spouses.forEach(function(sp, idx){
+        html += '<div class="spouse-card">';
+        html += '<b style="color:#8a6a1f;font-size:13px">'+spouseLabel+(f.spouses.length>1?' #'+(idx+1):'')+'</b>';
+        html += '<div class="row"><div class="label">الاسم:</div><div class="value">'+escapeHtml(sp.name||'-')+'</div></div>';
+        html += '<div class="row"><div class="label">رقم الهوية:</div><div class="value">'+escapeHtml(sp.id||'-')+'</div></div>';
+        html += '</div>';
+      });
+    }
+    
+    html += '<div class="summary-stats">';
+    html += '<div class="stat"><div class="num">1</div><div class="label">المسجَّل</div></div>';
+    html += '<div class="stat"><div class="num">'+(f.spouses||[]).length+'</div><div class="label">'+spouseLabel+'</div></div>';
+    html += '<div class="stat"><div class="num">'+(f.sonsUnder18||0)+'</div><div class="label">ذكور دون 18</div></div>';
+    html += '<div class="stat"><div class="num">'+(f.daughtersUnder18||0)+'</div><div class="label">إناث دون 18</div></div>';
+    html += '</div>';
+    
+    html += '<div class="row" style="margin-top:10px;background:#dcfce7;padding:8px;border-radius:6px"><div class="label">إجمالي أفراد الأسرة:</div><div class="value"><b>'+totalFamily+' فرد</b></div></div>';
+    html += '</div>';
+  }
+  
+  // Health info
+  html += '<div class="section">';
+  html += '<h2>🩺 الحالة الصحية</h2>';
+  html += '<div class="row"><div class="label">صحة المسجَّل:</div><div class="value">'+(h.self==='yes' ? '<span class="badge badge-warn">⚠️ يوجد حالة صحية</span>' : '<span class="badge badge-ok">✓ بصحة جيدة</span>')+'</div></div>';
+  if(h.self === 'yes' && h.selfDetails) html += '<div class="row"><div class="label">التفاصيل:</div><div class="value">'+escapeHtml(h.selfDetails)+'</div></div>';
+  
+  if(f.marital && f.marital !== 'single'){
+    html += '<div class="row"><div class="label">صحة '+spouseLabel+':</div><div class="value">'+(h.spouse==='yes' ? '<span class="badge badge-warn">⚠️ يوجد حالة صحية</span>' : '<span class="badge badge-ok">✓ بصحة جيدة</span>')+'</div></div>';
+    if(h.spouse === 'yes' && h.spouseDetails) html += '<div class="row"><div class="label">التفاصيل:</div><div class="value">'+escapeHtml(h.spouseDetails)+'</div></div>';
+  }
+  
+  html += '<div class="row"><div class="label">حالات في الأسرة:</div><div class="value">'+(h.familyAffected ? '<span class="badge badge-warn">⚠️ نعم</span>' : '<span class="badge badge-ok">✓ لا توجد</span>')+'</div></div>';
+  if(h.familyAffected && h.familyDetails) html += '<div class="row"><div class="label">تفاصيل الحالات:</div><div class="value">'+escapeHtml(h.familyDetails)+'</div></div>';
+  if(h.familyNeeds) html += '<div class="row"><div class="label">الاحتياجات:</div><div class="value">'+escapeHtml(h.familyNeeds)+'</div></div>';
+  html += '</div>';
+  
+  html += '<div class="footer-page">جميع الحقوق محفوظة لدى الموقع الرسمي لعائلة أبو طه © 2026</div>';
   html += '</body></html>';
   
   w.document.write(html);
   w.document.close();
-  toast('✅ تم فتح التقرير في نافذة جديدة', 'ok');
+  toast('✅ تم فتح السجل - اضغط طباعة لحفظه PDF', 'ok');
 }
+
+// Make accessible globally
+window.printPersonReport = printPersonReport;
+
 
 // ════════ Wire all dashboard handlers ════════
 function initCensusDashboard(){
@@ -3767,6 +4652,12 @@ function initCensusDashboard(){
   if(btnPrint && !btnPrint.dataset.bound){
     btnPrint.addEventListener('click', printReport);
     btnPrint.dataset.bound = '1';
+  }
+  
+  var btnIndReport = document.getElementById('btnIndReport');
+  if(btnIndReport && !btnIndReport.dataset.bound){
+    btnIndReport.addEventListener('click', generateIndividualReport);
+    btnIndReport.dataset.bound = '1';
   }
 }
 
@@ -4391,7 +5282,7 @@ async function compressImage(file, maxWidth, quality){
 
 window.handleVoterIDImg = async function(inp){
   const f = inp.files[0]; if(!f) return;
-  if(f.size > 20*1024*1024){ toast('الصورة أكبر من 20 ميجابايت','err'); inp.value=''; return; }
+  if(f.size > 15*1024*1024){ toast('الصورة أكبر من 15 ميجابايت','err'); inp.value=''; return; }
 
   // Show progress UI
   const warn = document.getElementById('r_upload_warning');
