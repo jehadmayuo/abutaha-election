@@ -4459,6 +4459,373 @@ html.dark .modal-head {
     transition: font-weight 200ms ease, color 200ms ease;
   }
 }
+
+
+/* ════════════════════════════════════════════════════════
+   WELCOME POPUP — Glass effect with backdrop blur
+════════════════════════════════════════════════════════ */
+.welcome-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 12, 0.35);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  backdrop-filter: blur(8px) saturate(1.1);
+  z-index: 9998;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms cubic-bezier(.32,.72,0,1),
+              backdrop-filter 320ms ease;
+}
+
+.welcome-popup-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.welcome-popup {
+  width: 100%;
+  max-width: 680px;
+  max-height: 88vh;
+  background: rgba(255, 252, 245, 0.88);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  border-radius: 28px 28px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-bottom: none;
+  box-shadow: 
+    0 -16px 60px rgba(0, 0, 0, 0.18),
+    0 -2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 1px rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(20px);
+  transition: transform 420ms cubic-bezier(.32,.72,0,1);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.welcome-popup-backdrop.show .welcome-popup {
+  transform: translateY(0);
+}
+
+/* Desktop: centered with margins */
+@media (min-width: 768px) {
+  .welcome-popup-backdrop {
+    align-items: center;
+    padding: 24px;
+  }
+  .welcome-popup {
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    max-height: 86vh;
+  }
+}
+
+/* Drag handle (mobile visual cue) */
+.wp-handle {
+  width: 48px;
+  height: 5px;
+  background: rgba(154, 125, 26, 0.35);
+  border-radius: 999px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+@media (min-width: 768px) {
+  .wp-handle { display: none; }
+}
+
+/* Header */
+.wp-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px 16px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  flex-shrink: 0;
+}
+
+.wp-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.20), rgba(212,175,55,0.08));
+  border: 1px solid rgba(212,175,55,0.30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9A7D1A;
+  flex-shrink: 0;
+}
+.wp-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.wp-title {
+  font-family: 'Cairo', sans-serif;
+  font-size: 19px;
+  font-weight: 900;
+  color: #1A1A1A;
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+}
+
+@media (min-width: 768px) {
+  .wp-title {
+    font-size: 22px;
+  }
+}
+
+/* Body (scrollable) */
+.wp-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212,175,55,0.25) transparent;
+}
+.wp-body::-webkit-scrollbar {
+  width: 6px;
+}
+.wp-body::-webkit-scrollbar-thumb {
+  background: rgba(212,175,55,0.30);
+  border-radius: 999px;
+}
+
+.wp-greeting {
+  font-family: 'Cairo', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A1A;
+  margin: 0 0 12px;
+}
+
+.wp-paragraph {
+  font-family: 'Cairo', sans-serif;
+  font-size: 14.5px;
+  font-weight: 400;
+  color: #2A2A2A;
+  line-height: 1.85;
+  margin: 0 0 16px;
+}
+
+/* Highlighted callout (18+ age warning) */
+.wp-callout {
+  display: flex;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.10), rgba(212,175,55,0.04));
+  border: 1px solid rgba(212,175,55,0.30);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin: 16px 0;
+}
+.wp-callout-icon {
+  width: 22px;
+  height: 22px;
+  color: #9A7D1A;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.wp-callout p {
+  font-family: 'Cairo', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1A1A1A;
+  line-height: 1.7;
+  margin: 0;
+}
+.wp-callout strong {
+  color: #9A7D1A;
+  font-weight: 800;
+}
+
+/* Subtitle for the checklist */
+.wp-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1A1A1A;
+  margin: 20px 0 12px;
+}
+.wp-subtitle svg {
+  width: 20px;
+  height: 20px;
+  color: #D4AF37;
+  flex-shrink: 0;
+}
+
+/* Checklist items */
+.wp-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wp-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(212,175,55,0.18);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2A2A2A;
+  line-height: 1.7;
+}
+
+.wp-checklist li strong {
+  color: #9A7D1A;
+  font-weight: 800;
+}
+
+.wp-num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E8C868, #D4AF37);
+  color: #FFFFFF;
+  font-family: 'Cairo', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(212,175,55,0.35);
+}
+
+/* Tip box */
+.wp-tip {
+  display: flex;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px dashed rgba(212,175,55,0.40);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 16px;
+}
+.wp-tip svg {
+  width: 22px;
+  height: 22px;
+  color: #D4AF37;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.wp-tip p {
+  font-family: 'Cairo', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #2A2A2A;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Footer */
+.wp-footer {
+  flex-shrink: 0;
+  background: rgba(245, 240, 224, 0.65);
+  border-top: 1px solid rgba(212,175,55,0.20);
+  padding: 14px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wp-dont-show {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: 'Cairo', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B6B6B;
+  user-select: none;
+}
+.wp-dont-show input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #D4AF37;
+  cursor: pointer;
+}
+
+.wp-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.wp-btn {
+  font-family: 'Cairo', sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 12px 22px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  -webkit-tap-highlight-color: transparent;
+  transition: 
+    background 200ms ease,
+    box-shadow 200ms ease,
+    transform 120ms cubic-bezier(.32,.72,0,1);
+}
+.wp-btn:active {
+  transform: scale(0.96);
+}
+
+.wp-btn-secondary {
+  background: rgba(255,255,255,0.7);
+  color: #6B6B6B;
+  border: 1px solid rgba(0,0,0,0.10);
+}
+.wp-btn-secondary:hover {
+  background: rgba(255,255,255,0.9);
+  color: #1A1A1A;
+}
+
+.wp-btn-primary {
+  background: linear-gradient(135deg, #E5C158 0%, #D4AF37 50%, #B8941F 100%);
+  color: #1A1A1A;
+  box-shadow: 
+    0 4px 14px rgba(212,175,55,0.40),
+    inset 0 1px 1px rgba(255,255,255,0.4);
+}
+.wp-btn-primary:hover {
+  box-shadow: 
+    0 6px 20px rgba(212,175,55,0.50),
+    inset 0 1px 1px rgba(255,255,255,0.5);
+}
+.wp-btn-primary svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .welcome-popup-backdrop,
+  .welcome-popup {
+    transition-duration: 0.01ms !important;
+  }
+}
 </style>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5219,6 +5586,7 @@ document.addEventListener('DOMContentLoaded', function(){
               JSON
             </button>
             <button class="btn btn-ghost btn-sm" id="btnPrintReport" type="button">طباعة كامل</button>
+            <button class="btn btn-ghost btn-sm" onclick="showFilteredPrintPicker()" type="button" style="background:rgba(212,175,55,.12);color:var(--primary-dark)">🎯 طباعة مفلترة</button>
             <button class="btn btn-ghost btn-sm" onclick="printGeoReport()" type="button">🌍 جغرافي</button>
             <button class="btn btn-ghost btn-sm" onclick="printNeedsReport()" type="button">📋 احتياجات</button>
           </div>
@@ -5761,6 +6129,10 @@ document.addEventListener('DOMContentLoaded', function(){
             <label>المدينة / البلدة</label>
             <input type="text" id="r_city" class="input" placeholder="اكتب اسم المدينة" />
           </div>
+          <div class="field hidden" id="f-district">
+            <label>الحي / المنطقة</label>
+            <input type="text" id="r_district" class="input" placeholder="اكتب اسم الحي أو المنطقة" />
+          </div>
         </div>
 
         <!-- ═══ CONTACT ═══ -->
@@ -5941,20 +6313,28 @@ document.addEventListener('DOMContentLoaded', function(){
               ➕ إضافة زوجة أخرى
             </button>
 
-            <!-- Children counts -->
+            <!-- Detailed Children System -->
             <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
-              <h5 style="margin:0 0 10px;color:var(--primary);font-size:14px">👶 عدد أفراد الأسرة دون 18 سنة</h5>
-              <div class="field" style="margin-bottom:10px">
-                <label>عدد الذكور</label>
-                <input type="number" id="r_sons_count" class="input" min="0" max="20" placeholder="0" value="0" />
+              <h5 style="margin:0 0 4px;color:var(--primary);font-size:14px">👶 بيانات الأبناء</h5>
+              <div class="hint" style="margin:0 0 12px;color:var(--text-muted);font-size:12px">
+                أضف بيانات كل ابن/ابنة. من بلغ 16 عاماً فأكثر يُدخل رقم الهوية، ومن هم دون ذلك يُدخل رقم شهادة الميلاد.
               </div>
-              <div class="field" style="margin:0">
-                <label>عدد الإناث</label>
-                <input type="number" id="r_daughters_count" class="input" min="0" max="20" placeholder="0" value="0" />
+
+              <!-- Dynamic children list -->
+              <div id="childrenContainer">
+                <!-- Child rows added dynamically -->
               </div>
+
+              <button type="button" id="btnAddChild" class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%">
+                ➕ إضافة ابن / ابنة
+              </button>
+
+              <!-- Hidden counts (auto-calculated for compatibility) -->
+              <input type="hidden" id="r_sons_count" value="0" />
+              <input type="hidden" id="r_daughters_count" value="0" />
             </div>
             <div class="hint" style="margin-top:8px;color:var(--text-muted)">
-              💡 ملاحظة: لتجنب احتساب الأبناء مرتين، يكفي أن يدخل أحد الزوجين هذه البيانات.
+              💡 ملاحظة: لتجنب احتساب الأبناء مرتين، يكفي أن يدخل أحد الزوجين بيانات الأبناء.
             </div>
           </div>
         </div>
@@ -7050,7 +7430,22 @@ function populateEditForm(voter){
       });
     }
     if(f.sonsUnder18 || f.daughtersUnder18){
-      html += '<b>الأبناء دون 18:</b><span>' + (f.sonsUnder18||0) + ' ذكور، ' + (f.daughtersUnder18||0) + ' إناث</span>';
+      html += '<b>الأبناء دون 16:</b><span>' + (f.sonsUnder18||0) + ' ذكور، ' + (f.daughtersUnder18||0) + ' إناث</span>';
+    }
+    // Detailed children list
+    if(f.children && f.children.length){
+      html += '<b>تفاصيل الأبناء:</b><span style="display:block;margin-top:4px">';
+      f.children.forEach(function(ch, i){
+        var genderIcon = ch.gender === 'female' ? '👧' : '👦';
+        var idTypeLabel = ch.idType === 'national_id' ? 'هوية' : 'شهادة ميلاد';
+        var ageStr = (ch.age !== null && ch.age !== undefined) ? (ch.age + ' سنة') : '';
+        html += '<div style="padding:4px 0;border-bottom:1px solid var(--border)">' +
+          genderIcon + ' ' + escapeHtml(ch.name || 'بدون اسم') +
+          (ageStr ? ' — ' + ageStr : '') +
+          (ch.idNumber ? ' — ' + idTypeLabel + ': ' + escapeHtml(ch.idNumber) : '') +
+          '</div>';
+      });
+      html += '</span>';
     }
     
     // Education & Profession
@@ -7288,7 +7683,7 @@ var _ctaCon = document.getElementById('ctaContact'); if(_ctaCon) _ctaCon.addEven
 function openRegister(){
   if(!isActive('reg')){ toast('مرحلة التسجيل غير مفعّلة حالياً','err'); return; }
   // Reset all input fields
-  ['r_id','r_issue','r_name','r_phone_pal','r_phone_free','r_phone_alt','r_email','r_city48','r_country','r_city','r_dob','r_birthplace','r_father_id','r_father_name','r_mother_name','r_marital','r_education','r_profession','r_health_details','r_spouse_health_details','r_family_health_details','r_needs','r_aspirations_details','r_spouse_education','r_spouse_profession','r_sons_count','r_daughters_count'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value = (id==='r_sons_count'||id==='r_daughters_count') ? '0' : ''; });
+  ['r_id','r_issue','r_name','r_phone_pal','r_phone_free','r_phone_alt','r_email','r_city48','r_country','r_city','r_district','r_dob','r_birthplace','r_father_id','r_father_name','r_mother_name','r_marital','r_education','r_profession','r_health_details','r_spouse_health_details','r_family_health_details','r_needs','r_aspirations_details','r_spouse_education','r_spouse_profession','r_sons_count','r_daughters_count'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value = (id==='r_sons_count'||id==='r_daughters_count') ? '0' : ''; });
   // Reset selects
   ['r_work_status','r_doctype','r_health','r_spouse_health','r_family_health','r_spouse_work_status'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=el.options[0].value; });
   // Reset radios + pills
@@ -7375,6 +7770,14 @@ $$('label.radio-pill[data-loctype]').forEach(p => {
     $('#f-country').classList.toggle('hidden', t !== 'ab');
     $('#f-city').classList.toggle('hidden', t !== 'ab');
     
+    // District (الحي) - show for all location types that have a city/area
+    var fDistrict = document.getElementById('f-district');
+    if(fDistrict){
+      // Show district for gaza/wb (with gov) and external (with city)
+      var showDistrict = (t === 'gaza' || t === 'wb' || t === 'ab' || t === '48');
+      fDistrict.classList.toggle('hidden', !showDistrict);
+    }
+    
     // Phone block: Palestinian (gaza/wb) or international
     const palPhone = (t === 'gaza' || t === 'wb');
     $('#phonePalBlock').classList.toggle('hidden', !palPhone);
@@ -7427,8 +7830,8 @@ var _n1=document.getElementById('btnNext1'); if(_n1) _n1.addEventListener('click
   if(age == null){
     $('#f-dob .err').textContent = 'أدخل تاريخ ميلاد صحيح.';
     setErr('f-dob', true); ok = false;
-  } else if(age < 18){
-    $('#f-dob .err').textContent = 'يجب ألّا يقلّ عمر المسجَّل عن ١٨ سنة.';
+  } else if(age < 16){
+    $('#f-dob .err').textContent = 'يجب ألّا يقلّ عمر المسجَّل عن ١٦ سنة.';
     setErr('f-dob', true); ok = false;
   } else setErr('f-dob', false);
 
@@ -7632,11 +8035,15 @@ function getFamilyData(){
   });
   var aspirationsDetails = T('r_aspirations_details');
 
+  // Collect detailed children data
+  var childrenData = (typeof collectChildrenData === 'function') ? collectChildrenData() : [];
+
   return {
     marital: marital,
     spouses: spouses,
     sonsUnder18: sons,
     daughtersUnder18: daughters,
+    children: childrenData,
     health: {
       self: healthSelf,
       selfDetails: healthSelfDetails,
@@ -8015,6 +8422,7 @@ var _sr=document.getElementById('btnSubmitReg'); if(_sr) _sr.addEventListener('c
       locType: t,
       gov: (t==='gaza' || t==='wb') ? ($('#r_gov').value || '') : '',
       city: (t==='gaza' || t==='wb') ? ($('#r_city').value || '').trim() : (t==='48' ? ($('#r_city48').value || '').trim() : (t==='ab' ? ($('#r_city').value || '').trim() : '')),
+      district: ($('#r_district') ? ($('#r_district').value || '').trim() : ''),
       country: t==='ab' ? ($('#r_country').value || '').trim() : '',
       phone: (t==='gaza' || t==='wb') ? normalizeDigits($('#r_phone_pal').value || '') : ($('#r_phone_free').value || '').trim(),
       createdAt: Date.now(),
@@ -8776,7 +9184,7 @@ function renderAdmin(){
     const tr = document.createElement('tr');
     let loc = v.locType==='pal' ? v.gov : v.locType==='48' ? `48 - ${v.city||''}` : `خارج - ${v.country||''}`;
     const a = ageFromDob(v.dob);
-    const elig = (a!=null && a>=18) ? `<span class="badge ok">مؤهَّل</span>` : `<span class="badge bad">غير مؤهَّل</span>`;
+    const elig = (a!=null && a>=16) ? `<span class="badge ok">مؤهَّل</span>` : `<span class="badge bad">غير مؤهَّل</span>`;
     const hasImg = v.idImage && v.idImage.length > 10;
     const imgCell = hasImg
       ? `<img src="${v.idImage}" style="width:70px;height:50px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid var(--border)" onclick="openImgModal('${v.id}')" title="انقر للتكبير">`
@@ -8801,6 +9209,7 @@ function renderAdmin(){
     if(isApproved){
       actions = '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(15,107,60,.15);color:var(--success)" onclick="window.printPersonReport(\''+v.id+'\')">🖨 طباعة</button>' +
+        ((v.family && (v.family.needs||[]).filter(function(n){return n&&n!=='none';}).length) ? '<button class="btn btn-ghost btn-sm" style="background:rgba(212,175,55,.15);color:var(--primary-dark)" onclick="window.showNeedCertPicker(\''+v.id+'\')">📜 شهادة احتياج</button>' : '') +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="' + v.id + '">✗ إلغاء الاعتماد</button>' +
         '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
         '</div>';
@@ -8808,6 +9217,7 @@ function renderAdmin(){
       actions = '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(20,122,63,.15);color:var(--success);font-weight:700" data-verify-voter="' + v.id + '">✓ إعادة قبول</button>' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(15,107,60,.15);color:var(--success)" onclick="window.printPersonReport(\''+v.id+'\')">🖨 طباعة</button>' +
+        ((v.family && (v.family.needs||[]).filter(function(n){return n&&n!=='none';}).length) ? '<button class="btn btn-ghost btn-sm" style="background:rgba(212,175,55,.15);color:var(--primary-dark)" onclick="window.showNeedCertPicker(\''+v.id+'\')">📜 شهادة احتياج</button>' : '') +
         '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
         '</div>';
     } else {
@@ -8815,6 +9225,7 @@ function renderAdmin(){
         '<button class="btn btn-ghost btn-sm" style="background:rgba(20,122,63,.15);color:var(--success);font-weight:700" data-verify-voter="' + v.id + '">✓ قبول</button>' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="' + v.id + '">✗ رفض</button>' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(15,107,60,.15);color:var(--success)" onclick="window.printPersonReport(\''+v.id+'\')">🖨 طباعة</button>' +
+        ((v.family && (v.family.needs||[]).filter(function(n){return n&&n!=='none';}).length) ? '<button class="btn btn-ghost btn-sm" style="background:rgba(212,175,55,.15);color:var(--primary-dark)" onclick="window.showNeedCertPicker(\''+v.id+'\')">📜 شهادة احتياج</button>' : '') +
         '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
         '</div>';
     }
@@ -9681,7 +10092,7 @@ function printIndividualReport(voter){
   html += '<h2>📍 مكان الإقامة</h2>';
   html += '<div class="field"><div class="label">الدولة:</div><div class="value '+(!f.country?'empty':'')+'">'+(countryLabel||'لم يُحدّد')+'</div></div>';
   html += '<div class="field"><div class="label">المدينة / المحافظة:</div><div class="value '+(!f.city?'empty':'')+'">'+escapeHtml(f.city||'لم يُحدّد')+'</div></div>';
-  html += '<div class="field"><div class="label">الحي / المنطقة:</div><div class="value '+(!f.neighborhood?'empty':'')+'">'+escapeHtml(f.neighborhood||'لم يُحدّد')+'</div></div>';
+  html += '<div class="field"><div class="label">الحي / المنطقة:</div><div class="value '+(!f.district?'empty':'')+'">'+escapeHtml(f.district||'لم يُحدّد')+'</div></div>';
   html += '</div>';
   
   // Family
@@ -10148,7 +10559,7 @@ var _vl=document.getElementById('btnVoterLogin'); if(_vl) _vl.addEventListener('
   if(!voter){ $('#f-vl-id .err').textContent='رقم الهوية غير مسجّل في المنظومة.'; setErr('f-vl-id', true); return; }
   if(getVotes().some(v=>v.voterId===id)){ $('#f-vl-id .err').textContent='هذه الهوية مسجّلة مسبقاً.'; setErr('f-vl-id', true); return; }
   const a = ageFromDob(voter.dob);
-  if(a==null || a<18){ $('#f-vl-id .err').textContent='غير مؤهَّل للتصويت (يجب ألّا يقلّ العمر عن ١٨).'; setErr('f-vl-id', true); return; }
+  if(a==null || a<16){ $('#f-vl-id .err').textContent='غير مؤهَّل للتصويت (يجب ألّا يقلّ العمر عن ١٨).'; setErr('f-vl-id', true); return; }
   setErr('f-vl-id', false);
   pendingVote.voterId = id;
   closeModal('modalVoterLogin');
@@ -14845,6 +15256,677 @@ window.addEventListener('load', function(){
     setupBottomNav();
   }
 });
+
+
+// ══════════════════════════════════════════════════════════
+// WELCOME POPUP — Shows guidelines on first visit
+// ══════════════════════════════════════════════════════════
+function setupWelcomePopup(){
+  var backdrop = document.getElementById('welcomePopupBackdrop');
+  if(!backdrop) return;
+  
+  var startBtn = document.getElementById('wpStartBtn');
+  var laterBtn = document.getElementById('wpLaterBtn');
+  var dontShow = document.getElementById('wpDontShow');
+  
+  // Check if user previously chose "don't show"
+  var hidden = localStorage.getItem('abutaha_hide_welcome_popup');
+  if(hidden === 'true'){
+    backdrop.style.display = 'none';
+    return;
+  }
+  
+  // Show popup after a short delay (let page render first)
+  setTimeout(function(){
+    backdrop.classList.add('show');
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+  }, 800);
+  
+  function closePopup(){
+    backdrop.classList.remove('show');
+    document.body.style.overflow = '';
+    
+    // Save preference if checked
+    if(dontShow && dontShow.checked){
+      try {
+        localStorage.setItem('abutaha_hide_welcome_popup', 'true');
+      } catch(e){}
+    }
+    
+    // Remove from DOM after animation
+    setTimeout(function(){
+      backdrop.style.display = 'none';
+    }, 400);
+  }
+  
+  // "ابدأ التسجيل" → close + open register modal
+  if(startBtn){
+    startBtn.addEventListener('click', function(){
+      closePopup();
+      setTimeout(function(){
+        var regBtn = document.getElementById('ctaRegister');
+        if(regBtn) regBtn.click();
+      }, 450);
+    });
+  }
+  
+  // "لاحقاً" → just close
+  if(laterBtn){
+    laterBtn.addEventListener('click', closePopup);
+  }
+  
+  // Click outside (on backdrop) closes
+  backdrop.addEventListener('click', function(e){
+    if(e.target === backdrop){
+      closePopup();
+    }
+  });
+  
+  // ESC key closes
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && backdrop.classList.contains('show')){
+      closePopup();
+    }
+  });
+  
+  console.log('[WelcomePopup] Initialized');
+}
+
+// Run after DOM ready
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', setupWelcomePopup);
+} else {
+  setTimeout(setupWelcomePopup, 0);
+}
+
+
+// ══════════════════════════════════════════════════════════
+// DETAILED CHILDREN SYSTEM — add/remove children with auto age detection
+// ══════════════════════════════════════════════════════════
+var _childRowSeq = 0;
+
+function calcChildAge(birthDate){
+  if(!birthDate) return null;
+  var bd = new Date(birthDate);
+  if(isNaN(bd.getTime())) return null;
+  var now = new Date();
+  var age = now.getFullYear() - bd.getFullYear();
+  var m = now.getMonth() - bd.getMonth();
+  if(m < 0 || (m === 0 && now.getDate() < bd.getDate())) age--;
+  return age;
+}
+
+function addChildRow(data){
+  data = data || {};
+  var container = document.getElementById('childrenContainer');
+  if(!container) return;
+  
+  var rowId = 'child_' + (++_childRowSeq);
+  var row = document.createElement('div');
+  row.className = 'child-row';
+  row.id = rowId;
+  row.style.cssText = 'background:#FBF8F0;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative';
+  
+  row.innerHTML = 
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+      '<span style="font-weight:700;font-size:13px;color:var(--primary-dark)">👤 ابن / ابنة</span>' +
+      '<button type="button" class="child-remove-btn" style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.25);color:#dc2626;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">✕</button>' +
+    '</div>' +
+    '<div class="field" style="margin-bottom:8px">' +
+      '<label style="font-size:12px">الاسم الكامل</label>' +
+      '<input type="text" class="input child-name" placeholder="اسم الابن/الابنة" value="' + (data.name || '') + '" />' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+      '<div class="field" style="margin:0">' +
+        '<label style="font-size:12px">الجنس</label>' +
+        '<select class="input child-gender">' +
+          '<option value="male"' + (data.gender === 'male' ? ' selected' : '') + '>ذكر</option>' +
+          '<option value="female"' + (data.gender === 'female' ? ' selected' : '') + '>أنثى</option>' +
+        '</select>' +
+      '</div>' +
+      '<div class="field" style="margin:0">' +
+        '<label style="font-size:12px">تاريخ الميلاد</label>' +
+        '<input type="date" class="input child-dob" value="' + (data.dob || '') + '" />' +
+      '</div>' +
+    '</div>' +
+    '<div class="field" style="margin:0">' +
+      '<label style="font-size:12px" class="child-id-label">رقم الهوية / شهادة الميلاد</label>' +
+      '<input type="text" class="input child-id" placeholder="رقم الهوية أو شهادة الميلاد" value="' + (data.idNumber || '') + '" inputmode="numeric" />' +
+      '<div class="child-age-badge" style="margin-top:6px;font-size:11px;font-weight:600"></div>' +
+    '</div>';
+  
+  container.appendChild(row);
+  
+  var dobInput = row.querySelector('.child-dob');
+  var idLabel = row.querySelector('.child-id-label');
+  var idInput = row.querySelector('.child-id');
+  var ageBadge = row.querySelector('.child-age-badge');
+  var removeBtn = row.querySelector('.child-remove-btn');
+  
+  // Update label based on age (16+ = ID, under 16 = birth certificate)
+  function updateChildAgeUI(){
+    var age = calcChildAge(dobInput.value);
+    if(age === null){
+      idLabel.textContent = 'رقم الهوية / شهادة الميلاد';
+      ageBadge.textContent = '';
+      return;
+    }
+    if(age >= 16){
+      idLabel.textContent = 'رقم الهوية الوطنية';
+      idInput.placeholder = 'رقم الهوية (9 أرقام)';
+      ageBadge.innerHTML = '<span style="color:#16a34a">✅ العمر ' + age + ' سنة — مؤهل لهوية وطنية</span>';
+    } else {
+      idLabel.textContent = 'رقم شهادة الميلاد';
+      idInput.placeholder = 'رقم شهادة الميلاد';
+      ageBadge.innerHTML = '<span style="color:#9A7D1A">📋 العمر ' + age + ' سنة — يُدخل رقم شهادة الميلاد</span>';
+    }
+  }
+  
+  dobInput.addEventListener('change', function(){
+    updateChildAgeUI();
+    updateChildrenCounts();
+  });
+  dobInput.addEventListener('input', updateChildAgeUI);
+  
+  removeBtn.addEventListener('click', function(){
+    row.remove();
+    updateChildrenCounts();
+  });
+  
+  updateChildAgeUI();
+  updateChildrenCounts();
+}
+
+function updateChildrenCounts(){
+  var rows = document.querySelectorAll('#childrenContainer .child-row');
+  var sons = 0, daughters = 0;
+  rows.forEach(function(row){
+    var gender = row.querySelector('.child-gender').value;
+    var age = calcChildAge(row.querySelector('.child-dob').value);
+    // Count those under 16 (dependents)
+    if(age !== null && age < 16){
+      if(gender === 'male') sons++;
+      else daughters++;
+    }
+  });
+  var sonsEl = document.getElementById('r_sons_count');
+  var dauEl = document.getElementById('r_daughters_count');
+  if(sonsEl) sonsEl.value = sons;
+  if(dauEl) dauEl.value = daughters;
+}
+
+function collectChildrenData(){
+  var rows = document.querySelectorAll('#childrenContainer .child-row');
+  var children = [];
+  rows.forEach(function(row){
+    var name = (row.querySelector('.child-name').value || '').trim();
+    var gender = row.querySelector('.child-gender').value;
+    var dob = row.querySelector('.child-dob').value;
+    var idNumber = (row.querySelector('.child-id').value || '').trim();
+    var age = calcChildAge(dob);
+    if(name || dob || idNumber){
+      children.push({
+        name: name,
+        gender: gender,
+        dob: dob,
+        idNumber: idNumber,
+        age: age,
+        idType: (age !== null && age >= 16) ? 'national_id' : 'birth_certificate'
+      });
+    }
+  });
+  return children;
+}
+
+// Wire the "add child" button
+(function wireAddChild(){
+  function setup(){
+    var btn = document.getElementById('btnAddChild');
+    if(btn && !btn.dataset.wired){
+      btn.dataset.wired = '1';
+      btn.addEventListener('click', function(){ addChildRow(); });
+    }
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', setup);
+  } else {
+    setTimeout(setup, 0);
+  }
+})();
+
+
+// ══════════════════════════════════════════════════════════
+// OFFICIAL NEED CERTIFICATE — Stamped document for a specific need
+// شهادة احتياج رسمية مصدّقة من لجنة العائلة
+// ══════════════════════════════════════════════════════════
+function printNeedCertificate(voterId, specificNeed){
+  var voters = (typeof getVoters === 'function') ? getVoters() : [];
+  var v = voters.find(function(x){ return x.id === voterId; });
+  if(!v){ toast('لم يتم العثور على المسجّل', 'err'); return; }
+  
+  var f = v.family || {};
+  var needLabels = {
+    medical: 'علاج', education: 'تعليم', marriage: 'زواج',
+    business: 'عمل', housing: 'سكن', travel: 'سفر', other: 'استحقاق آخر'
+  };
+  var needsList = (f.needs || []).filter(function(n){ return n && n !== 'none'; });
+  var certNeed = specificNeed || (needsList.length ? needsList[0] : null);
+  if(!certNeed){ toast('لا يوجد استحقاق مسجّل لهذا الشخص', 'err'); return; }
+  
+  var needLabel;
+  if(specificNeed){
+    needLabel = needLabels[certNeed] || certNeed;
+  } else {
+    needLabel = needsList.map(function(n){ return needLabels[n] || n; }).join('، ');
+  }
+  
+  // Description from the registrant's own description box
+  var description = (f.aspirationsDetails || '').trim();
+  if(!description){
+    description = 'مستحق لـ' + needLabel + ' وفق البيانات والسجلات المعتمدة لدى لجنة العائلة، وتُمنح هذه الشهادة لتقديمها إلى الجهات المختصة واستكمال الإجراءات اللازمة.';
+  }
+  
+  var maritalLabels = {single:'أعزب',married:'متزوج',polygamous:'متعدد الزوجات',divorced:'مطلق',widowed:'أرمل'};
+  if(v.gender === 'female' || v.gender === 'أنثى'){
+    maritalLabels = {single:'عزباء',married:'متزوجة',divorced:'مطلقة',widowed:'أرملة',polygamous:'-'};
+  }
+  
+  var w = window.open('', '_blank');
+  if(!w){ toast('يرجى السماح بفتح النوافذ المنبثقة', 'err'); return; }
+  
+  var now = new Date();
+  var dateStr = now.toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' });
+  var certNumber = 'AT-' + now.getFullYear() + '-' + String(v.serial || Math.floor(Math.random()*9999)).padStart(4,'0');
+  var locationStr = [v.city, v.district, v.gov, v.country].filter(Boolean).join('، ');
+  var logoUrl = 'https://i.ibb.co/F4xfYJCp/FB-IMG-1777373548219.jpg';
+  
+  // QR data (verification text)
+  var qrData = encodeURIComponent('شهادة استحقاق رقم ' + certNumber + ' - ' + (v.name||'') + ' - عائلة أبو طه');
+  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=' + qrData;
+  
+  var doc = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
+    '<title>شهادة استحقاق — ' + escapeHtml(v.name || '') + '</title>' +
+    '<style>' +
+    '@import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;900&display=swap");' +
+    '* { margin:0; padding:0; box-sizing:border-box; }' +
+    'body { background:#e8e8e8; font-family:Cairo,sans-serif; padding:20px; margin:0; }' +
+    '.page { width:210mm; height:297mm; margin:0 auto; background:#fff; padding:0; position:relative; display:flex; align-items:center; justify-content:center; }' +
+    '.frame { width:82%; height:82%; border:2.5px double #B8860B; border-radius:6px; padding:5mm 7mm; position:relative; box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; }' +
+    '.frame::before { content:""; position:absolute; inset:5px; border:1px solid #B8860B; border-radius:4px; opacity:0.5; pointer-events:none; }' +
+    /* Corner ornaments */
+    '.corner { position:absolute; width:38px; height:38px; border:2px solid #B8860B; }' +
+    '.corner.tl { top:10px; right:10px; border-left:none; border-bottom:none; }' +
+    '.corner.tr { top:10px; left:10px; border-right:none; border-bottom:none; }' +
+    '.corner.bl { bottom:10px; right:10px; border-left:none; border-top:none; }' +
+    '.corner.br { bottom:10px; left:10px; border-right:none; border-top:none; }' +
+    /* Header */
+    '.c-num { position:absolute; top:0; right:0; font-size:10px; color:#666; font-weight:600; }' +
+    '.c-head { text-align:center; padding-top:2px; margin-bottom:2px; }' +
+    '.c-logo { width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid #B8860B; margin-bottom:3px; }' +
+    '.c-org { font-size:20px; font-weight:900; color:#1a1a1a; }' +
+    '.c-sub { font-size:13px; color:#B8860B; font-weight:700; margin-top:2px; }' +
+    '.divider { height:1.5px; background:linear-gradient(90deg, transparent, #B8860B, transparent); margin:6px 0; }' +
+    '.divider-deco { text-align:center; color:#B8860B; font-size:13px; margin:3px 0; letter-spacing:5px; }' +
+    /* Title */
+    '.c-title { text-align:center; font-family:Amiri,serif; font-size:32px; font-weight:700; color:#B8860B; margin:6px 0; text-shadow:1px 1px 0 rgba(184,134,11,0.15); }' +
+    /* Body text */
+    '.c-intro { font-size:12px; line-height:1.5; text-align:center; color:#2a2a2a; margin:5px 16px; }' +
+    /* Data cards */
+    '.cards { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:9px 0; }' +
+    '.card { background:#FBF8F0; border:1px solid #E0D4A8; border-radius:8px; padding:7px 10px; display:flex; align-items:center; gap:8px; }' +
+    '.card-ico { width:28px; height:28px; border-radius:7px; background:#B8860B; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }' +
+    '.card-txt .k { font-size:10px; color:#888; }' +
+    '.card-txt .val { font-size:14px; font-weight:700; color:#1a1a1a; }' +
+    /* Eligibility section */
+    '.elig { display:grid; grid-template-columns:1fr 2fr; gap:9px; margin:9px 0; }' +
+    '.elig-type { background:linear-gradient(135deg,#FBF3D8,#F5ECC8); border:2px solid #B8860B; border-radius:10px; padding:10px; text-align:center; display:flex; flex-direction:column; justify-content:center; }' +
+    '.elig-type .lbl { font-size:12px; color:#9A7D1A; margin-bottom:5px; }' +
+    '.elig-type .v { font-size:17px; font-weight:900; color:#B8860B; }' +
+    '.elig-desc { background:#fff; border:2px solid #E0D4A8; border-radius:10px; padding:10px 12px; }' +
+    '.elig-desc .lbl { font-size:12px; color:#9A7D1A; font-weight:700; margin-bottom:6px; }' +
+    '.elig-desc .v { font-size:12.5px; line-height:1.55; color:#2a2a2a; text-align:justify; }' +
+    /* Official paragraph */
+    '.c-official { font-size:11px; line-height:1.45; text-align:center; color:#444; margin:5px 18px; font-style:italic; }' +
+    /* Validity bar */
+    '.validity { background:linear-gradient(135deg,#B8860B,#9A7D1A); color:#fff; border-radius:9px; padding:8px; text-align:center; font-size:13px; font-weight:700; margin:8px 0; }' +
+    /* Disclaimer */
+    '.disclaimer { background:#FBF8F0; border:1px solid #E0D4A8; border-right:4px solid #B8860B; border-radius:7px; padding:8px 12px; margin:8px 0; }' +
+    '.disclaimer h4 { font-size:12px; color:#9A7D1A; margin-bottom:4px; }' +
+    '.disclaimer p { font-size:9.5px; line-height:1.4; color:#555; margin-bottom:2px; text-align:justify; }' +
+    /* Footer */
+    '.c-foot { display:flex; justify-content:space-between; align-items:flex-end; margin-top:16px; padding-top:8px; }' +
+    '.foot-col { text-align:center; flex:1; }' +
+    '.qr-box img { width:68px; height:68px; border:1px solid #ddd; }' +
+    '.qr-box .lbl { font-size:9px; color:#888; margin-top:2px; }' +
+    '.stamp-area { width:100px; height:54px; }' +  /* empty for real stamp */
+    '.sign-line { width:135px; border-bottom:1.5px solid #1a1a1a; height:26px; margin:0 auto 4px; }' +
+    '.sign-role { font-size:11px; font-weight:700; color:#1a1a1a; }' +
+    '.foot-meta { display:flex; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px dashed #ccc; font-size:10px; color:#666; }' +
+    '.e-notice { margin-top:6px; background:#fff8e8; border:1px solid #E0D4A8; border-radius:7px; padding:5px; text-align:center; font-size:9px; color:#9A7D1A; }' +
+    '@page { size:210mm 297mm; margin:0; }' +'@media print { html,body { background:#fff; padding:0; margin:0; width:210mm; height:297mm; overflow:hidden; } .page { width:210mm; height:297mm; margin:0; padding:0; box-shadow:none; overflow:hidden; display:flex; align-items:center; justify-content:center; page-break-after:avoid; page-break-inside:avoid; } .frame { width:82%; height:82%; page-break-inside:avoid; } .no-print { display:none; } }' +
+    '.print-btn { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#E5C158,#B8860B); color:#1a1a1a; border:none; padding:14px 36px; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(184,134,11,0.5); z-index:99; }' +
+    '</style></head><body>' +
+    '<div class="page"><div class="frame">' +
+      '<div class="corner tl"></div><div class="corner tr"></div>' +
+      '<div class="corner bl"></div><div class="corner br"></div>' +
+      '<div class="c-num">رقم الشهادة: ' + certNumber + '</div>' +
+      '<div class="c-head">' +
+        '<img src="' + logoUrl + '" class="c-logo" onerror="this.style.display=\'none\'" />' +
+        '<div class="c-org">المنظومة الإلكترونية المركزية</div>' +
+        '<div class="c-sub">لجنة عائلة أبو طه</div>' +
+      '</div>' +
+      '<div class="divider"></div>' +
+      '<div class="c-title">شهادة استحقاق</div>' +
+      '<div class="divider-deco">❖ ❖ ❖</div>' +
+      '<div class="c-intro">تشهد لجنة عائلة أبو طه بأن المذكور أدناه من أبناء العائلة المسجلين لديها، وبناءً على البيانات والسجلات المعتمدة لدى اللجنة فإنه مستحق للغرض المبيّن أدناه.</div>' +
+      '<div class="cards">' +
+        '<div class="card"><div class="card-ico">👤</div><div class="card-txt"><div class="k">الاسم الكامل</div><div class="val">' + escapeHtml(v.name || '—') + '</div></div></div>' +
+        '<div class="card"><div class="card-ico">🪪</div><div class="card-txt"><div class="k">رقم الهوية</div><div class="val">' + escapeHtml(v.id || '—') + '</div></div></div>' +
+        '<div class="card"><div class="card-ico">📍</div><div class="card-txt"><div class="k">مكان الإقامة</div><div class="val">' + escapeHtml(locationStr || '—') + '</div></div></div>' +
+        '<div class="card"><div class="card-ico">💍</div><div class="card-txt"><div class="k">الحالة الاجتماعية</div><div class="val">' + (maritalLabels[f.marital] || '—') + '</div></div></div>' +
+      '</div>' +
+      '<div class="elig">' +
+        '<div class="elig-type"><div class="lbl">نوع الاستحقاق</div><div class="v">' + escapeHtml(needLabel) + '</div></div>' +
+        '<div class="elig-desc"><div class="lbl">وصف الاستحقاق</div><div class="v">' + escapeHtml(description) + '</div></div>' +
+      '</div>' +
+      '<div class="c-official">وقد حُررت هذه الشهادة بناءً على طلب صاحب العلاقة لتقديمها إلى الجهات المختصة واتخاذ ما يلزم بشأن الاستحقاق المذكور أعلاه.</div>' +
+      '<div class="validity">⏳ مدة صلاحية الشهادة: تسعون (90) يوماً من تاريخ إصدارها</div>' +
+      '<div class="disclaimer">' +
+        '<h4>إخلاء مسؤولية</h4>' +
+        '<p>أُصدرت هذه الشهادة استناداً إلى البيانات والسجلات المتوفرة لدى لجنة عائلة أبو طه بتاريخ إصدارها، وتقتصر مسؤولية اللجنة على صحة البيانات الواردة فيها وفق سجلاتها الرسمية، ولا يترتب على إصدارها أي التزام قانوني أو مالي أو إداري تجاه أي جهة كانت.</p>' +
+        '<p>وقد أُعطيت هذه الشهادة بناءً على طلب صاحب العلاقة لتقديمها للجهات المعنية.</p>' +
+      '</div>' +
+      '<div class="c-foot">' +
+        '<div class="foot-col qr-box"><img src="' + qrUrl + '" onerror="this.style.display=\'none\'" /><div class="lbl">رمز التحقق</div></div>' +
+        '<div class="foot-col"><div class="stamp-area"></div><div class="lbl" style="font-size:11px;color:#aaa">مكان الختم</div></div>' +
+        '<div class="foot-col"><div class="sign-line"></div><div class="sign-role">رئيس لجنة العائلة</div></div>' +
+      '</div>' +
+      '<div class="foot-meta">' +
+        '<span>تاريخ الإصدار: ' + dateStr + '</span>' +
+        '<span>رقم الشهادة: ' + certNumber + '</span>' +
+      '</div>' +
+      '<div class="e-notice">هذه الشهادة صادرة إلكترونياً من المنظومة المركزية للجنة عائلة أبو طه وتُعتمد بختم وتوقيع لجنة العائلة.</div>' +
+    '</div></div>' +
+    '<button class="print-btn no-print" onclick="window.print()">🖨 طباعة الشهادة</button>' +
+    '</body></html>';
+  
+  w.document.write(doc);
+  w.document.close();
+}
+window.printNeedCertificate = printNeedCertificate;
+
+
+// ══════════════════════════════════════════════════════════
+// NEED CERTIFICATE PICKER — choose which need to certify
+// ══════════════════════════════════════════════════════════
+function showNeedCertPicker(voterId){
+  var voters = (typeof getVoters === 'function') ? getVoters() : [];
+  var v = voters.find(function(x){ return x.id === voterId; });
+  if(!v){ toast('لم يتم العثور على المسجّل', 'err'); return; }
+  
+  var f = v.family || {};
+  var needLabels = {
+    medical: 'علاجي / طبي', education: 'تعليمي', marriage: 'زواج',
+    business: 'مشروع تجاري', housing: 'سكن', travel: 'سفر', other: 'احتياج آخر'
+  };
+  var needs = (f.needs || []).filter(function(n){ return n && n !== 'none'; });
+  
+  if(needs.length === 0){
+    toast('لا يوجد احتياج مسجّل', 'err');
+    return;
+  }
+  
+  // If only one need, generate directly
+  if(needs.length === 1){
+    printNeedCertificate(voterId, needs[0]);
+    return;
+  }
+  
+  // Multiple needs: show picker overlay
+  var overlay = document.createElement('div');
+  overlay.className = 'ay-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  
+  var card = document.createElement('div');
+  card.style.cssText = 'background:#fff;border-radius:18px;padding:24px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)';
+  
+  var btns = needs.map(function(n){
+    return '<button class="need-cert-pick" data-need="' + n + '" style="width:100%;text-align:right;background:#FBF8F0;border:1px solid #E8E0CC;border-radius:12px;padding:14px 16px;margin-bottom:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:15px;font-weight:600;color:#1a1a1a;display:flex;align-items:center;justify-content:space-between">' +
+      '<span>📜 ' + (needLabels[n] || n) + '</span>' +
+      '<span style="color:#9A7D1A">←</span>' +
+    '</button>';
+  }).join('');
+  
+  card.innerHTML = 
+    '<h3 style="font-family:Cairo,sans-serif;font-size:18px;font-weight:800;color:#1a1a1a;margin:0 0 6px">اختر الاحتياج</h3>' +
+    '<p style="font-family:Cairo,sans-serif;font-size:13px;color:#6b6b6b;margin:0 0 16px">لدى ' + escapeHtml(v.name||'') + ' عدة احتياجات. اختر الاحتياج لإصدار الشهادة:</p>' +
+    btns +
+    '<button class="need-cert-all" style="width:100%;background:linear-gradient(135deg,#E5C158,#D4AF37);border:none;border-radius:12px;padding:14px;margin-top:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:15px;font-weight:700;color:#1a1a1a">📋 شهادة بكل الاحتياجات</button>' +
+    '<button class="need-cert-cancel" style="width:100%;background:none;border:none;padding:12px;margin-top:4px;cursor:pointer;font-family:Cairo,sans-serif;font-size:14px;color:#6b6b6b">إلغاء</button>';
+  
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  
+  // Wire buttons
+  card.querySelectorAll('.need-cert-pick').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var need = btn.dataset.need;
+      overlay.remove();
+      printNeedCertificate(voterId, need);
+    });
+  });
+  card.querySelector('.need-cert-all').addEventListener('click', function(){
+    overlay.remove();
+    printNeedCertificate(voterId, null);  // null = all needs
+  });
+  card.querySelector('.need-cert-cancel').addEventListener('click', function(){
+    overlay.remove();
+  });
+  overlay.addEventListener('click', function(e){
+    if(e.target === overlay) overlay.remove();
+  });
+}
+window.showNeedCertPicker = showNeedCertPicker;
+
+
+// ══════════════════════════════════════════════════════════
+// FILTERED PRINT — print records by gender + marital status
+// لفرز الفئات المستهدفة للمبادرات والفعاليات
+// ══════════════════════════════════════════════════════════
+function showFilteredPrintPicker(){
+  var overlay = document.createElement('div');
+  overlay.className = 'ay-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  
+  var card = document.createElement('div');
+  card.style.cssText = 'background:#fff;border-radius:18px;padding:24px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)';
+  
+  card.innerHTML = 
+    '<h3 style="font-family:Cairo,sans-serif;font-size:19px;font-weight:800;color:#1a1a1a;margin:0 0 6px">🎯 طباعة مفلترة</h3>' +
+    '<p style="font-family:Cairo,sans-serif;font-size:13px;color:#6b6b6b;margin:0 0 18px">اختر الفئة المستهدفة لطباعة سجلّها (للمبادرات والفعاليات).</p>' +
+    
+    '<div style="margin-bottom:16px">' +
+      '<label style="font-family:Cairo,sans-serif;font-size:14px;font-weight:700;color:#1a1a1a;display:block;margin-bottom:8px">الجنس</label>' +
+      '<select id="fp_gender" style="width:100%;padding:11px;border:1px solid #D8D0BC;border-radius:10px;font-family:Cairo,sans-serif;font-size:14px;background:#FBF8F0">' +
+        '<option value="">كلا الجنسين</option>' +
+        '<option value="male">الذكور فقط</option>' +
+        '<option value="female">الإناث فقط</option>' +
+      '</select>' +
+    '</div>' +
+    
+    '<div style="margin-bottom:16px">' +
+      '<label style="font-family:Cairo,sans-serif;font-size:14px;font-weight:700;color:#1a1a1a;display:block;margin-bottom:8px">الحالة الاجتماعية</label>' +
+      '<select id="fp_marital" style="width:100%;padding:11px;border:1px solid #D8D0BC;border-radius:10px;font-family:Cairo,sans-serif;font-size:14px;background:#FBF8F0">' +
+        '<option value="">كل الحالات</option>' +
+        '<option value="single">أعزب / عزباء</option>' +
+        '<option value="married">متزوج / متزوجة</option>' +
+        '<option value="polygamous">متعدد الزوجات</option>' +
+        '<option value="divorced">مطلق / مطلقة</option>' +
+        '<option value="widowed">أرمل / أرملة</option>' +
+      '</select>' +
+    '</div>' +
+    
+    '<div style="margin-bottom:18px">' +
+      '<label style="font-family:Cairo,sans-serif;font-size:14px;font-weight:700;color:#1a1a1a;display:block;margin-bottom:8px">الفئة العمرية</label>' +
+      '<select id="fp_age" style="width:100%;padding:11px;border:1px solid #D8D0BC;border-radius:10px;font-family:Cairo,sans-serif;font-size:14px;background:#FBF8F0">' +
+        '<option value="">كل الأعمار</option>' +
+        '<option value="16plus">16 سنة فأكثر (حاملو الهوية)</option>' +
+        '<option value="under16">دون 16 سنة</option>' +
+        '<option value="18-30">18 – 30</option>' +
+        '<option value="31-50">31 – 50</option>' +
+        '<option value="51plus">51 فأكثر</option>' +
+      '</select>' +
+    '</div>' +
+    
+    '<div id="fp_count" style="font-family:Cairo,sans-serif;font-size:13px;color:#9A7D1A;font-weight:700;text-align:center;margin-bottom:14px;padding:10px;background:#FBF8F0;border-radius:10px"></div>' +
+    
+    '<button class="fp-print-btn" style="width:100%;background:linear-gradient(135deg,#E5C158,#D4AF37);border:none;border-radius:12px;padding:14px;cursor:pointer;font-family:Cairo,sans-serif;font-size:15px;font-weight:700;color:#1a1a1a">🖨 طباعة السجل المفلتر</button>' +
+    '<button class="fp-cancel-btn" style="width:100%;background:none;border:none;padding:12px;margin-top:4px;cursor:pointer;font-family:Cairo,sans-serif;font-size:14px;color:#6b6b6b">إلغاء</button>';
+  
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  
+  var genderSel = card.querySelector('#fp_gender');
+  var maritalSel = card.querySelector('#fp_marital');
+  var ageSel = card.querySelector('#fp_age');
+  var countBox = card.querySelector('#fp_count');
+  
+  function updateCount(){
+    var filtered = getFilteredVoters(genderSel.value, maritalSel.value, ageSel.value);
+    countBox.textContent = 'عدد المطابقين: ' + filtered.length + ' مسجَّل';
+  }
+  genderSel.addEventListener('change', updateCount);
+  maritalSel.addEventListener('change', updateCount);
+  ageSel.addEventListener('change', updateCount);
+  updateCount();
+  
+  card.querySelector('.fp-print-btn').addEventListener('click', function(){
+    var g = genderSel.value, m = maritalSel.value, a = ageSel.value;
+    overlay.remove();
+    printFilteredReport(g, m, a);
+  });
+  card.querySelector('.fp-cancel-btn').addEventListener('click', function(){ overlay.remove(); });
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.remove(); });
+}
+window.showFilteredPrintPicker = showFilteredPrintPicker;
+
+function getFilteredVoters(gender, marital, ageRange){
+  var voters = (typeof getVoters === 'function') ? getVoters() : [];
+  return voters.filter(function(v){
+    // Gender filter
+    if(gender){
+      var vGender = (v.gender === 'female' || v.gender === 'أنثى') ? 'female' : 'male';
+      if(vGender !== gender) return false;
+    }
+    // Marital filter
+    if(marital){
+      var f = v.family || {};
+      if((f.marital || 'single') !== marital) return false;
+    }
+    // Age filter
+    if(ageRange){
+      var age = (typeof ageFromDob === 'function') ? ageFromDob(v.dob) : null;
+      if(age === null) return false;
+      if(ageRange === '16plus' && age < 16) return false;
+      if(ageRange === 'under16' && age >= 16) return false;
+      if(ageRange === '18-30' && (age < 18 || age > 30)) return false;
+      if(ageRange === '31-50' && (age < 31 || age > 50)) return false;
+      if(ageRange === '51plus' && age < 51) return false;
+    }
+    return true;
+  });
+}
+
+function printFilteredReport(gender, marital, ageRange){
+  var filtered = getFilteredVoters(gender, marital, ageRange);
+  if(filtered.length === 0){
+    toast('لا يوجد مسجّلون مطابقون للفلتر', 'err');
+    return;
+  }
+  
+  var w = window.open('', '_blank');
+  if(!w){ toast('يرجى السماح بفتح النوافذ المنبثقة', 'err'); return; }
+  
+  var genderLabels = { '': 'كلا الجنسين', male: 'الذكور', female: 'الإناث' };
+  var maritalLabels = { '':'كل الحالات', single:'العُزّاب', married:'المتزوجون', polygamous:'متعددو الزوجات', divorced:'المطلقون', widowed:'الأرامل' };
+  var ageLabels = { '':'كل الأعمار', '16plus':'16 سنة فأكثر', 'under16':'دون 16', '18-30':'18-30', '31-50':'31-50', '51plus':'51 فأكثر' };
+  
+  var filterDesc = [];
+  if(gender) filterDesc.push(genderLabels[gender]);
+  if(marital) filterDesc.push(maritalLabels[marital]);
+  if(ageRange) filterDesc.push(ageLabels[ageRange]);
+  var filterTitle = filterDesc.length ? filterDesc.join(' — ') : 'كل المسجّلين';
+  
+  var mLabel = function(m, g){
+    if(g === 'female' || g === 'أنثى'){
+      return ({single:'عزباء',married:'متزوجة',polygamous:'-',divorced:'مطلقة',widowed:'أرملة'})[m] || '-';
+    }
+    return ({single:'أعزب',married:'متزوج',polygamous:'متعدد الزوجات',divorced:'مطلق',widowed:'أرمل'})[m] || '-';
+  };
+  
+  var now = new Date().toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
+  
+  var rows = filtered.map(function(v, i){
+    var f = v.family || {};
+    var age = (typeof ageFromDob === 'function') ? ageFromDob(v.dob) : '';
+    var loc = [v.city, v.district, v.gov, v.country].filter(Boolean).join('، ');
+    return '<tr>' +
+      '<td>' + (i+1) + '</td>' +
+      '<td>' + escapeHtml(v.name || '') + '</td>' +
+      '<td>' + escapeHtml(v.id || '') + '</td>' +
+      '<td>' + (v.gender === 'female' || v.gender === 'أنثى' ? 'أنثى' : 'ذكر') + '</td>' +
+      '<td>' + (age !== null ? age : '-') + '</td>' +
+      '<td>' + mLabel(f.marital, v.gender) + '</td>' +
+      '<td>' + escapeHtml(loc || '-') + '</td>' +
+      '<td>' + escapeHtml(v.phone || '-') + '</td>' +
+    '</tr>';
+  }).join('');
+  
+  var doc = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
+    '<title>سجل مفلتر — ' + filterTitle + '</title>' +
+    '<style>' +
+    '@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap");' +
+    '*{margin:0;padding:0;box-sizing:border-box;font-family:Cairo,sans-serif}' +
+    'body{padding:30px;color:#1a1a1a}' +
+    '.head{text-align:center;border-bottom:3px solid #B8860B;padding-bottom:16px;margin-bottom:20px}' +
+    '.head h1{font-size:22px;color:#B8860B;font-weight:900}' +
+    '.head h2{font-size:15px;color:#666;font-weight:600;margin-top:4px}' +
+    '.filter-badge{display:inline-block;background:#FBF8F0;border:2px solid #B8860B;border-radius:999px;padding:8px 20px;margin:14px 0;font-weight:700;color:#9A7D1A;font-size:15px}' +
+    '.meta{display:flex;justify-content:space-between;font-size:13px;color:#666;margin-bottom:16px}' +
+    'table{width:100%;border-collapse:collapse;font-size:12px}' +
+    'th{background:#B8860B;color:#fff;padding:8px 6px;font-weight:700;border:1px solid #9A7D1A}' +
+    'td{padding:7px 6px;border:1px solid #ddd;text-align:center}' +
+    'tr:nth-child(even){background:#FBF8F0}' +
+    '.foot{margin-top:20px;text-align:center;font-size:12px;color:#666;border-top:1px solid #ddd;padding-top:12px}' +
+    '@media print{body{padding:0}.no-print{display:none}}' +
+    '.print-btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#E5C158,#B8860B);color:#1a1a1a;border:none;padding:14px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(184,134,11,0.4)}' +
+    '</style></head><body>' +
+    '<div class="head">' +
+      '<h1>المنظومة الإلكترونية المركزية</h1>' +
+      '<h2>لجنة عائلة أبو طه — سجل مفلتر</h2>' +
+      '<div class="filter-badge">🎯 ' + filterTitle + '</div>' +
+    '</div>' +
+    '<div class="meta">' +
+      '<span>عدد المطابقين: <strong>' + filtered.length + '</strong> مسجَّل</span>' +
+      '<span>تاريخ الطباعة: ' + now + '</span>' +
+    '</div>' +
+    '<table>' +
+      '<thead><tr>' +
+        '<th>#</th><th>الاسم الكامل</th><th>رقم الهوية</th><th>الجنس</th>' +
+        '<th>العمر</th><th>الحالة</th><th>الإقامة</th><th>الجوال</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>' +
+    '<div class="foot">هذا السجل صادر إلكترونياً من المنظومة المركزية لعائلة أبو طه — ' + now + '</div>' +
+    '<button class="print-btn no-print" onclick="window.print()">🖨 طباعة</button>' +
+    '</body></html>';
+  
+  w.document.write(doc);
+  w.document.close();
+}
+window.printFilteredReport = printFilteredReport;
+window.getFilteredVoters = getFilteredVoters;
 </script>
 
 <!-- ══════════════════════════════════════════════════════════
@@ -14999,6 +16081,108 @@ window.addEventListener('load', function(){
       <span>عن المنظومة</span>
       <svg class="more-item-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
+    
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     WELCOME GUIDELINES POPUP (Glass effect, shows on first visit)
+══════════════════════════════════════════════════════════ -->
+<div class="welcome-popup-backdrop" id="welcomePopupBackdrop" role="dialog" aria-labelledby="welcomePopupTitle" aria-modal="true">
+  <div class="welcome-popup" id="welcomePopup">
+    
+    <!-- Drag handle (visual cue) -->
+    <div class="wp-handle"></div>
+    
+    <!-- Header with icon and title -->
+    <div class="wp-header">
+      <div class="wp-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+      </div>
+      <h2 class="wp-title" id="welcomePopupTitle">إرشادات مهمة قبل التسجيل</h2>
+    </div>
+    
+    <!-- Scrollable body -->
+    <div class="wp-body">
+      
+      <p class="wp-greeting">الأخوة والأخوات أبناء عائلة أبو طه الكرام،</p>
+      
+      <p class="wp-paragraph">
+        في إطار الجهود المبذولة لتوثيق وحفظ بيانات العائلة وبناء قاعدة معلومات حديثة ودقيقة تخدم أبناء العائلة والأجيال القادمة، تم إطلاق موقع تسجيل البيانات الشخصية، والذي يهدف إلى جمع وتحديث المعلومات الأساسية لأفراد العائلة وفق آلية منظمة وسهلة الاستخدام.
+      </p>
+      
+      <div class="wp-callout">
+        <svg class="wp-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <p>
+          التسجيل المباشر في الموقع متاح للأشخاص الذين تبلغ أعمارهم <strong>16 عامًا فأكثر</strong> (السن القانوني لإصدار الهوية). أما الأبناء دون سن 16 عامًا فسيتم إدراج بياناتهم ضمن بيانات أحد الوالدين أثناء عملية التسجيل.
+        </p>
+      </div>
+      
+      <h3 class="wp-subtitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        البيانات والوثائق المطلوبة قبل التسجيل
+      </h3>
+      
+      <ul class="wp-checklist">
+        <li>
+          <span class="wp-num">1</span>
+          <span>صورة <strong>الهوية الشخصية</strong> أو أي وثيقة إثبات شخصية، محفوظة على الجهاز المستخدم للتسجيل (الهاتف المحمول أو الحاسوب).</span>
+        </li>
+        <li>
+          <span class="wp-num">2</span>
+          <span><strong>رقم الهوية الشخصية</strong> وسنة إصدارها.</span>
+        </li>
+        <li>
+          <span class="wp-num">3</span>
+          <span><strong>مكان الميلاد</strong> كما هو وارد في وثيقة إثبات الشخصية.</span>
+        </li>
+        <li>
+          <span class="wp-num">4</span>
+          <span><strong>رقم هوية الوالد</strong> وسنة إصدار هويته.</span>
+        </li>
+        <li>
+          <span class="wp-num">5</span>
+          <span>عنوان <strong>البريد الإلكتروني</strong> (الإيميل) إن وجد.</span>
+        </li>
+      </ul>
+      
+      <div class="wp-tip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+        <p>تجهيز هذه البيانات مسبقًا سيساعد على إتمام عملية التسجيل بسهولة وسرعة، ويُسهم في ضمان دقة المعلومات واكتمالها.</p>
+      </div>
+      
+    </div>
+    
+    <!-- Footer with actions -->
+    <div class="wp-footer">
+      <label class="wp-dont-show">
+        <input type="checkbox" id="wpDontShow">
+        <span>عدم إظهار هذه الرسالة مرة أخرى</span>
+      </label>
+      <div class="wp-actions">
+        <button class="wp-btn wp-btn-secondary" id="wpLaterBtn" type="button">لاحقاً</button>
+        <button class="wp-btn wp-btn-primary" id="wpStartBtn" type="button">
+          <span>ابدأ التسجيل</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
     
   </div>
 </div>
