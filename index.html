@@ -15605,9 +15605,13 @@ function printNeedCertificate(voterId, specificNeed){
     '.stamp-area { width:100px; height:54px; }' +  /* empty for real stamp */
     '.sign-line { width:135px; border-bottom:1.5px solid #1a1a1a; height:26px; margin:0 auto 4px; }' +
     '.sign-role { font-size:11px; font-weight:700; color:#1a1a1a; }' +
-    '.foot-meta { display:flex; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px dashed #ccc; font-size:10px; color:#666; }' +
-    '.print-date-bar { margin-top:5px; text-align:center; font-size:9.5px; color:#9A7D1A; font-weight:600; }' +
-    '.e-notice { margin-top:6px; background:#fff8e8; border:1px solid #E0D4A8; border-radius:7px; padding:5px; text-align:center; font-size:9px; color:#9A7D1A; }' +
+    
+    
+    '.gov-footer { margin-top:8px; border-top:1.5px solid #B8860B; padding-top:7px; }' +
+    '.gov-tahreer { font-size:12px; font-weight:700; color:#1a1a1a; margin-bottom:5px; direction:rtl; }' +
+    '.print-date-val { color:#B8860B; font-weight:700; }' +
+    '.gov-notice { font-size:10.5px; color:#444; line-height:1.7; direction:rtl; }' +
+    '.gov-bullet { color:#B8860B; font-size:13px; vertical-align:middle; }' +
     '@page { size:210mm 297mm; margin:0; }' +'@media print { html,body { background:#fff; padding:0; margin:0; width:210mm; height:297mm; overflow:hidden; } .page { width:210mm; height:297mm; margin:0; padding:0; box-shadow:none; overflow:hidden; display:flex; align-items:center; justify-content:center; page-break-after:avoid; page-break-inside:avoid; } .frame { width:82%; height:82%; page-break-inside:avoid; } .no-print { display:none; } }' +
     '.print-btn { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#E5C158,#B8860B); color:#1a1a1a; border:none; padding:14px 36px; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(184,134,11,0.5); z-index:99; }' +
     '</style></head><body>' +
@@ -15647,12 +15651,14 @@ function printNeedCertificate(voterId, specificNeed){
         '<div class="foot-col"><div class="stamp-area"></div><div class="lbl" style="font-size:11px;color:#aaa">مكان الختم</div></div>' +
         '<div class="foot-col"><div class="sign-line"></div><div class="sign-role">رئيس لجنة العائلة</div></div>' +
       '</div>' +
-      '<div class="foot-meta">' +
-        '<span>تاريخ الإصدار: ' + dateStr + '</span>' +
-        '<span>رقم الشهادة: ' + certNumber + '</span>' +
+      '<div class="gov-footer">' +
+        '<div class="gov-tahreer">حُرِّرت بتاريخ: <span class="print-date-val" id="printDateVal">—</span></div>' +
+        '<div class="gov-notice">' +
+          '<span class="gov-bullet">◉</span>' +
+          ' هذه الشهادة صادرة إلكترونياً عن المنظومة المركزية لعائلة أبو طه، وتُعتمد بختم وتوقيع لجنة العائلة.' +
+          ' رقم الشهادة للتحقق: <strong>' + certNumber + '</strong>' +
+        '</div>' +
       '</div>' +
-      '<div class="print-date-bar" id="printDateBar">تاريخ الطباعة: <span class="print-date-val" id="printDateVal">—</span></div>' +
-      '<div class="e-notice">هذه الشهادة صادرة إلكترونياً من المنظومة المركزية - للجنة عائلة أبو طه وتُعتمد بختم وتوقيع لجنة العائلة.</div>' +
     '</div></div>' +
     '<script>window.addEventListener("beforeprint",function(){var d=new Date();var opts={year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"};var el=document.getElementById("printDateVal");if(el)el.textContent=d.toLocaleDateString("ar-EG",opts);});' + '<\/script>' +
     '<button class="print-btn no-print" onclick="window.print()">🖨 طباعة الشهادة</button>' +
