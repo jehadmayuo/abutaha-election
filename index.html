@@ -15542,8 +15542,10 @@ function printNeedCertificate(voterId, specificNeed){
   var logoUrl = 'https://i.ibb.co/F4xfYJCp/FB-IMG-1777373548219.jpg';
   
   // QR data (verification text)
-  var qrData = encodeURIComponent('شهادة استحقاق رقم ' + certNumber + ' - ' + (v.name||'') + ' - عائلة أبو طه');
-  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=' + qrData;
+  // QR links to the live site with verification params
+  var siteBase = (typeof window !== 'undefined' && window.location && window.location.hostname !== 'about:blank' && window.location.hostname !== '') ? (window.location.protocol + '//' + window.location.hostname) : 'https://election-abutaha.com';
+  var verifyUrl = siteBase + '/?verify=' + encodeURIComponent(certNumber) + '&id=' + encodeURIComponent(v.id || '');
+  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=B8860B&bgcolor=FFFDF0&data=' + encodeURIComponent(verifyUrl);
   
   var doc = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
     '<title>شهادة استحقاق — ' + escapeHtml(v.name || '') + '</title>' +
@@ -15567,7 +15569,7 @@ function printNeedCertificate(voterId, specificNeed){
     '.c-org { font-size:20px; font-weight:900; color:#1a1a1a; }' +
     '.c-sub { font-size:13px; color:#B8860B; font-weight:700; margin-top:2px; }' +
     '.divider { height:1.5px; background:linear-gradient(90deg, transparent, #B8860B, transparent); margin:6px 0; }' +
-    '.divider-deco { text-align:center; color:#B8860B; font-size:13px; margin:3px 0; letter-spacing:5px; }' +
+    
     /* Title */
     '.c-title { text-align:center; font-family:Amiri,serif; font-size:32px; font-weight:700; color:#B8860B; margin:6px 0; text-shadow:1px 1px 0 rgba(184,134,11,0.15); }' +
     /* Body text */
@@ -15599,10 +15601,12 @@ function printNeedCertificate(voterId, specificNeed){
     '.foot-col { text-align:center; flex:1; }' +
     '.qr-box img { width:68px; height:68px; border:1px solid #ddd; }' +
     '.qr-box .lbl { font-size:9px; color:#888; margin-top:2px; }' +
+    '.qr-box { text-align:center; }' +
     '.stamp-area { width:100px; height:54px; }' +  /* empty for real stamp */
     '.sign-line { width:135px; border-bottom:1.5px solid #1a1a1a; height:26px; margin:0 auto 4px; }' +
     '.sign-role { font-size:11px; font-weight:700; color:#1a1a1a; }' +
     '.foot-meta { display:flex; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px dashed #ccc; font-size:10px; color:#666; }' +
+    '.print-date-bar { margin-top:5px; text-align:center; font-size:9.5px; color:#9A7D1A; font-weight:600; }' +
     '.e-notice { margin-top:6px; background:#fff8e8; border:1px solid #E0D4A8; border-radius:7px; padding:5px; text-align:center; font-size:9px; color:#9A7D1A; }' +
     '@page { size:210mm 297mm; margin:0; }' +'@media print { html,body { background:#fff; padding:0; margin:0; width:210mm; height:297mm; overflow:hidden; } .page { width:210mm; height:297mm; margin:0; padding:0; box-shadow:none; overflow:hidden; display:flex; align-items:center; justify-content:center; page-break-after:avoid; page-break-inside:avoid; } .frame { width:82%; height:82%; page-break-inside:avoid; } .no-print { display:none; } }' +
     '.print-btn { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#E5C158,#B8860B); color:#1a1a1a; border:none; padding:14px 36px; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(184,134,11,0.5); z-index:99; }' +
@@ -15618,11 +15622,12 @@ function printNeedCertificate(voterId, specificNeed){
       '</div>' +
       '<div class="divider"></div>' +
       '<div class="c-title">شهادة استحقاق</div>' +
-      '<div class="divider-deco">❖ ❖ ❖</div>' +
       '<div class="c-intro">تشهد لجنة عائلة أبو طه بأن المذكور أدناه من أبناء العائلة المسجلين لديها، وبناءً على البيانات والسجلات المعتمدة لدى اللجنة فإنه مستحق للغرض المبيّن أدناه.</div>' +
       '<div class="cards">' +
         '<div class="card"><div class="card-ico">👤</div><div class="card-txt"><div class="k">الاسم الكامل</div><div class="val">' + escapeHtml(v.name || '—') + '</div></div></div>' +
         '<div class="card"><div class="card-ico">🪪</div><div class="card-txt"><div class="k">رقم الهوية</div><div class="val">' + escapeHtml(v.id || '—') + '</div></div></div>' +
+        '<div class="card"><div class="card-ico">📅</div><div class="card-txt"><div class="k">تاريخ الميلاد</div><div class="val">' + (v.dob ? new Date(v.dob).toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'}) : '—') + '</div></div></div>' +
+        '<div class="card"><div class="card-ico">🏙️</div><div class="card-txt"><div class="k">مكان الميلاد</div><div class="val">' + escapeHtml(v.birthplace || '—') + '</div></div></div>' +
         '<div class="card"><div class="card-ico">📍</div><div class="card-txt"><div class="k">مكان الإقامة</div><div class="val">' + escapeHtml(locationStr || '—') + '</div></div></div>' +
         '<div class="card"><div class="card-ico">💍</div><div class="card-txt"><div class="k">الحالة الاجتماعية</div><div class="val">' + (maritalLabels[f.marital] || '—') + '</div></div></div>' +
       '</div>' +
@@ -15638,7 +15643,7 @@ function printNeedCertificate(voterId, specificNeed){
         '<p>وقد أُعطيت هذه الشهادة بناءً على طلب صاحب العلاقة لتقديمها للجهات المعنية.</p>' +
       '</div>' +
       '<div class="c-foot">' +
-        '<div class="foot-col qr-box"><img src="' + qrUrl + '" onerror="this.style.display=\'none\'" /><div class="lbl">رمز التحقق</div></div>' +
+        '<div class="foot-col qr-box"><img src="' + qrUrl + '" onerror="this.style.display=\'none\'" /><div class="lbl">امسح للتحقق من الشهادة</div></div>' +
         '<div class="foot-col"><div class="stamp-area"></div><div class="lbl" style="font-size:11px;color:#aaa">مكان الختم</div></div>' +
         '<div class="foot-col"><div class="sign-line"></div><div class="sign-role">رئيس لجنة العائلة</div></div>' +
       '</div>' +
@@ -15646,8 +15651,10 @@ function printNeedCertificate(voterId, specificNeed){
         '<span>تاريخ الإصدار: ' + dateStr + '</span>' +
         '<span>رقم الشهادة: ' + certNumber + '</span>' +
       '</div>' +
-      '<div class="e-notice">هذه الشهادة صادرة إلكترونياً من المنظومة المركزية للجنة عائلة أبو طه وتُعتمد بختم وتوقيع لجنة العائلة.</div>' +
+      '<div class="print-date-bar" id="printDateBar">تاريخ الطباعة: <span class="print-date-val" id="printDateVal">—</span></div>' +
+      '<div class="e-notice">هذه الشهادة صادرة إلكترونياً من المنظومة المركزية - للجنة عائلة أبو طه وتُعتمد بختم وتوقيع لجنة العائلة.</div>' +
     '</div></div>' +
+    '<script>window.addEventListener("beforeprint",function(){var d=new Date();var opts={year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"};var el=document.getElementById("printDateVal");if(el)el.textContent=d.toLocaleDateString("ar-EG",opts);});' + '<\/script>' +
     '<button class="print-btn no-print" onclick="window.print()">🖨 طباعة الشهادة</button>' +
     '</body></html>';
   
