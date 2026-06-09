@@ -15546,7 +15546,11 @@ function printNeedCertificate(voterId, specificNeed){
 
   var now        = new Date();
   // Use existing certNumber if already saved, else generate and save
-  var certNumber = v.certNumber || ('AT-' + now.getFullYear() + '-' + String(v.serial || Math.floor(Math.random()*9999)).padStart(4,'0'));
+  var certNumber = v.certNumber || (function(){
+    var rnd = '', chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    for(var i=0;i<8;i++){ rnd += chars.charAt(Math.floor(Math.random()*chars.length)); }
+    return 'AT-' + now.getFullYear() + '-' + String(v.serial || Math.floor(Math.random()*9999)).padStart(4,'0') + '-' + rnd;
+  })();
   if(!v.certNumber){
     v.certNumber = certNumber;
     // Persist to localStorage and Supabase
@@ -15588,7 +15592,7 @@ function printNeedCertificate(voterId, specificNeed){
     '.corner.bl { bottom:8px; right:8px; transform:scaleY(-1); }' +
     '.corner.br { bottom:8px; left:8px; transform:scale(-1,-1); }' +
     '.c-num { position:absolute; top:0; right:0; font-size:10px; color:#888; font-weight:600; }' +
-    '.c-head { text-align:center; padding-top:2px; margin-bottom:4px; }' +
+    '.c-head { text-align:center; padding-top:2px; margin-bottom:4px; }' + '.c-head { position:relative; }' + '.head-qr { position:absolute; top:0; right:0; text-align:center; }' + '.head-qr img { width:62px; height:62px; }' + '.head-qr-lbl { font-size:8px; color:#888; margin-top:1px; }' + '.foot-box { text-align:center; flex:1; }' + '.foot-box-label { font-size:13px; font-weight:800; color:#B8860B; margin-bottom:6px; }' + '.stamp-space { width:120px; height:80px; margin:0 auto; }' + '.sign-space { width:150px; height:80px; margin:0 auto; border-bottom:1.5px solid #1a1a1a; }' +
     '.c-logo { width:54px; height:54px; border-radius:50%; object-fit:cover; border:2px solid #B8860B; margin-bottom:4px; }' +
     '.c-org { font-size:20px; font-weight:900; color:#1a1a1a; }' +
     '.c-sub { font-size:13px; color:#B8860B; font-weight:700; margin-top:2px; }' +
@@ -15634,6 +15638,7 @@ function printNeedCertificate(voterId, specificNeed){
       '<div class="corner bl"></div><div class="corner br"></div>' +
       '<div class="c-num">رقم: ' + certNumber + '</div>' +
       '<div class="c-head">' +
+        '<div class="head-qr"><img src="' + qrUrl + '" onerror=\\"this.style.display=none\\" /><div class="head-qr-lbl">للتحقق</div></div>' +
         '<img src="' + logoUrl + '" class="c-logo" onerror=\"this.style.display=none\" />' +
         '<div class="c-org">المنظومة الإلكترونية المركزية</div>' +
         '<div class="c-sub">لجنة عائلة أبو طه</div>' +
@@ -15661,12 +15666,7 @@ function printNeedCertificate(voterId, specificNeed){
         '<p>أُصدرت هذه الشهادة استناداً إلى البيانات والسجلات المتوفرة لدى لجنة عائلة أبو طه بتاريخ إصدارها، وتقتصر مسؤولية اللجنة على صحة البيانات الواردة فيها وفق سجلاتها الرسمية، ولا يترتب على إصدارها أي التزام قانوني أو مالي أو إداري تجاه أي جهة كانت.</p>' +
         '<p>وقد أُعطيت هذه الشهادة بناءً على طلب صاحب العلاقة لتقديمها للجهات المعنية.</p>' +
       '</div>' +
-      '<div class="c-foot">' +
-        '<div class="qr-box"><img src="' + qrUrl + '" onerror=\"this.style.display=none\" /><div class="lbl">امسح للتحقق من الشهادة</div></div>' +
-        '<div class="stamp-area"></div>' +
-        '<div><div class="sign-line"></div><div class="sign-role">رئيس لجنة العائلة</div></div>' +
-      '</div>' +
-      '<div class="gov-footer">' +
+      '<div class="c-foot">' + '<div class="foot-box"><div class="foot-box-label">ختم اللجنة</div><div class="stamp-space"></div></div>' + '<div class="foot-box"><div class="foot-box-label">رئيس اللجنة</div><div class="sign-space"></div></div>' + '</div>' + '<div class="gov-footer">' +
         '<div class="gov-tahreer">حُرِّرت هذه الشهادة إلكترونياً بتاريخ: <span class="print-date-val" id="printDateVal">—</span></div>' +
         '<div class="gov-notice">هذه الشهادة صادرة إلكترونياً عن المنظومة المركزية - للجنة عائلة أبو طه وتُعتمد بختم وتوقيع لجنة العائلة. رقم الشهادة للتحقق: <strong>' + certNumber + '</strong></div>' +
       '</div>' +
@@ -15971,91 +15971,85 @@ function initCertVerify(){
   // Wait for voters to load from Supabase/localStorage
   function doVerify(){
     var voters = (typeof getVoters === 'function') ? getVoters() : [];
-    var needLabels = {
-      medical:'علاج', education:'تعليم', marriage:'زواج',
-      business:'عمل', housing:'سكن', travel:'سفر', other:'استحقاق آخر'
+    var needLabels = {medical:'علاج',education:'تعليم',marriage:'زواج',business:'عمل',housing:'سكن',travel:'سفر',other:'استحقاق آخر'};
+    var autoDesc = {
+      medical:'يحتاج إلى تلقّي العلاج الطبي اللازم لحالته الصحية.',
+      education:'يرغب في الالتحاق ببرنامج تعليمي أو الحصول على منحة دراسية.',
+      marriage:'يرغب في إتمام الزواج ويحتاج إلى دعم لجنة العائلة.',
+      business:'يسعى إلى إقامة مشروع تجاري أو الحصول على دعم مادي.',
+      housing:'يحتاج إلى وحدة سكنية أو دعم لتأمين المسكن المناسب.',
+      travel:'يحتاج إلى السفر خارج البلاد لغرض العلاج أو الدراسة.',
+      other:'لديه احتياج موثّق لدى لجنة العائلة.'
     };
+    var voter = voters.find(function(v){ return v.certNumber === certNum; });
+    if(!voter && voterId){ voter = voters.find(function(v){ return v.id === voterId; }); }
 
-    // Find voter by certNumber OR by id+certNumber combo
-    var voter = voters.find(function(v){
-      return v.certNumber === certNum ||
-             (voterId && v.id === voterId && v.certNumber === certNum);
-    });
-
-    // If not found by certNumber, try by ID alone (cert may not be saved yet)
-    if(!voter && voterId){
-      voter = voters.find(function(v){ return v.id === voterId; });
-    }
-
-    var statusEl   = document.getElementById('verifyStatus');
-    var cardEl     = document.getElementById('verifyCertCard');
+    var statusEl = document.getElementById('verifyStatus');
+    var cardEl = document.getElementById('verifyCertCard');
     var notFoundEl = document.getElementById('verifyNotFound');
 
+    function banner(bg,color,icon,text,sub){
+      return '<div style="background:'+bg+';border-radius:16px;padding:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.06)">'+
+        '<div style="font-size:40px;margin-bottom:8px">'+icon+'</div>'+
+        '<div style="font-size:19px;font-weight:900;color:'+color+'">'+text+'</div>'+
+        (sub?'<div style="font-size:13px;color:#6B6B6B;margin-top:6px;line-height:1.7">'+sub+'</div>':'')+'</div>';
+    }
+
     if(!voter){
-      // Not found
-      statusEl.innerHTML = '<div style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:999px;font-size:16px;font-weight:800;background:#FEE2E2;color:#dc2626"><span style="font-size:22px">❌</span> شهادة غير معتمدة</div>';
+      statusEl.innerHTML = banner('#FEF2F2','#dc2626','❌','شهادة غير معتمدة','');
       notFoundEl.style.display = 'block';
       return;
     }
 
-    // Calculate validity
     var f = voter.family || {};
     var needsList = (f.needs || []).filter(function(n){ return n && n !== 'none'; });
+    var certNeed = needsList[0] || 'other';
     var needLabel = needsList.map(function(n){ return needLabels[n] || n; }).join('، ') || '—';
+    var description = (f.aspirationsDetails || '').trim() || autoDesc[certNeed] || autoDesc['other'];
 
-    // Parse issue date from certNumber: AT-YYYY-NNNN
-    var yearMatch = certNum.match(/AT-(\d{4})-/);
-    var issueYear = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
-    // We use today as issue date approximation (exact date not stored yet)
     var now = new Date();
-    var arOpts = {year:'numeric', month:'long', day:'numeric'};
-    var issueDateStr = issueYear + '';
-
-    // Check if voter has a stored issue timestamp
+    var arOpts = {year:'numeric',month:'long',day:'numeric'};
     var issueTs = voter.certIssuedAt;
-    var expiryDate, isValid, issueDateDisplay;
+    var isValid, isCancelled = voter.certCancelled === true;
+    var issueDateDisplay, expiryDate = null;
 
     if(issueTs){
       var issueD = new Date(issueTs);
-      expiryDate = new Date(issueD);
-      expiryDate.setDate(expiryDate.getDate() + 90);
+      expiryDate = new Date(issueD); expiryDate.setDate(expiryDate.getDate()+90);
       isValid = now <= expiryDate;
-      issueDateDisplay = issueD.toLocaleDateString('ar-EG', arOpts);
+      issueDateDisplay = issueD.toLocaleDateString('ar-EG-u-nu-latn', arOpts);
     } else {
-      // No timestamp — show as valid, display year only
       isValid = true;
-      issueDateDisplay = 'خلال عام ' + issueYear;
-      expiryDate = null;
+      var ym = certNum.match(/AT-(\d{4})/);
+      issueDateDisplay = ym ? ('عام '+ym[1]) : '—';
     }
 
-    // Render status badge
-    if(isValid){
-      statusEl.innerHTML =
-        '<div style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:999px;font-size:16px;font-weight:800;background:#DCFCE7;color:#16a34a">' +
-        '<span style="font-size:22px">✅</span> شهادة سارية ومعتمدة</div>';
+    if(isCancelled){
+      statusEl.innerHTML = banner('#FEF2F2','#dc2626','❌','تم إلغاء هذه الشهادة','لم تعد صالحة للاستخدام.');
+    } else if(!isValid){
+      var exp = expiryDate ? expiryDate.toLocaleDateString('ar-EG-u-nu-latn',arOpts) : '';
+      statusEl.innerHTML = banner('#FEFCE8','#ca8a04','⚠️','انتهت صلاحية هذه الشهادة', exp?('بتاريخ: '+exp):'');
     } else {
-      statusEl.innerHTML =
-        '<div style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:999px;font-size:16px;font-weight:800;background:#FEF9C3;color:#ca8a04">' +
-        '<span style="font-size:22px">⚠️</span> انتهت صلاحية الشهادة</div>';
+      statusEl.innerHTML = banner('#F0FDF4','#16a34a','✅','تم التحقق من صحة الشهادة','هذه الشهادة سارية ومعتمدة.');
     }
 
-    // Fill cert card
-    document.getElementById('verifyCertNum').textContent  = certNum;
-    document.getElementById('vd-name').textContent        = voter.name || '—';
-    document.getElementById('vd-id').textContent          = voter.id   || '—';
-    document.getElementById('vd-need').textContent        = needLabel;
-    document.getElementById('vd-issue').textContent       = issueDateDisplay;
-    document.getElementById('vd-expiry').textContent      = expiryDate
-      ? expiryDate.toLocaleDateString('ar-EG', arOpts)
-      : 'غير محدد';
-    document.getElementById('vd-validity').innerHTML      = isValid
-      ? '<span style="color:#16a34a;font-weight:800">✅ سارية</span>'
-      : '<span style="color:#ca8a04;font-weight:800">⚠️ منتهية الصلاحية</span>';
+    document.getElementById('verifyCertNum').textContent = certNum;
+    document.getElementById('vd-name').textContent = voter.name || '—';
+    document.getElementById('vd-id').textContent = voter.id || '—';
+    document.getElementById('vd-need').textContent = needLabel;
+    var descEl = document.getElementById('vd-desc'); if(descEl) descEl.textContent = description;
+    document.getElementById('vd-issue').textContent = issueDateDisplay;
+    var expEl = document.getElementById('vd-expiry');
+    if(expiryDate){
+      expEl.textContent = expiryDate.toLocaleDateString('ar-EG-u-nu-latn',arOpts);
+      expEl.style.color = isValid ? '#16a34a' : '#ca8a04';
+    } else { expEl.textContent = '—'; }
 
+    notFoundEl.style.display = 'none';
     cardEl.style.display = 'block';
   }
 
-  // Try immediately, then retry after data loads from Supabase
+    // Try immediately, then retry after data loads from Supabase
   setTimeout(doVerify, 200);
   setTimeout(doVerify, 1500);
   setTimeout(doVerify, 3500);
@@ -16348,90 +16342,49 @@ if(document.readyState === 'loading'){
 
 
 <!-- ══════════════════════════════════════════════════════════
-     CERTIFICATE VERIFICATION PAGE — opens when ?verify= in URL
+     CERTIFICATE VERIFICATION PAGE — government-style
 ══════════════════════════════════════════════════════════ -->
-<div class="ay-overlay" id="verifyOverlay" style="display:none;z-index:9999;background:#FBF8F0">
-  <div style="max-width:640px;margin:0 auto;padding:24px 16px;min-height:100vh;font-family:'Cairo',sans-serif;direction:rtl">
-    
-    <!-- Header -->
-    <div style="text-align:center;padding:24px 0 16px;border-bottom:2px solid #B8860B;margin-bottom:24px">
-      <img src="https://i.ibb.co/F4xfYJCp/FB-IMG-1777373548219.jpg" 
-           style="width:64px;height:64px;border-radius:50%;border:2px solid #B8860B;object-fit:cover;margin-bottom:10px"
-           onerror="this.style.display='none'" />
-      <div style="font-size:20px;font-weight:900;color:#1a1a1a">المنظومة الإلكترونية المركزية</div>
-      <div style="font-size:14px;color:#B8860B;font-weight:700">لجنة عائلة أبو طه</div>
+<div id="verifyOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#FBF8F0,#F3EDDD);overflow-y:auto;font-family:'Cairo',sans-serif;direction:rtl">
+  <div style="max-width:560px;margin:0 auto;padding:20px 16px 40px">
+
+    <div style="text-align:center;padding:20px 0 16px">
+      <img src="https://i.ibb.co/F4xfYJCp/FB-IMG-1777373548219.jpg" style="width:72px;height:72px;border-radius:50%;border:3px solid #B8860B;object-fit:cover;box-shadow:0 4px 16px rgba(184,134,11,0.25)" onerror="this.style.display='none'" />
+      <div style="font-size:21px;font-weight:900;color:#1a1a1a;margin-top:10px">المنظومة الإلكترونية المركزية</div>
+      <div style="font-size:14px;color:#B8860B;font-weight:700;margin-top:2px">لجنة عائلة أبو طه</div>
+      <div style="font-size:12px;color:#888;margin-top:6px">نظام التحقق الإلكتروني من الشهادات</div>
     </div>
 
-    <!-- Status badge -->
-    <div id="verifyStatus" style="text-align:center;margin-bottom:20px">
-      <div style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:999px;font-size:16px;font-weight:800;background:#F5F0E0;color:#6B6B6B">
-        <span style="font-size:22px">⏳</span> جارٍ التحقق...
+    <div id="verifyStatus" style="margin:16px 0"></div>
+
+    <div id="verifyCertCard" style="display:none;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.08);border:1px solid #EFE7D2">
+      <div style="background:linear-gradient(135deg,#B8860B,#9A7D1A);padding:18px 22px;text-align:center">
+        <div style="font-family:'Amiri',serif;font-size:28px;font-weight:700;color:#fff">شهادة استحقاق</div>
+        <div id="verifyCertNum" style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:5px;direction:ltr;font-weight:600;letter-spacing:0.5px"></div>
       </div>
+      <div style="padding:8px 22px 18px">
+        <table style="width:100%;border-collapse:collapse;font-size:14px"><tbody>
+          <tr><td style="padding:11px 0;color:#888;font-weight:600;width:42%;border-bottom:1px solid #F3EDDD">اسم المستفيد</td><td style="padding:11px 0;font-weight:700;color:#1a1a1a;border-bottom:1px solid #F3EDDD" id="vd-name"></td></tr>
+          <tr><td style="padding:11px 0;color:#888;font-weight:600;border-bottom:1px solid #F3EDDD">رقم الهوية</td><td style="padding:11px 0;font-weight:700;color:#1a1a1a;direction:ltr;text-align:right;border-bottom:1px solid #F3EDDD" id="vd-id"></td></tr>
+          <tr><td style="padding:11px 0;color:#888;font-weight:600;border-bottom:1px solid #F3EDDD">نوع الاستحقاق</td><td style="padding:11px 0;font-weight:800;color:#B8860B;font-size:15px;border-bottom:1px solid #F3EDDD" id="vd-need"></td></tr>
+          <tr><td style="padding:11px 0;color:#888;font-weight:600;border-bottom:1px solid #F3EDDD;vertical-align:top">وصف الاستحقاق</td><td style="padding:11px 0;font-weight:500;color:#444;line-height:1.7;font-size:13px;border-bottom:1px solid #F3EDDD" id="vd-desc"></td></tr>
+          <tr><td style="padding:11px 0;color:#888;font-weight:600;border-bottom:1px solid #F3EDDD">تاريخ الإصدار</td><td style="padding:11px 0;font-weight:700;color:#1a1a1a;border-bottom:1px solid #F3EDDD" id="vd-issue"></td></tr>
+          <tr><td style="padding:11px 0;color:#888;font-weight:600">تاريخ انتهاء الصلاحية</td><td style="padding:11px 0;font-weight:700" id="vd-expiry"></td></tr>
+        </tbody></table>
+      </div>
+      <div style="background:#FBF8F0;border-top:1px solid #EFE7D2;padding:14px 22px;text-align:center;font-size:11px;color:#888;line-height:1.7">هذه الشهادة صادرة إلكترونياً عن المنظومة المركزية للجنة عائلة أبو طه<br>وتُعتمد بختم وتوقيع لجنة العائلة</div>
     </div>
 
-    <!-- Certificate data card -->
-    <div id="verifyCertCard" style="display:none;background:#fff;border:2px solid #E8E0CC;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06)">
-      
-      <!-- Card header -->
-      <div style="background:linear-gradient(135deg,#B8860B,#9A7D1A);padding:16px 20px;text-align:center">
-        <div style="font-family:'Amiri',serif;font-size:26px;font-weight:700;color:#fff">شهادة استحقاق</div>
-        <div id="verifyCertNum" style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:4px;direction:ltr"></div>
-      </div>
-
-      <!-- Data rows -->
-      <div style="padding:16px 20px">
-        <table style="width:100%;border-collapse:collapse;font-size:14px">
-          <tr id="vr-name">
-            <td style="padding:8px 0;color:#888;font-weight:600;width:40%">الاسم الكامل</td>
-            <td style="padding:8px 0;font-weight:700;color:#1a1a1a" id="vd-name"></td>
-          </tr>
-          <tr style="border-top:1px solid #F0EBDD" id="vr-id">
-            <td style="padding:8px 0;color:#888;font-weight:600">رقم الهوية</td>
-            <td style="padding:8px 0;font-weight:700;color:#1a1a1a;direction:ltr;text-align:right" id="vd-id"></td>
-          </tr>
-          <tr style="border-top:1px solid #F0EBDD">
-            <td style="padding:8px 0;color:#888;font-weight:600">نوع الاستحقاق</td>
-            <td style="padding:8px 0;font-weight:800;color:#B8860B;font-size:15px" id="vd-need"></td>
-          </tr>
-          <tr style="border-top:1px solid #F0EBDD">
-            <td style="padding:8px 0;color:#888;font-weight:600">تاريخ الإصدار</td>
-            <td style="padding:8px 0;font-weight:700;color:#1a1a1a" id="vd-issue"></td>
-          </tr>
-          <tr style="border-top:1px solid #F0EBDD">
-            <td style="padding:8px 0;color:#888;font-weight:600">تاريخ الانتهاء</td>
-            <td style="padding:8px 0;font-weight:700" id="vd-expiry"></td>
-          </tr>
-          <tr style="border-top:1px solid #F0EBDD">
-            <td style="padding:8px 0;color:#888;font-weight:600">الحالة</td>
-            <td style="padding:8px 0" id="vd-validity"></td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- Footer -->
-      <div style="background:#FBF8F0;border-top:1px solid #E8E0CC;padding:12px 20px;text-align:center;font-size:11px;color:#6B6B6B;line-height:1.6">
-        هذه الشهادة صادرة إلكترونياً عن المنظومة المركزية للجنة عائلة أبو طه<br>
-        وتُعتمد بختم وتوقيع لجنة العائلة
-      </div>
+    <div id="verifyNotFound" style="display:none;background:#fff;border-radius:18px;padding:36px 24px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.08);border:1px solid #FECACA">
+      <div style="width:72px;height:72px;border-radius:50%;background:#FEE2E2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:36px">❌</div>
+      <div style="font-size:19px;font-weight:800;color:#dc2626;margin-bottom:10px">شهادة غير معتمدة</div>
+      <div style="font-size:14px;color:#6B6B6B;line-height:1.8">هذه الشهادة غير موجودة أو غير صادرة عن<br>المنظومة الإلكترونية المركزية - عائلة أبو طه.</div>
     </div>
 
-    <!-- Not found message -->
-    <div id="verifyNotFound" style="display:none;text-align:center;padding:32px 20px;background:#fff;border:2px solid #E8E0CC;border-radius:16px">
-      <div style="font-size:48px;margin-bottom:12px">❌</div>
-      <div style="font-size:18px;font-weight:800;color:#dc2626;margin-bottom:8px">الشهادة غير موجودة</div>
-      <div style="font-size:14px;color:#6B6B6B;line-height:1.7">
-        لم يتم العثور على شهادة بهذا الرقم.<br>
-        قد تكون الشهادة غير صحيحة أو تم إلغاؤها.
-      </div>
-    </div>
-
-    <!-- Back button -->
     <div style="text-align:center;margin-top:24px">
-      <button onclick="document.getElementById('verifyOverlay').style.display='none';history.replaceState(null,'',window.location.pathname);"
-              style="background:none;border:1px solid #D8D0BC;border-radius:10px;padding:10px 24px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:600;color:#6B6B6B;cursor:pointer">
-        → العودة للموقع
-      </button>
+      <button onclick="document.getElementById('verifyOverlay').style.display='none';document.body.style.overflow='';history.replaceState(null,'',window.location.pathname);" style="background:#fff;border:1px solid #D8D0BC;border-radius:12px;padding:12px 28px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:#6B6B6B;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04)">← الذهاب إلى الموقع الرئيسي</button>
     </div>
+
+    <div style="text-align:center;margin-top:20px;font-size:11px;color:#A89B7A;line-height:1.7">🔒 نظام تحقق آمن — كل شهادة تحمل رمزاً فريداً غير قابل للتخمين<br>المنظومة الإلكترونية المركزية © عائلة أبو طه</div>
 
   </div>
 </div>
