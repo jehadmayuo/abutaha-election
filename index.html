@@ -7230,7 +7230,7 @@ function getVoters(){
   });
   return arr;
 }
-// [removed duplicate: setVoters]
+function _origSetVoters(v){ save(K.voters, v); }
 function getCands(){ return load(K.cands, []); }
 // [removed duplicate: setCands]
 function getVotes(){ return load(K.votes, []); }
@@ -7973,7 +7973,7 @@ var _n2=document.getElementById('btnNext2'); if(_n2) _n2.addEventListener('click
     ok = false;
   }
 
-  // If married/polygamous - require at least one spouse with name and id
+  // If married/polygamous - require at least one spouse with name (ID optional)
   if(['married','polygamous'].indexOf(marital) >= 0){
     var family = getFamilyData();
     if(!family.spouses || family.spouses.length === 0){
@@ -7981,10 +7981,10 @@ var _n2=document.getElementById('btnNext2'); if(_n2) _n2.addEventListener('click
       ok = false;
     } else {
       var validSpouse = family.spouses.some(function(s){
-        return s.name && s.name.length > 5 && /^\d{9}$/.test(s.id);
+        return s.name && s.name.trim().length >= 4;
       });
       if(!validSpouse){
-        toast('يرجى إدخال اسم الزوج/ة (٤ كلمات) ورقم هويته/ها (٩ أرقام)','err');
+        toast('يرجى إدخال اسم الزوج/ة على الأقل','err');
         ok = false;
       }
     }
@@ -10979,7 +10979,6 @@ window.rejectVoter = function(voterId){
 // Sync voter immediately when saved (override existing sync)
 // ══════════════════════════════════════════════════════════
 // Sync voters to Supabase on save
-const _origSetVoters = setVoters;
 function setVoters(v){
   _origSetVoters(v);
   syncVotersToSupabase(v);
@@ -15460,10 +15459,15 @@ function collectChildrenData(){
   var rows = document.querySelectorAll('#childrenContainer .child-row');
   var children = [];
   rows.forEach(function(row){
-    var name = (row.querySelector('.child-name').value || '').trim();
-    var gender = row.querySelector('.child-gender').value;
-    var dob = row.querySelector('.child-dob').value;
-    var idNumber = (row.querySelector('.child-id').value || '').trim();
+    var nameEl   = row.querySelector('.child-name');
+    var genderEl = row.querySelector('.child-gender');
+    var dobEl    = row.querySelector('.child-dob');
+    var idEl     = row.querySelector('.child-id');
+    if(!nameEl || !genderEl || !dobEl || !idEl) return;
+    var name = (nameEl.value || '').trim();
+    var gender = genderEl.value;
+    var dob = dobEl.value;
+    var idNumber = (idEl.value || '').trim();
     var age = calcChildAge(dob);
     if(name || dob || idNumber){
       children.push({
@@ -15504,170 +15508,178 @@ function printNeedCertificate(voterId, specificNeed){
   var voters = (typeof getVoters === 'function') ? getVoters() : [];
   var v = voters.find(function(x){ return x.id === voterId; });
   if(!v){ toast('لم يتم العثور على المسجّل', 'err'); return; }
-  
+
   var f = v.family || {};
   var needLabels = {
-    medical: 'علاج', education: 'تعليم', marriage: 'زواج',
-    business: 'عمل', housing: 'سكن', travel: 'سفر', other: 'استحقاق آخر'
+    medical:'علاج', education:'تعليم', marriage:'زواج',
+    business:'عمل', housing:'سكن', travel:'سفر', other:'استحقاق آخر'
   };
   var needsList = (f.needs || []).filter(function(n){ return n && n !== 'none'; });
-  var certNeed = specificNeed || (needsList.length ? needsList[0] : null);
+  var certNeed  = specificNeed || (needsList.length ? needsList[0] : null);
   if(!certNeed){ toast('لا يوجد استحقاق مسجّل لهذا الشخص', 'err'); return; }
-  
-  var needLabel;
-  if(specificNeed){
-    needLabel = needLabels[certNeed] || certNeed;
-  } else {
-    needLabel = needsList.map(function(n){ return needLabels[n] || n; }).join('، ');
-  }
-  
-  // Description from the registrant's own description box
+
+  var needLabel = specificNeed
+    ? (needLabels[certNeed] || certNeed)
+    : needsList.map(function(n){ return needLabels[n] || n; }).join('، ');
+
+  // Description from registrant or auto-generated
   var description = (f.aspirationsDetails || '').trim();
   if(!description){
-    description = 'مستحق لـ' + needLabel + ' وفق البيانات والسجلات المعتمدة لدى لجنة العائلة، وتُمنح هذه الشهادة لتقديمها إلى الجهات المختصة واستكمال الإجراءات اللازمة.';
+    var autoDesc = {
+      medical:  'يحتاج إلى تلقّي العلاج الطبي اللازم لحالته الصحية، وتُمنح هذه الشهادة لتقديمها إلى الجهات الطبية والإدارية المختصة لاستكمال الإجراءات.',
+      education:'يرغب في الالتحاق ببرنامج تعليمي أو الحصول على منحة دراسية، وتُمنح هذه الشهادة لتقديمها إلى المؤسسات التعليمية المختصة.',
+      marriage: 'يرغب في إتمام الزواج وتحتاج عائلته إلى دعم لجنة العائلة لاستكمال الإجراءات اللازمة.',
+      business: 'يسعى إلى إقامة مشروع تجاري أو الحصول على دعم مادي، وتُمنح هذه الشهادة لتقديمها إلى الجهات الداعمة والمانحة.',
+      housing:  'يحتاج إلى وحدة سكنية أو دعم لتأمين المسكن المناسب له ولأسرته.',
+      travel:   'يحتاج إلى السفر خارج البلاد لغرض العلاج أو الدراسة أو إتمام الإجراءات الرسمية، وتُمنح هذه الشهادة لتقديمها إلى الجهات المختصة.',
+      other:    'لديه احتياج موثّق لدى لجنة العائلة، وتُمنح هذه الشهادة لتقديمها إلى الجهات المعنية.'
+    };
+    description = autoDesc[certNeed] || autoDesc['other'];
   }
-  
-  var maritalLabels = {single:'أعزب',married:'متزوج',polygamous:'متعدد الزوجات',divorced:'مطلق',widowed:'أرمل'};
-  if(v.gender === 'female' || v.gender === 'أنثى'){
-    maritalLabels = {single:'عزباء',married:'متزوجة',divorced:'مطلقة',widowed:'أرملة',polygamous:'-'};
-  }
-  
+
+  var maritalLabels = (v.gender === 'female' || v.gender === 'أنثى')
+    ? {single:'عزباء', married:'متزوجة', divorced:'مطلقة', widowed:'أرملة', polygamous:'-'}
+    : {single:'أعزب',  married:'متزوج',  divorced:'مطلق',  widowed:'أرمل',  polygamous:'متعدد الزوجات'};
+
   var w = window.open('', '_blank');
   if(!w){ toast('يرجى السماح بفتح النوافذ المنبثقة', 'err'); return; }
-  
-  var now = new Date();
-  var dateStr = now.toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' });
-  var certNumber = 'AT-' + now.getFullYear() + '-' + String(v.serial || Math.floor(Math.random()*9999)).padStart(4,'0');
-  var locationStr = [v.city, v.district, v.gov, v.country].filter(Boolean).join('، ');
-  var logoUrl = 'https://i.ibb.co/F4xfYJCp/FB-IMG-1777373548219.jpg';
-  
-  // QR data (verification text)
-  // QR links to the live site with verification params
-  var siteBase = (typeof window !== 'undefined' && window.location && window.location.hostname !== 'about:blank' && window.location.hostname !== '') ? (window.location.protocol + '//' + window.location.hostname) : 'https://election-abutaha.com';
+
+  var now        = new Date();
+  // Use existing certNumber if already saved, else generate and save
+  var certNumber = v.certNumber || ('AT-' + now.getFullYear() + '-' + String(v.serial || Math.floor(Math.random()*9999)).padStart(4,'0'));
+  if(!v.certNumber){
+    v.certNumber = certNumber;
+    // Persist to localStorage and Supabase
+    var _voters = getVoters();
+    var _vi = _voters.findIndex(function(x){ return x.id === v.id; });
+    if(_vi >= 0){ _voters[_vi].certNumber = certNumber; setVoters(_voters); }
+    if(SUPA){ SUPA.from('voters').update({cert_number: certNumber}).eq('id', v.id).then(function(){}); }
+  }
+  var expiry     = new Date(now); expiry.setDate(expiry.getDate() + 90);
+  var arOpts     = {year:'numeric', month:'long', day:'numeric'};
+  var dateStr    = now.toLocaleDateString('ar-EG-u-nu-latn', arOpts);
+  var expiryStr  = expiry.toLocaleDateString('ar-EG-u-nu-latn', arOpts);
+  var dobStr     = v.dob ? new Date(v.dob).toLocaleDateString('ar-EG-u-nu-latn', arOpts) : '—';
+  var locationStr= [v.city, v.district, v.gov, v.country].filter(Boolean).join('، ');
+  var logoUrl    = 'https://i.ibb.co/F4xfYJCp/FB-IMG-1777373548219.jpg';
+
+  var siteBase  = (window.location && window.location.hostname)
+    ? (window.location.protocol + '//' + window.location.hostname)
+    : 'https://election-abutaha.com';
   var verifyUrl = siteBase + '/?verify=' + encodeURIComponent(certNumber) + '&id=' + encodeURIComponent(v.id || '');
-  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=B8860B&bgcolor=FFFDF0&data=' + encodeURIComponent(verifyUrl);
-  
-  var doc = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
-    '<title>شهادة استحقاق — ' + escapeHtml(v.name || '') + '</title>' +
+  var qrUrl     = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=B8860B&bgcolor=FFFDF0&data=' + encodeURIComponent(verifyUrl);
+
+  var doc =
+    '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
+    '<title>شهادة استحقاق — ' + escapeHtml(v.name||'') + '</title>' +
     '<style>' +
     '@import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;900&display=swap");' +
     '* { margin:0; padding:0; box-sizing:border-box; }' +
     'body { background:#e8e8e8; font-family:Cairo,sans-serif; padding:20px; margin:0; }' +
     '.page { width:210mm; height:297mm; margin:0 auto; background:#fff; padding:0; position:relative; display:flex; align-items:center; justify-content:center; }' +
     '.frame { width:82%; height:82%; border:2.5px double #B8860B; border-radius:6px; padding:5mm 7mm; position:relative; box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; }' +
-    '.frame::before { content:""; position:absolute; inset:5px; border:1px solid #B8860B; border-radius:4px; opacity:0.5; pointer-events:none; }' +
-    /* Corner ornaments */
-    '.corner { position:absolute; width:38px; height:38px; border:2px solid #B8860B; }' +
-    '.corner.tl { top:10px; right:10px; border-left:none; border-bottom:none; }' +
-    '.corner.tr { top:10px; left:10px; border-right:none; border-bottom:none; }' +
-    '.corner.bl { bottom:10px; right:10px; border-left:none; border-top:none; }' +
-    '.corner.br { bottom:10px; left:10px; border-right:none; border-top:none; }' +
-    /* Header */
-    '.c-num { position:absolute; top:0; right:0; font-size:10px; color:#666; font-weight:600; }' +
-    '.c-head { text-align:center; padding-top:2px; margin-bottom:2px; }' +
-    '.c-logo { width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid #B8860B; margin-bottom:3px; }' +
+    '.frame::before { content:""; position:absolute; inset:5px; border:1px solid rgba(184,134,11,0.35); border-radius:4px; pointer-events:none; }' +
+    '.corner { position:absolute; width:24px; height:24px; }' +
+    '.corner::before,.corner::after { content:""; position:absolute; background:#B8860B; }' +
+    '.corner::before { width:100%; height:2px; top:0; }' +
+    '.corner::after  { height:100%; width:2px; top:0; }' +
+    '.corner.tl { top:8px; right:8px; }' +
+    '.corner.tr { top:8px; left:8px; transform:scaleX(-1); }' +
+    '.corner.bl { bottom:8px; right:8px; transform:scaleY(-1); }' +
+    '.corner.br { bottom:8px; left:8px; transform:scale(-1,-1); }' +
+    '.c-num { position:absolute; top:0; right:0; font-size:10px; color:#888; font-weight:600; }' +
+    '.c-head { text-align:center; padding-top:2px; margin-bottom:4px; }' +
+    '.c-logo { width:54px; height:54px; border-radius:50%; object-fit:cover; border:2px solid #B8860B; margin-bottom:4px; }' +
     '.c-org { font-size:20px; font-weight:900; color:#1a1a1a; }' +
     '.c-sub { font-size:13px; color:#B8860B; font-weight:700; margin-top:2px; }' +
-    '.divider { height:1.5px; background:linear-gradient(90deg, transparent, #B8860B, transparent); margin:6px 0; }' +
-    
-    /* Title */
+    '.divider { height:1.5px; background:linear-gradient(90deg,transparent,#B8860B,transparent); margin:6px 0; }' +
     '.c-title { text-align:center; font-family:Amiri,serif; font-size:32px; font-weight:700; color:#B8860B; margin:6px 0; text-shadow:1px 1px 0 rgba(184,134,11,0.15); }' +
-    /* Body text */
-    '.c-intro { font-size:12px; line-height:1.5; text-align:center; color:#2a2a2a; margin:5px 16px; }' +
-    /* Data cards */
+    '.c-title-sub { text-align:center; font-size:11px; color:#888; margin-bottom:4px; }' +
+    '.c-intro { font-size:12px; line-height:1.55; text-align:center; color:#2a2a2a; margin:5px 16px; }' +
     '.cards { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:9px 0; }' +
-    '.card { background:#FBF8F0; border:1px solid #E0D4A8; border-radius:8px; padding:7px 10px; display:flex; align-items:center; gap:8px; }' +
+    '.card { background:#FBF8F0; border:1px solid #E0D4A8; border-radius:8px; padding:8px 12px; }' +
     '.card-ico { width:28px; height:28px; border-radius:7px; background:#B8860B; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }' +
     '.card-txt .k { font-size:10px; color:#888; }' +
-    '.card-txt .val { font-size:14px; font-weight:700; color:#1a1a1a; }' +
-    /* Eligibility section */
+    '.card-txt .val { font-size:13px; font-weight:700; color:#1a1a1a; }' +
     '.elig { display:grid; grid-template-columns:1fr 2fr; gap:9px; margin:9px 0; }' +
     '.elig-type { background:linear-gradient(135deg,#FBF3D8,#F5ECC8); border:2px solid #B8860B; border-radius:10px; padding:10px; text-align:center; display:flex; flex-direction:column; justify-content:center; }' +
     '.elig-type .lbl { font-size:12px; color:#9A7D1A; margin-bottom:5px; }' +
-    '.elig-type .v { font-size:17px; font-weight:900; color:#B8860B; }' +
+    '.elig-type .v { font-size:18px; font-weight:900; color:#B8860B; font-family:Amiri,serif; }' +
     '.elig-desc { background:#fff; border:2px solid #E0D4A8; border-radius:10px; padding:10px 12px; }' +
     '.elig-desc .lbl { font-size:12px; color:#9A7D1A; font-weight:700; margin-bottom:6px; }' +
-    '.elig-desc .v { font-size:12.5px; line-height:1.55; color:#2a2a2a; text-align:justify; }' +
-    /* Official paragraph */
-    '.c-official { font-size:11px; line-height:1.45; text-align:center; color:#444; margin:5px 18px; font-style:italic; }' +
-    /* Validity bar */
+    '.elig-desc .v { font-size:12.5px; line-height:1.6; color:#2a2a2a; text-align:justify; }' +
+    '.c-official { font-size:11px; line-height:1.5; text-align:center; color:#444; margin:7px 18px; font-style:italic; }' +
     '.validity { background:linear-gradient(135deg,#B8860B,#9A7D1A); color:#fff; border-radius:9px; padding:8px; text-align:center; font-size:13px; font-weight:700; margin:8px 0; }' +
-    /* Disclaimer */
-    '.disclaimer { background:#FBF8F0; border:1px solid #E0D4A8; border-right:4px solid #B8860B; border-radius:7px; padding:8px 12px; margin:8px 0; }' +
+    '.disclaimer { background:#FBF8F0; border:1px solid #E0D4A8; border-right:4px solid #B8860B; border-radius:8px; padding:8px 12px; margin:8px 0; }' +
     '.disclaimer h4 { font-size:12px; color:#9A7D1A; margin-bottom:4px; }' +
-    '.disclaimer p { font-size:9.5px; line-height:1.4; color:#555; margin-bottom:2px; text-align:justify; }' +
-    /* Footer */
-    '.c-foot { display:flex; justify-content:space-between; align-items:flex-end; margin-top:16px; padding-top:8px; }' +
-    '.foot-col { text-align:center; flex:1; }' +
-    '.qr-box img { width:68px; height:68px; border:1px solid #ddd; }' +
-    '.qr-box .lbl { font-size:9px; color:#888; margin-top:2px; }' +
+    '.disclaimer p { font-size:10px; line-height:1.5; color:#555; margin-bottom:3px; text-align:justify; }' +
+    '.c-foot { display:flex; justify-content:space-between; align-items:flex-end; padding-top:8px; }' +
     '.qr-box { text-align:center; }' +
-    '.stamp-area { width:100px; height:54px; }' +  /* empty for real stamp */
+    '.qr-box img { width:72px; height:72px; border:1px solid #ddd; }' +
+    '.qr-box .lbl { font-size:9px; color:#888; margin-top:3px; }' +
+    '.stamp-area { width:90px; height:56px; }' +
     '.sign-line { width:135px; border-bottom:1.5px solid #1a1a1a; height:26px; margin:0 auto 4px; }' +
-    '.sign-role { font-size:11px; font-weight:700; color:#1a1a1a; }' +
-    
-    
-    '.gov-footer { margin-top:8px; border-top:1.5px solid #B8860B; padding-top:7px; }' +
-    '.gov-tahreer { font-size:12px; font-weight:700; color:#1a1a1a; margin-bottom:5px; direction:rtl; }' +
-    '.print-date-val { color:#B8860B; font-weight:700; }' +
-    '.gov-notice { font-size:10.5px; color:#444; line-height:1.7; direction:rtl; }' +
-    '.gov-bullet { color:#B8860B; font-size:13px; vertical-align:middle; }' +
-    '@page { size:210mm 297mm; margin:0; }' +'@media print { html,body { background:#fff; padding:0; margin:0; width:210mm; height:297mm; overflow:hidden; } .page { width:210mm; height:297mm; margin:0; padding:0; box-shadow:none; overflow:hidden; display:flex; align-items:center; justify-content:center; page-break-after:avoid; page-break-inside:avoid; } .frame { width:82%; height:82%; page-break-inside:avoid; } .no-print { display:none; } }' +
-    '.print-btn { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#E5C158,#B8860B); color:#1a1a1a; border:none; padding:14px 36px; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(184,134,11,0.5); z-index:99; }' +
+    '.sign-role { font-size:11px; font-weight:700; text-align:center; }' +
+    '.gov-footer { margin-top:10px; border-top:1.5px solid #B8860B; padding-top:6px; }' +
+    '.gov-tahreer { font-size:11px; font-weight:700; color:#1a1a1a; margin-bottom:4px; }' +
+    '.gov-tahreer span, .print-date-val { color:#B8860B; font-weight:700; }' +
+    '.gov-notice { font-size:9.5px; color:#444; line-height:1.6; text-align:center; padding:4px 6px; background:#FBF8F0; border:0.8px solid #E0D4A8; border-radius:4px; }' +
+    '.gov-notice strong { color:#B8860B; font-weight:800; }' +
+    '@page { size:210mm 297mm; margin:0; }' +
+    '@media print { html,body { background:#fff; padding:0; margin:0; width:210mm; overflow:hidden; } .page { margin:0; padding:0; box-shadow:none; max-height:297mm; overflow:hidden; } .frame { page-break-inside:avoid; } .no-print { display:none; } }' +
+    '.print-btn { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#E5C158,#B8860B); color:#1a1a1a; border:none; padding:14px 36px; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(184,134,11,0.5); z-index:99; font-family:Cairo,sans-serif; }' +
     '</style></head><body>' +
     '<div class="page"><div class="frame">' +
       '<div class="corner tl"></div><div class="corner tr"></div>' +
       '<div class="corner bl"></div><div class="corner br"></div>' +
-      '<div class="c-num">رقم الشهادة: ' + certNumber + '</div>' +
+      '<div class="c-num">رقم: ' + certNumber + '</div>' +
       '<div class="c-head">' +
-        '<img src="' + logoUrl + '" class="c-logo" onerror="this.style.display=\'none\'" />' +
+        '<img src="' + logoUrl + '" class="c-logo" onerror=\"this.style.display=none\" />' +
         '<div class="c-org">المنظومة الإلكترونية المركزية</div>' +
         '<div class="c-sub">لجنة عائلة أبو طه</div>' +
       '</div>' +
       '<div class="divider"></div>' +
       '<div class="c-title">شهادة استحقاق</div>' +
-      '<div class="c-intro">تشهد لجنة عائلة أبو طه بأن المذكور أدناه من أبناء العائلة المسجلين لديها، وبناءً على البيانات والسجلات المعتمدة لدى اللجنة فإنه مستحق للغرض المبيّن أدناه.</div>' +
+      '<div class="c-title-sub">،، لمن يهمه الأمر ،،</div>' +
+      '<p class="c-intro">تشهد لجنة عائلة أبو طه بأن المذكور أدناه من أبناء العائلة المسجلين لديها، وبناءً على البيانات والسجلات المعتمدة لدى اللجنة فإنه مستحق للغرض المبيّن أدناه.</p>' +
       '<div class="cards">' +
-        '<div class="card"><div class="card-ico">👤</div><div class="card-txt"><div class="k">الاسم الكامل</div><div class="val">' + escapeHtml(v.name || '—') + '</div></div></div>' +
-        '<div class="card"><div class="card-ico">🪪</div><div class="card-txt"><div class="k">رقم الهوية</div><div class="val">' + escapeHtml(v.id || '—') + '</div></div></div>' +
-        '<div class="card"><div class="card-ico">📅</div><div class="card-txt"><div class="k">تاريخ الميلاد</div><div class="val">' + (v.dob ? new Date(v.dob).toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'}) : '—') + '</div></div></div>' +
-        '<div class="card"><div class="card-ico">🏙️</div><div class="card-txt"><div class="k">مكان الميلاد</div><div class="val">' + escapeHtml(v.birthplace || '—') + '</div></div></div>' +
-        '<div class="card"><div class="card-ico">📍</div><div class="card-txt"><div class="k">مكان الإقامة</div><div class="val">' + escapeHtml(locationStr || '—') + '</div></div></div>' +
-        '<div class="card"><div class="card-ico">💍</div><div class="card-txt"><div class="k">الحالة الاجتماعية</div><div class="val">' + (maritalLabels[f.marital] || '—') + '</div></div></div>' +
+        '<div class="card"><div class="card-txt"><div class="k">الاسم الكامل</div><div class="val">' + escapeHtml(v.name||'—') + '</div></div></div>' +
+        '<div class="card"><div class="card-txt"><div class="k">رقم الهوية</div><div class="val">' + escapeHtml(v.id||'—') + '</div></div></div>' +
+        '<div class="card"><div class="card-txt"><div class="k">تاريخ الميلاد</div><div class="val">' + dobStr + '</div></div></div>' +
+        '<div class="card"><div class="card-txt"><div class="k">مكان الميلاد</div><div class="val">' + escapeHtml(v.birthplace||'—') + '</div></div></div>' +
+        '<div class="card"><div class="card-txt"><div class="k">مكان الإقامة</div><div class="val">' + escapeHtml(locationStr||'—') + '</div></div></div>' +
+        '<div class="card"><div class="card-txt"><div class="k">الحالة الاجتماعية</div><div class="val">' + (maritalLabels[f.marital]||'—') + '</div></div></div>' +
       '</div>' +
       '<div class="elig">' +
         '<div class="elig-type"><div class="lbl">نوع الاستحقاق</div><div class="v">' + escapeHtml(needLabel) + '</div></div>' +
         '<div class="elig-desc"><div class="lbl">وصف الاستحقاق</div><div class="v">' + escapeHtml(description) + '</div></div>' +
       '</div>' +
-      '<div class="c-official">وقد حُررت هذه الشهادة بناءً على طلب صاحب العلاقة لتقديمها إلى الجهات المختصة واتخاذ ما يلزم بشأن الاستحقاق المذكور أعلاه.</div>' +
-      '<div class="validity">⏳ مدة صلاحية الشهادة: تسعون (90) يوماً من تاريخ إصدارها</div>' +
+      '<p class="c-official">وقد حُررت هذه الشهادة بناءً على طلب صاحب العلاقة لتقديمها إلى الجهات المختصة واتخاذ ما يلزم بشأن الاستحقاق المذكور أعلاه.</p>' +
+      '<div class="validity">مدة صلاحية الشهادة: تسعون (90) يوماً من تاريخ إصدارها — تنتهي في: ' + expiryStr + '</div>' +
       '<div class="disclaimer">' +
         '<h4>إخلاء مسؤولية</h4>' +
         '<p>أُصدرت هذه الشهادة استناداً إلى البيانات والسجلات المتوفرة لدى لجنة عائلة أبو طه بتاريخ إصدارها، وتقتصر مسؤولية اللجنة على صحة البيانات الواردة فيها وفق سجلاتها الرسمية، ولا يترتب على إصدارها أي التزام قانوني أو مالي أو إداري تجاه أي جهة كانت.</p>' +
         '<p>وقد أُعطيت هذه الشهادة بناءً على طلب صاحب العلاقة لتقديمها للجهات المعنية.</p>' +
       '</div>' +
       '<div class="c-foot">' +
-        '<div class="foot-col qr-box"><img src="' + qrUrl + '" onerror="this.style.display=\'none\'" /><div class="lbl">امسح للتحقق من الشهادة</div></div>' +
-        '<div class="foot-col"><div class="stamp-area"></div><div class="lbl" style="font-size:11px;color:#aaa">مكان الختم</div></div>' +
-        '<div class="foot-col"><div class="sign-line"></div><div class="sign-role">رئيس لجنة العائلة</div></div>' +
+        '<div class="qr-box"><img src="' + qrUrl + '" onerror=\"this.style.display=none\" /><div class="lbl">امسح للتحقق من الشهادة</div></div>' +
+        '<div class="stamp-area"></div>' +
+        '<div><div class="sign-line"></div><div class="sign-role">رئيس لجنة العائلة</div></div>' +
       '</div>' +
       '<div class="gov-footer">' +
-        '<div class="gov-tahreer">حُرِّرت بتاريخ: <span class="print-date-val" id="printDateVal">—</span></div>' +
-        '<div class="gov-notice">' +
-          '<span class="gov-bullet">◉</span>' +
-          ' هذه الشهادة صادرة إلكترونياً عن المنظومة المركزية لعائلة أبو طه، وتُعتمد بختم وتوقيع لجنة العائلة.' +
-          ' رقم الشهادة للتحقق: <strong>' + certNumber + '</strong>' +
-        '</div>' +
+        '<div class="gov-tahreer">حُرِّرت هذه الشهادة إلكترونياً بتاريخ: <span class="print-date-val" id="printDateVal">—</span></div>' +
+        '<div class="gov-notice">هذه الشهادة صادرة إلكترونياً عن المنظومة المركزية - للجنة عائلة أبو طه وتُعتمد بختم وتوقيع لجنة العائلة. رقم الشهادة للتحقق: <strong>' + certNumber + '</strong></div>' +
       '</div>' +
     '</div></div>' +
-    '<script>window.addEventListener("beforeprint",function(){var d=new Date();var opts={year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"};var el=document.getElementById("printDateVal");if(el)el.textContent=d.toLocaleDateString("ar-EG",opts);});' + '<\/script>' +
+    '<script>window.addEventListener("beforeprint",function(){var d=new Date(),opts={year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"};var el=document.getElementById("printDateVal");if(el)el.textContent=d.toLocaleDateString("ar-EG-u-nu-latn",opts);});<' + '/script>' +
     '<button class="print-btn no-print" onclick="window.print()">🖨 طباعة الشهادة</button>' +
     '</body></html>';
-  
+
   w.document.write(doc);
   w.document.close();
 }
 window.printNeedCertificate = printNeedCertificate;
+
 
 
 // ══════════════════════════════════════════════════════════
@@ -15940,6 +15952,140 @@ function printFilteredReport(gender, marital, ageRange){
 }
 window.printFilteredReport = printFilteredReport;
 window.getFilteredVoters = getFilteredVoters;
+
+
+// ══════════════════════════════════════════════════════════
+// CERTIFICATE VERIFICATION — triggered by ?verify=CERT_NUM&id=VOTER_ID
+// ══════════════════════════════════════════════════════════
+function initCertVerify(){
+  var params = new URLSearchParams(window.location.search);
+  var certNum = params.get('verify');
+  var voterId = params.get('id');
+  if(!certNum) return;  // Not a verify request
+
+  var overlay = document.getElementById('verifyOverlay');
+  if(!overlay) return;
+  overlay.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+
+  // Wait for voters to load from Supabase/localStorage
+  function doVerify(){
+    var voters = (typeof getVoters === 'function') ? getVoters() : [];
+    var needLabels = {
+      medical:'علاج', education:'تعليم', marriage:'زواج',
+      business:'عمل', housing:'سكن', travel:'سفر', other:'استحقاق آخر'
+    };
+
+    // Find voter by certNumber OR by id+certNumber combo
+    var voter = voters.find(function(v){
+      return v.certNumber === certNum ||
+             (voterId && v.id === voterId && v.certNumber === certNum);
+    });
+
+    // If not found by certNumber, try by ID alone (cert may not be saved yet)
+    if(!voter && voterId){
+      voter = voters.find(function(v){ return v.id === voterId; });
+    }
+
+    var statusEl   = document.getElementById('verifyStatus');
+    var cardEl     = document.getElementById('verifyCertCard');
+    var notFoundEl = document.getElementById('verifyNotFound');
+
+    if(!voter){
+      // Not found
+      statusEl.innerHTML = '<div style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:999px;font-size:16px;font-weight:800;background:#FEE2E2;color:#dc2626"><span style="font-size:22px">❌</span> شهادة غير معتمدة</div>';
+      notFoundEl.style.display = 'block';
+      return;
+    }
+
+    // Calculate validity
+    var f = voter.family || {};
+    var needsList = (f.needs || []).filter(function(n){ return n && n !== 'none'; });
+    var needLabel = needsList.map(function(n){ return needLabels[n] || n; }).join('، ') || '—';
+
+    // Parse issue date from certNumber: AT-YYYY-NNNN
+    var yearMatch = certNum.match(/AT-(\d{4})-/);
+    var issueYear = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
+    // We use today as issue date approximation (exact date not stored yet)
+    var now = new Date();
+    var arOpts = {year:'numeric', month:'long', day:'numeric'};
+    var issueDateStr = issueYear + '';
+
+    // Check if voter has a stored issue timestamp
+    var issueTs = voter.certIssuedAt;
+    var expiryDate, isValid, issueDateDisplay;
+
+    if(issueTs){
+      var issueD = new Date(issueTs);
+      expiryDate = new Date(issueD);
+      expiryDate.setDate(expiryDate.getDate() + 90);
+      isValid = now <= expiryDate;
+      issueDateDisplay = issueD.toLocaleDateString('ar-EG', arOpts);
+    } else {
+      // No timestamp — show as valid, display year only
+      isValid = true;
+      issueDateDisplay = 'خلال عام ' + issueYear;
+      expiryDate = null;
+    }
+
+    // Render status badge
+    if(isValid){
+      statusEl.innerHTML =
+        '<div style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:999px;font-size:16px;font-weight:800;background:#DCFCE7;color:#16a34a">' +
+        '<span style="font-size:22px">✅</span> شهادة سارية ومعتمدة</div>';
+    } else {
+      statusEl.innerHTML =
+        '<div style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:999px;font-size:16px;font-weight:800;background:#FEF9C3;color:#ca8a04">' +
+        '<span style="font-size:22px">⚠️</span> انتهت صلاحية الشهادة</div>';
+    }
+
+    // Fill cert card
+    document.getElementById('verifyCertNum').textContent  = certNum;
+    document.getElementById('vd-name').textContent        = voter.name || '—';
+    document.getElementById('vd-id').textContent          = voter.id   || '—';
+    document.getElementById('vd-need').textContent        = needLabel;
+    document.getElementById('vd-issue').textContent       = issueDateDisplay;
+    document.getElementById('vd-expiry').textContent      = expiryDate
+      ? expiryDate.toLocaleDateString('ar-EG', arOpts)
+      : 'غير محدد';
+    document.getElementById('vd-validity').innerHTML      = isValid
+      ? '<span style="color:#16a34a;font-weight:800">✅ سارية</span>'
+      : '<span style="color:#ca8a04;font-weight:800">⚠️ منتهية الصلاحية</span>';
+
+    cardEl.style.display = 'block';
+  }
+
+  // Try immediately, then retry after data loads from Supabase
+  setTimeout(doVerify, 200);
+  setTimeout(doVerify, 1500);
+  setTimeout(doVerify, 3500);
+}
+
+// Also save certIssuedAt timestamp when cert is first printed
+// (patch into printNeedCertificate — runs after certNumber saved)
+(function patchCertTimestamp(){
+  var orig = window.printNeedCertificate;
+  if(typeof orig !== 'function') return;
+  window.printNeedCertificate = function(voterId, specificNeed){
+    // Save timestamp if not already saved
+    if(typeof getVoters === 'function' && typeof setVoters === 'function'){
+      var _v = getVoters();
+      var _vi = _v.findIndex(function(x){ return x.id === voterId; });
+      if(_vi >= 0 && !_v[_vi].certIssuedAt){
+        _v[_vi].certIssuedAt = Date.now();
+        setVoters(_v);
+      }
+    }
+    return orig.apply(this, arguments);
+  };
+})();
+
+// Initialize on DOMContentLoaded
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initCertVerify);
+} else {
+  setTimeout(initCertVerify, 0);
+}
 </script>
 
 <!-- ══════════════════════════════════════════════════════════
@@ -16197,6 +16343,96 @@ window.getFilteredVoters = getFilteredVoters;
       </div>
     </div>
     
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     CERTIFICATE VERIFICATION PAGE — opens when ?verify= in URL
+══════════════════════════════════════════════════════════ -->
+<div class="ay-overlay" id="verifyOverlay" style="display:none;z-index:9999;background:#FBF8F0">
+  <div style="max-width:640px;margin:0 auto;padding:24px 16px;min-height:100vh;font-family:'Cairo',sans-serif;direction:rtl">
+    
+    <!-- Header -->
+    <div style="text-align:center;padding:24px 0 16px;border-bottom:2px solid #B8860B;margin-bottom:24px">
+      <img src="https://i.ibb.co/F4xfYJCp/FB-IMG-1777373548219.jpg" 
+           style="width:64px;height:64px;border-radius:50%;border:2px solid #B8860B;object-fit:cover;margin-bottom:10px"
+           onerror="this.style.display='none'" />
+      <div style="font-size:20px;font-weight:900;color:#1a1a1a">المنظومة الإلكترونية المركزية</div>
+      <div style="font-size:14px;color:#B8860B;font-weight:700">لجنة عائلة أبو طه</div>
+    </div>
+
+    <!-- Status badge -->
+    <div id="verifyStatus" style="text-align:center;margin-bottom:20px">
+      <div style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:999px;font-size:16px;font-weight:800;background:#F5F0E0;color:#6B6B6B">
+        <span style="font-size:22px">⏳</span> جارٍ التحقق...
+      </div>
+    </div>
+
+    <!-- Certificate data card -->
+    <div id="verifyCertCard" style="display:none;background:#fff;border:2px solid #E8E0CC;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06)">
+      
+      <!-- Card header -->
+      <div style="background:linear-gradient(135deg,#B8860B,#9A7D1A);padding:16px 20px;text-align:center">
+        <div style="font-family:'Amiri',serif;font-size:26px;font-weight:700;color:#fff">شهادة استحقاق</div>
+        <div id="verifyCertNum" style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:4px;direction:ltr"></div>
+      </div>
+
+      <!-- Data rows -->
+      <div style="padding:16px 20px">
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+          <tr id="vr-name">
+            <td style="padding:8px 0;color:#888;font-weight:600;width:40%">الاسم الكامل</td>
+            <td style="padding:8px 0;font-weight:700;color:#1a1a1a" id="vd-name"></td>
+          </tr>
+          <tr style="border-top:1px solid #F0EBDD" id="vr-id">
+            <td style="padding:8px 0;color:#888;font-weight:600">رقم الهوية</td>
+            <td style="padding:8px 0;font-weight:700;color:#1a1a1a;direction:ltr;text-align:right" id="vd-id"></td>
+          </tr>
+          <tr style="border-top:1px solid #F0EBDD">
+            <td style="padding:8px 0;color:#888;font-weight:600">نوع الاستحقاق</td>
+            <td style="padding:8px 0;font-weight:800;color:#B8860B;font-size:15px" id="vd-need"></td>
+          </tr>
+          <tr style="border-top:1px solid #F0EBDD">
+            <td style="padding:8px 0;color:#888;font-weight:600">تاريخ الإصدار</td>
+            <td style="padding:8px 0;font-weight:700;color:#1a1a1a" id="vd-issue"></td>
+          </tr>
+          <tr style="border-top:1px solid #F0EBDD">
+            <td style="padding:8px 0;color:#888;font-weight:600">تاريخ الانتهاء</td>
+            <td style="padding:8px 0;font-weight:700" id="vd-expiry"></td>
+          </tr>
+          <tr style="border-top:1px solid #F0EBDD">
+            <td style="padding:8px 0;color:#888;font-weight:600">الحالة</td>
+            <td style="padding:8px 0" id="vd-validity"></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div style="background:#FBF8F0;border-top:1px solid #E8E0CC;padding:12px 20px;text-align:center;font-size:11px;color:#6B6B6B;line-height:1.6">
+        هذه الشهادة صادرة إلكترونياً عن المنظومة المركزية للجنة عائلة أبو طه<br>
+        وتُعتمد بختم وتوقيع لجنة العائلة
+      </div>
+    </div>
+
+    <!-- Not found message -->
+    <div id="verifyNotFound" style="display:none;text-align:center;padding:32px 20px;background:#fff;border:2px solid #E8E0CC;border-radius:16px">
+      <div style="font-size:48px;margin-bottom:12px">❌</div>
+      <div style="font-size:18px;font-weight:800;color:#dc2626;margin-bottom:8px">الشهادة غير موجودة</div>
+      <div style="font-size:14px;color:#6B6B6B;line-height:1.7">
+        لم يتم العثور على شهادة بهذا الرقم.<br>
+        قد تكون الشهادة غير صحيحة أو تم إلغاؤها.
+      </div>
+    </div>
+
+    <!-- Back button -->
+    <div style="text-align:center;margin-top:24px">
+      <button onclick="document.getElementById('verifyOverlay').style.display='none';history.replaceState(null,'',window.location.pathname);"
+              style="background:none;border:1px solid #D8D0BC;border-radius:10px;padding:10px 24px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:600;color:#6B6B6B;cursor:pointer">
+        → العودة للموقع
+      </button>
+    </div>
+
   </div>
 </div>
 
