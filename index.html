@@ -5216,6 +5216,22 @@ document.addEventListener('DOMContentLoaded', function(){
           </button>
         </div>
 
+        <!-- ── Card: Requests & Assistance ── -->
+        <div class="section-card" data-section="requests">
+          <div class="section-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
+            </svg>
+          </div>
+          <h3 class="section-card-title">الطلبات والمتابعة</h3>
+          <p class="section-card-desc">تقديم طلب مساعدة جديد أو متابعة حالة طلباتك السابقة</p>
+          <button class="section-card-btn" onclick="openRequestsHub()" type="button">
+            <span>دخول</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+        </div>
+
       </div>
     </div>
 
@@ -5468,10 +5484,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
       <!-- Stats Grid -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:20px clamp(16px,3vw,32px)">
-        <div class="stat"><div class="num" id="statVoters">0</div><div class="lbl">المسجَّلون</div></div>
-        <div class="stat"><div class="num" id="statFamilies">0</div><div class="lbl">الأسر</div></div>
-        <div class="stat"><div class="num" id="statPopulation">0</div><div class="lbl">إجمالي الأفراد</div></div>
-        <div class="stat"><div class="num" id="statMsgs">0</div><div class="lbl">الرسائل</div></div>
+        <div class="stat" onclick="document.getElementById('votersList').scrollIntoView({behavior:'smooth'})" style="cursor:pointer"><div class="num" id="statVoters">0</div><div class="lbl">المسجَّلون</div></div>
+        <div class="stat" onclick="document.getElementById('familyStatsBox').scrollIntoView({behavior:'smooth'})" style="cursor:pointer"><div class="num" id="statFamilies">0</div><div class="lbl">الأسر</div></div>
+        <div class="stat" onclick="document.getElementById('familyStatsBox').scrollIntoView({behavior:'smooth'})" style="cursor:pointer"><div class="num" id="statPopulation">0</div><div class="lbl">إجمالي الأفراد</div></div>
+        <div class="stat" onclick="document.getElementById('adminMsgsCard').scrollIntoView({behavior:'smooth'})" style="cursor:pointer"><div class="num" id="statMsgs">0</div><div class="lbl">الرسائل</div></div>
+        <div class="stat" onclick="openAdminRequests()" style="cursor:pointer;border:1px solid #E0D4A8;border-radius:10px"><div class="num" id="statRequests" style="color:#B8860B">0</div><div class="lbl">الطلبات 📋</div></div>
         <div class="stat" style="display:none"><div class="num" id="statCands">0</div><div class="lbl">المرشّحون</div></div>
         <div class="stat" style="display:none"><div class="num" id="statVotes">0</div><div class="lbl">الأصوات</div></div>
         <div class="stat" style="display:none"><div class="num" id="statTurnout">0%</div><div class="lbl">المشاركة</div></div>
@@ -5587,6 +5604,7 @@ document.addEventListener('DOMContentLoaded', function(){
             </button>
             <button class="btn btn-ghost btn-sm" id="btnPrintReport" type="button">طباعة كامل</button>
             <button class="btn btn-ghost btn-sm" onclick="showFilteredPrintPicker()" type="button" style="background:rgba(212,175,55,.12);color:var(--primary-dark)">🎯 طباعة مفلترة</button>
+            <button class="btn btn-ghost btn-sm" onclick="openReqExport()" type="button" style="background:rgba(184,134,11,.15);color:var(--primary-dark);font-weight:700">📋 كشف الطلبات</button>
             <button class="btn btn-ghost btn-sm" onclick="printGeoReport()" type="button">🌍 جغرافي</button>
             <button class="btn btn-ghost btn-sm" onclick="printNeedsReport()" type="button">📋 احتياجات</button>
           </div>
@@ -5648,7 +5666,7 @@ document.addEventListener('DOMContentLoaded', function(){
         </div>
 
         <!-- Messages -->
-        <div class="card"><h3 style="font-family:var(--font-display);font-size:17px;font-weight:900;color:var(--text);margin-bottom:14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C8A646" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:6px"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg> صندوق الرسائل</h3><div id="msgsList"><div class="alert info small">لا توجد رسائل بعد.</div></div></div>
+        <div class="card" id="adminMsgsCard"><h3 style="font-family:var(--font-display);font-size:17px;font-weight:900;color:var(--text);margin-bottom:14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C8A646" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:6px"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg> صندوق الرسائل</h3><div id="msgsList"><div class="alert info small">لا توجد رسائل بعد.</div></div></div>
 
         <!-- Voters Table -->
         <div id="votersList">
@@ -7236,7 +7254,7 @@ function getCands(){ return load(K.cands, []); }
 function getVotes(){ return load(K.votes, []); }
 // [removed duplicate: setVotes]
 function getMsgs(){ return load(K.msgs, []); }
-// [removed duplicate: setMsgs]
+function _origSetMsgs(v){ save(K.msgs, v); }
 function getSchedule(){ return load(K.schedule, {nomOpenAt:'', resultsAt:''}); }
 function setSchedule(s){ save(K.schedule, s); }
 
@@ -7681,7 +7699,7 @@ var _navCon = document.getElementById('navContact'); if(_navCon) _navCon.addEven
 var _ctaCon = document.getElementById('ctaContact'); if(_ctaCon) _ctaCon.addEventListener('click', openContact);
 
 function openRegister(){
-  if(!isActive('reg')){ toast('مرحلة التسجيل غير مفعّلة حالياً','err'); return; }
+  if(!_regEditMode && !isActive('reg')){ toast('مرحلة التسجيل غير مفعّلة حالياً','err'); return; }
   // Reset all input fields
   ['r_id','r_issue','r_name','r_phone_pal','r_phone_free','r_phone_alt','r_email','r_city48','r_country','r_city','r_district','r_dob','r_birthplace','r_father_id','r_father_name','r_mother_name','r_marital','r_education','r_profession','r_health_details','r_spouse_health_details','r_family_health_details','r_needs','r_aspirations_details','r_spouse_education','r_spouse_profession','r_sons_count','r_daughters_count'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value = (id==='r_sons_count'||id==='r_daughters_count') ? '0' : ''; });
   // Reset selects
@@ -8388,14 +8406,14 @@ var _sr=document.getElementById('btnSubmitReg'); if(_sr) _sr.addEventListener('c
     
     // Check that image was uploaded (REQUIRED)
     var ocrCheck = (typeof OCR_STORE !== 'undefined' && OCR_STORE.voter && OCR_STORE.voter.imgData) ? true : false;
-    if(!ocrCheck){
+    if(!ocrCheck && !_regEditMode){
       toast('يجب رفع صورة إثبات الهوية','err');
       regGo(1);
       return;
     }
 
     var voters = getVoters();
-    if(voters.some(function(v){return v.id===id;})){
+    if(!_regEditMode && voters.some(function(v){return v.id===id;})){
       toast('هذه الهوية مسجّلة مسبقاً','err');
       return;
     }
@@ -8433,6 +8451,33 @@ var _sr=document.getElementById('btnSubmitReg'); if(_sr) _sr.addEventListener('c
       approved: false,
       family: getFamilyData()
     };
+
+    if(_regEditMode && _regEditId){
+      // EDIT MODE: update existing record, preserve status/image/cert
+      var eidx = voters.findIndex(function(v){ return v.id === _regEditId; });
+      if(eidx >= 0){
+        var existing = voters[eidx];
+        rec.approved = existing.approved;          // keep approval status
+        rec.certNumber = existing.certNumber;       // keep certificate number
+        rec.certIssuedAt = existing.certIssuedAt;
+        rec.serial = existing.serial;
+        // keep existing image if no new one uploaded
+        if(!rec.imgData && existing.imgData) rec.imgData = existing.imgData;
+        if(!rec.idImage && existing.idImage) rec.idImage = existing.idImage;
+        rec.editLog = (existing.editLog||[]).concat([{timestamp:Date.now(),reviewed:true,source:'admin-reg-edit'}]);
+        voters[eidx] = rec;
+      } else {
+        voters.push(rec);
+      }
+      setVoters(voters);
+      _regEditMode = false; _regEditId = null;
+      // Remove edit banner
+      var banner = document.querySelector('.admin-edit-banner'); if(banner) banner.remove();
+      closeModal('modalRegister');
+      if(typeof toast === 'function') toast('✅ تم حفظ تعديلات المسجّل', 'ok');
+      if(typeof renderAdmin === 'function') renderAdmin();
+      return;
+    }
 
     voters.push(rec);
     
@@ -9093,6 +9138,7 @@ document.addEventListener('click', e=>{
 });
 
 function renderAdmin(){
+  try { renderMessagesBox(); } catch(e){ console.warn("Msgs:", e); }
   if(!isAdmin) return;
   // Show admin-only tools in C sections
   ['newsAdminTools','jobsAdminTools','occasionsAdminTools'].forEach(function(id){
@@ -9118,6 +9164,7 @@ function renderAdmin(){
   $('#statVotes') && ($('#statVotes').textContent = vs.length);
   $('#statTurnout') && ($('#statTurnout').textContent = voters.length ? Math.round(vs.length*100/voters.length)+'%' : '0%');
   $('#statMsgs') && ($('#statMsgs').textContent = ms.length);
+  $('#statRequests') && ($('#statRequests').textContent = (typeof getRequests==='function' ? getRequests().length : 0));
 
   // ── Render Family Stats ──
   var fsBox = document.getElementById('familyStatsBox');
@@ -9210,6 +9257,7 @@ function renderAdmin(){
       actions = '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(15,107,60,.15);color:var(--success)" onclick="window.printPersonReport(\''+v.id+'\')">🖨 طباعة</button>' +
         ((v.family && (v.family.needs||[]).filter(function(n){return n&&n!=='none';}).length) ? '<button class="btn btn-ghost btn-sm" style="background:rgba(212,175,55,.15);color:var(--primary-dark)" onclick="window.showNeedCertPicker(\''+v.id+'\')">📜 شهادة احتياج</button>' : '') +
+        '<button class="btn btn-ghost btn-sm" style="background:rgba(8,145,178,.15);color:#0891b2" onclick="window.adminEditViaRegistration(\''+v.id+'\')">✎ تعديل</button>' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="' + v.id + '">✗ إلغاء الاعتماد</button>' +
         '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
         '</div>';
@@ -9575,28 +9623,6 @@ function renderAdmin(){
       (c.pledge6?'\n✓ صحة البيانات':'');
     alert(info);
   }));
-
-  // messages list
-  const ml = $('#msgList'); if(!ml) return;
-  ml.innerHTML = '';
-  if(ms.length === 0){ ml.innerHTML = `<div class="alert info small" style="margin:0">لا توجد رسائل واردة بعد.</div>`; }
-  else {
-    ms.slice().reverse().forEach(m => {
-      const card = document.createElement('div'); card.className = 'msg-card';
-      card.innerHTML = `
-        <div class="meta">
-          <span><b>${escapeHtml(m.type)}</b> ${m.name?` - ${escapeHtml(m.name)}`:''} ${m.phone?` - 📞 ${escapeHtml(m.phone)}`:''}</span>
-          <span>${new Date(m.ts).toLocaleString('ar-EG')}</span>
-        </div>
-        <div class="body">${escapeHtml(m.msg)}</div>
-        <div style="margin-top:6px;text-align:left"><button class="btn btn-ghost btn-sm" data-del-msg="${m.id}">حذف</button></div>`;
-      ml.appendChild(card);
-    });
-    $$('[data-del-msg]', ml).forEach(b => b.addEventListener('click', ()=>{
-      const arr = getMsgs().filter(x => x.id !== b.dataset.delMsg);
-      setMsgs(arr); renderAdmin();
-    }));
-  }
 
   try { renderFamilyStats(); } catch(e){ console.warn("FamilyStats:", e); }
   try { updateMaintenancePanel(); initMaintenanceControls(); } catch(e){ console.warn("Maintenance:", e); }
@@ -11034,7 +11060,6 @@ async function syncVotesToSupabase(votes){
 }
 
 // Sync messages
-const _origSetMsgs = setMsgs;
 function setMsgs(v){
   _origSetMsgs(v);
   syncMsgsToSupabase(v.slice(-1));
@@ -16080,6 +16105,790 @@ if(document.readyState === 'loading'){
 } else {
   setTimeout(initCertVerify, 0);
 }
+
+
+// ══════════════════════════════════════════════════════════
+// REQUESTS SYSTEM — authenticated by National ID + Issue Year
+// ══════════════════════════════════════════════════════════
+var REQ_KEY = 'abutaha_requests';
+var _verifiedMember = null;
+
+function getRequests(){
+  try { return JSON.parse(localStorage.getItem(REQ_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function saveRequests(arr){
+  try { localStorage.setItem(REQ_KEY, JSON.stringify(arr)); } catch(e){}
+  if(typeof SUPA !== 'undefined' && SUPA){
+    try { SUPA.from('requests').upsert(arr).then(function(){}); } catch(e){}
+  }
+}
+function verifyMember(nationalId, issueYear){
+  var voters = (typeof getVoters === 'function') ? getVoters() : [];
+  var id = String(nationalId || '').trim();
+  var iy = String(issueYear || '').trim();
+  var member = voters.find(function(v){
+    var vIssue = String(v.issueYear || v.idIssueYear || '');
+    return v.id === id && vIssue === iy;
+  });
+  return member || null;
+}
+var REQ_TYPES = {
+  cash:'المساعدة النقدية', food:'السلة الغذائية', medical:'المساعدة الطبية',
+  housing:'تحسين السكن', travel:'السفر / لم الشمل', education_support:'الدعم التعليمي',
+  scholarship:'منحة تعليمية', fee_reduction:'تخفيض رسوم', mediation:'وساطة / توصية',
+  employment:'توظيف / فرصة عمل', legal:'استشارة قانونية', psychological:'الدعم النفسي / الإرشاد التربوي',
+  marriage:'المساعدة في الزواج', debt:'مساعدة في الديون / تسوية مالية',
+  complaint:'شكوى', inquiry:'استفسار', suggestion:'اقتراح', other:'أخرى'
+};
+var REQ_PRIORITIES = {normal:'عادي', medium:'متوسط', high:'عالية', urgent:'عاجل', emergency:'طارئ'};
+var REQ_PRIORITY_COLOR = {normal:'#6B7280', medium:'#0891b2', high:'#ca8a04', urgent:'#ea580c', emergency:'#dc2626'};
+var REQ_STATUS = {pending:'قيد المراجعة',studying:'تحت الدراسة',committee:'لجنة الاختصاص',interview:'طلب مقابلة شخصية',approved:'معتمد',rejected:'مرفوض',closed:'مغلق'};
+var REQ_STATUS_COLOR = {pending:'#ca8a04',studying:'#0891b2',committee:'#7c3aed',interview:'#0d9488',approved:'#16a34a',rejected:'#dc2626',closed:'#6B7280'};
+function genRequestNumber(){
+  var reqs = getRequests(), year = new Date().getFullYear();
+  var count = reqs.filter(function(r){ return (r.number||'').indexOf('REQ-'+year) === 0; }).length + 1;
+  return 'REQ-' + year + '-' + String(count).padStart(4,'0');
+}
+function hasActiveDuplicate(memberId, type){
+  return getRequests().some(function(r){
+    var active = ['pending','studying','committee','interview']; return r.memberId === memberId && r.type === type && active.indexOf(r.status) >= 0;
+  });
+}
+
+
+// REQUESTS MODALS — control logic
+var _reqIntent = 'new';
+function openReqModal(id){ var m=document.getElementById(id); if(m){m.style.display='flex';document.body.style.overflow='hidden';} }
+function closeReqModal(id){ var m=document.getElementById(id); if(m){m.style.display='none';document.body.style.overflow='';} }
+window.closeReqModal = closeReqModal;
+
+function openRequestsHub(){ openReqModal('reqHubModal'); }
+window.openRequestsHub = openRequestsHub;
+
+function updateReqTitle(){
+  var sel = document.getElementById('reqType');
+  var lbl = document.getElementById('reqTitleLabel');
+  if(sel && lbl) lbl.textContent = REQ_TYPES[sel.value] || sel.value;
+}
+window.updateReqTitle = updateReqTitle;
+
+function startNewRequest(){ _reqIntent='new'; if(_verifiedMember){openRequestForm();}else{showReqVerify('لتقديم طلب جديد، يرجى التحقق من بياناتك');} }
+function startMyRequests(){ _reqIntent='list'; if(_verifiedMember){openMyRequests();}else{showReqVerify('لمتابعة طلباتك، يرجى التحقق من بياناتك');} }
+window.startNewRequest = startNewRequest;
+window.startMyRequests = startMyRequests;
+
+function showReqVerify(purpose){
+  var p=document.getElementById('reqVerifyPurpose'); if(p)p.textContent=purpose;
+  var err=document.getElementById('reqVerifyError'); if(err)err.style.display='none';
+  document.getElementById('reqVId').value='';
+  document.getElementById('reqVYear').value='';
+  openReqModal('reqVerifyModal');
+}
+function doReqVerify(){
+  var id=(document.getElementById('reqVId').value||'').trim();
+  var yr=(document.getElementById('reqVYear').value||'').trim();
+  var err=document.getElementById('reqVerifyError');
+  if(!/^\d{9}$/.test(id)){ err.textContent='رقم الهوية يجب أن يكون 9 أرقام'; err.style.display='block'; return; }
+  if(!/^\d{4}$/.test(yr)){ err.textContent='أدخل سنة إصدار صحيحة (4 أرقام)'; err.style.display='block'; return; }
+  var member=verifyMember(id,yr);
+  if(!member){ err.innerHTML='❌ فشل التحقق — رقم الهوية أو سنة الإصدار غير مطابقة لسجلات العائلة.'; err.style.display='block'; return; }
+  _verifiedMember=member;
+  closeReqModal('reqVerifyModal');
+  if(_reqIntent==='new')openRequestForm(); else openMyRequests();
+}
+window.doReqVerify = doReqVerify;
+
+function openRequestForm(){
+  var m=_verifiedMember; if(!m)return;
+  var lbl=document.getElementById('reqFormMember'); if(lbl)lbl.textContent='مقدّم الطلب: '+(m.name||'')+' — '+(m.id||'');
+  var err=document.getElementById('reqFormError'); if(err)err.style.display='none';
+  document.getElementById('reqDetails').value='';
+  openReqModal('reqFormModal');
+}
+function submitNewRequest(){
+  var m=_verifiedMember; if(!m)return;
+  var type=document.getElementById('reqType').value;
+  var details=(document.getElementById('reqDetails').value||'').trim();
+  var err=document.getElementById('reqFormError');
+  if(details.length<5){ err.textContent='يرجى كتابة تفاصيل الطلب'; err.style.display='block'; return; }
+  if(hasActiveDuplicate(m.id,type)){ err.innerHTML='⚠️ لديك طلب من نفس النوع قيد المراجعة بالفعل. يرجى انتظار البتّ فيه.'; err.style.display='block'; return; }
+  var reqs=getRequests();
+  var priority=document.getElementById('reqPriority').value;var newReq={number:genRequestNumber(),memberId:m.id,memberName:m.name||'',memberPhone:m.phone||'',memberGender:m.gender||'',memberMarital:(m.family&&m.family.marital)||'',memberLocation:[m.city,m.district,m.gov].filter(Boolean).join('، '),type:type,priority:priority,details:details,status:'pending',committeeNote:'',submittedAt:Date.now()};
+  reqs.push(newReq);
+  saveRequests(reqs);
+  closeReqModal('reqFormModal');
+  if(typeof toast==='function')toast('✅ تم إرسال طلبك برقم '+newReq.number,'ok');
+  _reqIntent='list';
+  setTimeout(openMyRequests,300);
+}
+window.submitNewRequest = submitNewRequest;
+
+function openMyRequests(){
+  var m=_verifiedMember; if(!m)return;
+  var lbl=document.getElementById('reqListMember'); if(lbl)lbl.textContent=m.name+' — '+m.id;
+  var reqs=getRequests().filter(function(r){return r.memberId===m.id;});
+  reqs.sort(function(a,b){return b.submittedAt-a.submittedAt;});
+  var content=document.getElementById('reqListContent');
+  if(reqs.length===0){
+    content.innerHTML='<div style="text-align:center;padding:30px 20px;color:#888"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:15px">لا توجد طلبات سابقة</div><button onclick="closeReqModal(&quot;reqListModal&quot;);startNewRequest()" style="margin-top:16px;background:linear-gradient(135deg,#E5C158,#B8860B);border:none;border-radius:10px;padding:11px 24px;font-family:Cairo,sans-serif;font-weight:700;color:#1a1a1a;cursor:pointer">تقديم طلب جديد</button></div>';
+    openReqModal('reqListModal');
+    return;
+  }
+  var h='<button onclick="closeReqModal(&quot;reqListModal&quot;);startNewRequest()" style="width:100%;background:linear-gradient(135deg,#E5C158,#B8860B);border:none;border-radius:10px;padding:12px;font-family:Cairo,sans-serif;font-weight:800;color:#1a1a1a;cursor:pointer;margin-bottom:14px">➕ تقديم طلب جديد</button>';
+  reqs.forEach(function(r){
+    var stColor=REQ_STATUS_COLOR[r.status]||'#888';
+    var stLabel=REQ_STATUS[r.status]||r.status;
+    var dt=new Date(r.submittedAt).toLocaleDateString('ar-EG-u-nu-latn',{year:'numeric',month:'long',day:'numeric'});
+    var prColor=REQ_PRIORITY_COLOR[r.priority]||'#6B7280';
+    var prLabel=REQ_PRIORITIES[r.priority]||'';
+    h+='<div onclick="showRequestDetail(&quot;'+r.number+'&quot;)" style="background:#FBF8F0;border:1px solid #EFE7D2;border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:box-shadow .2s" onmouseover="this.style.boxShadow=&quot;0 4px 16px rgba(0,0,0,0.08)&quot;" onmouseout="this.style.boxShadow=&quot;none&quot;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+        '<span style="font-size:13px;font-weight:800;color:#1a1a1a;direction:ltr">'+r.number+'</span>'+
+        '<span style="font-size:12px;font-weight:700;color:#fff;background:'+stColor+';padding:3px 12px;border-radius:999px">'+stLabel+'</span>'+
+      '</div>'+
+      '<div style="font-size:14px;font-weight:700;color:#B8860B;margin-bottom:4px">'+(REQ_TYPES[r.type]||r.type)+'</div>'+
+      '<div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+escapeHtml(r.details||'')+'</div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<span style="font-size:11px;color:#999">'+dt+'</span>'+
+        (prLabel?'<span style="font-size:11px;font-weight:700;color:'+prColor+'">● '+prLabel+'</span>':'')+
+      '</div>'+
+      (r.committeeNote?'<div style="margin-top:8px;padding:8px 10px;background:#fff;border-right:3px solid #B8860B;border-radius:6px;font-size:12px;color:#444"><b style="color:#9A7D1A">رد اللجنة:</b> '+escapeHtml(r.committeeNote)+'</div>':'')+
+      '<div style="text-align:center;margin-top:8px;font-size:11px;color:#B8860B;font-weight:700">اضغط لعرض التفاصيل ←</div>'+
+    '</div>';
+  });
+  content.innerHTML=h;
+  openReqModal('reqListModal');
+}
+window.openMyRequests = openMyRequests;
+
+function showRequestDetail(number){
+  var reqs = getRequests();
+  var r = reqs.find(function(x){ return x.number === number; });
+  if(!r) return;
+  document.getElementById('reqDetailType').textContent = REQ_TYPES[r.type] || r.type;
+  document.getElementById('reqDetailNum').textContent = r.number;
+  var stColor = REQ_STATUS_COLOR[r.status] || '#888';
+  var stLabel = REQ_STATUS[r.status] || r.status;
+  var prColor = REQ_PRIORITY_COLOR[r.priority] || '#6B7280';
+  var prLabel = REQ_PRIORITIES[r.priority] || '—';
+  var dt = new Date(r.submittedAt).toLocaleDateString('ar-EG-u-nu-latn',{year:'numeric',month:'long',day:'numeric'});
+  var body = document.getElementById('reqDetailBody');
+  var h = '';
+  h += '<div style="display:flex;gap:8px;margin-bottom:16px">';
+  h += '<div style="flex:1;text-align:center;background:#FBF8F0;border-radius:10px;padding:10px"><div style="font-size:11px;color:#888;margin-bottom:4px">الحالة</div><div style="font-size:13px;font-weight:800;color:'+stColor+'">'+stLabel+'</div></div>';
+  h += '<div style="flex:1;text-align:center;background:#FBF8F0;border-radius:10px;padding:10px"><div style="font-size:11px;color:#888;margin-bottom:4px">الأولوية</div><div style="font-size:13px;font-weight:800;color:'+prColor+'">'+prLabel+'</div></div>';
+  h += '</div>';
+  h += '<div style="margin-bottom:12px"><div style="font-size:12px;color:#888;font-weight:600;margin-bottom:4px">تفاصيل طلبك</div><div style="font-size:14px;color:#1a1a1a;line-height:1.7;background:#FBF8F0;border-radius:10px;padding:12px">'+escapeHtml(r.details||'')+'</div></div>';
+  h += '<div style="font-size:12px;color:#999;margin-bottom:14px">تاريخ التقديم: '+dt+'</div>';
+  if(r.committeeNote){
+    h += '<div style="background:linear-gradient(135deg,#FBF3D8,#F5ECC8);border:1px solid #E0D4A8;border-radius:12px;padding:14px"><div style="font-size:13px;font-weight:800;color:#9A7D1A;margin-bottom:6px">📩 رد اللجنة</div><div style="font-size:14px;color:#1a1a1a;line-height:1.7">'+escapeHtml(r.committeeNote)+'</div></div>';
+  } else {
+    h += '<div style="text-align:center;padding:14px;background:#FBF8F0;border-radius:10px;font-size:13px;color:#999">لم تقم اللجنة بالرد على طلبك بعد</div>';
+  }
+  body.innerHTML = h;
+  openReqModal('reqDetailModal');
+}
+window.showRequestDetail = showRequestDetail;
+
+
+// ══════════════════════════════════════════════════════════
+// ADMIN REQUESTS PANEL — logic
+// ══════════════════════════════════════════════════════════
+function openAdminRequests(){
+  var ov = document.getElementById('adminReqOverlay');
+  if(!ov) return;
+  // Populate filter dropdowns once
+  var fStatus = document.getElementById('reqFilterStatus');
+  if(fStatus && fStatus.options.length <= 1){
+    Object.keys(REQ_STATUS).forEach(function(k){
+      var o=document.createElement('option'); o.value=k; o.textContent=REQ_STATUS[k]; fStatus.appendChild(o);
+    });
+    var fType=document.getElementById('reqFilterType');
+    Object.keys(REQ_TYPES).forEach(function(k){
+      var o=document.createElement('option'); o.value=k; o.textContent=REQ_TYPES[k]; fType.appendChild(o);
+    });
+    var fPri=document.getElementById('reqFilterPriority');
+    Object.keys(REQ_PRIORITIES).forEach(function(k){
+      var o=document.createElement('option'); o.value=k; o.textContent=REQ_PRIORITIES[k]; fPri.appendChild(o);
+    });
+  }
+  ov.style.display='block';
+  document.body.style.overflow='hidden';
+  renderAdminReqStats();
+  renderAdminReqList();
+}
+window.openAdminRequests = openAdminRequests;
+
+function closeAdminRequests(){
+  var ov=document.getElementById('adminReqOverlay');
+  if(ov){ ov.style.display='none'; document.body.style.overflow=''; }
+}
+window.closeAdminRequests = closeAdminRequests;
+
+function clearReqFilters(){
+  ['reqFilterStatus','reqFilterType','reqFilterGender','reqFilterMarital','reqFilterPriority'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('reqSearchInput').value='';
+  document.getElementById('reqFilterSort').value='newest';
+  renderAdminReqList();
+}
+window.clearReqFilters = clearReqFilters;
+
+function renderAdminReqStats(){
+  var reqs=getRequests();
+  var total=reqs.length;
+  var pending=reqs.filter(function(r){return ['pending','studying','committee','interview'].indexOf(r.status)>=0;}).length;
+  var approved=reqs.filter(function(r){return r.status==='approved';}).length;
+  var rejected=reqs.filter(function(r){return r.status==='rejected';}).length;
+  var urgent=reqs.filter(function(r){return r.priority==='urgent'||r.priority==='emergency';}).length;
+  var box=document.getElementById('adminReqStats');
+  function card(num,lbl,color){
+    return '<div style="background:#fff;border:1px solid #EFE7D2;border-radius:12px;padding:14px;text-align:center"><div style="font-size:26px;font-weight:900;color:'+color+'">'+num+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+lbl+'</div></div>';
+  }
+  box.innerHTML = card(total,'إجمالي الطلبات','#1a1a1a')+card(pending,'قيد المراجعة','#ca8a04')+card(approved,'معتمد','#16a34a')+card(rejected,'مرفوض','#dc2626')+card(urgent,'عاجل/طارئ','#ea580c');
+}
+
+function getReqVoterInfo(memberId){
+  var voters=(typeof getVoters==='function')?getVoters():[];
+  return voters.find(function(v){return v.id===memberId;}) || {};
+}
+
+function renderAdminReqList(){
+  var reqs=getRequests();
+  var q=(document.getElementById('reqSearchInput').value||'').trim().toLowerCase();
+  var fS=document.getElementById('reqFilterStatus').value;
+  var fT=document.getElementById('reqFilterType').value;
+  var fG=document.getElementById('reqFilterGender').value;
+  var fM=document.getElementById('reqFilterMarital').value;
+  var fP=document.getElementById('reqFilterPriority').value;
+  var sort=document.getElementById('reqFilterSort').value;
+
+  var filtered=reqs.filter(function(r){
+    var v=getReqVoterInfo(r.memberId);
+    if(fS && r.status!==fS) return false;
+    if(fT && r.type!==fT) return false;
+    if(fP && r.priority!==fP) return false;
+    if(fG && (r.memberGender||v.gender)!==fG) return false;
+    if(fM){ var mar=r.memberMarital||(v.family&&v.family.marital); if(mar!==fM) return false; }
+    if(q){
+      var hay=((r.memberName||'')+' '+(r.memberId||'')+' '+(r.details||'')).toLowerCase();
+      if(hay.indexOf(q)<0) return false;
+    }
+    return true;
+  });
+
+  var prOrder={emergency:0,urgent:1,high:2,medium:3,normal:4};
+  filtered.sort(function(a,b){
+    if(sort==='oldest') return a.submittedAt-b.submittedAt;
+    if(sort==='priority') return (prOrder[a.priority]||9)-(prOrder[b.priority]||9);
+    return b.submittedAt-a.submittedAt;
+  });
+
+  var list=document.getElementById('adminReqList');
+  if(filtered.length===0){
+    list.innerHTML='<div style="text-align:center;padding:40px;color:#999;background:#fff;border-radius:14px;border:1px solid #EFE7D2"><div style="font-size:40px;margin-bottom:10px">📭</div>لا توجد طلبات مطابقة</div>';
+    return;
+  }
+  var h='';
+  filtered.forEach(function(r){
+    var v=getReqVoterInfo(r.memberId);
+    var stColor=REQ_STATUS_COLOR[r.status]||'#888';
+    var stLabel=REQ_STATUS[r.status]||r.status;
+    var prColor=REQ_PRIORITY_COLOR[r.priority]||'#6B7280';
+    var prLabel=REQ_PRIORITIES[r.priority]||'';
+    var dt=new Date(r.submittedAt).toLocaleDateString('ar-EG-u-nu-latn',{year:'numeric',month:'short',day:'numeric'});
+    h+='<div onclick="openAdminReqDetail(&quot;'+r.number+'&quot;)" style="background:#fff;border:1px solid #EFE7D2;border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">'+
+        '<span style="font-size:13px;font-weight:800;color:#1a1a1a;direction:ltr">'+r.number+'</span>'+
+        '<div style="display:flex;gap:6px">'+
+          (prLabel?'<span style="font-size:11px;font-weight:700;color:#fff;background:'+prColor+';padding:2px 10px;border-radius:999px">'+prLabel+'</span>':'')+
+          '<span style="font-size:11px;font-weight:700;color:#fff;background:'+stColor+';padding:2px 10px;border-radius:999px">'+stLabel+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div style="font-size:14px;font-weight:700;color:#B8860B;margin-bottom:3px">'+(REQ_TYPES[r.type]||r.type)+'</div>'+
+      '<div style="font-size:13px;color:#1a1a1a;margin-bottom:3px">'+escapeHtml(r.memberName||'')+' — <span style="direction:ltr">'+escapeHtml(r.memberId||'')+'</span></div>'+
+      '<div style="font-size:12px;color:#777;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">'+escapeHtml(r.details||'')+'</div>'+
+      '<div style="font-size:11px;color:#999;margin-top:5px">'+dt+'</div>'+
+    '</div>';
+  });
+  list.innerHTML=h;
+}
+window.renderAdminReqList = renderAdminReqList;
+
+function openAdminReqDetail(number){
+  var reqs=getRequests();
+  var r=reqs.find(function(x){return x.number===number;});
+  if(!r) return;
+  var v=getReqVoterInfo(r.memberId);
+  document.getElementById('adminReqDetailNum').textContent=r.number;
+  var stLabel=REQ_STATUS[r.status]||r.status;
+  var prLabel=REQ_PRIORITIES[r.priority]||'—';
+  var dt=new Date(r.submittedAt).toLocaleDateString('ar-EG-u-nu-latn',{year:'numeric',month:'long',day:'numeric'});
+  var genLabel=(r.memberGender||v.gender)==='female'?'أنثى':'ذكر';
+  var marMap={single:'أعزب',married:'متزوج',divorced:'مطلق',widowed:'أرمل',polygamous:'متعدد الزوجات'};
+  var mar=r.memberMarital||(v.family&&v.family.marital);
+  var loc=r.memberLocation||[v.city,v.district,v.gov].filter(Boolean).join('، ');
+  function row(k,val){ return '<tr><td style="padding:8px 0;color:#888;font-weight:600;width:40%;border-bottom:1px solid #F3EDDD;font-size:13px">'+k+'</td><td style="padding:8px 0;font-weight:700;color:#1a1a1a;border-bottom:1px solid #F3EDDD;font-size:13px">'+val+'</td></tr>'; }
+  var body=document.getElementById('adminReqDetailBody');
+  var h='<table style="width:100%;border-collapse:collapse;margin-bottom:16px"><tbody>';
+  h+=row('رقم الطلب','<span style="direction:ltr">'+r.number+'</span>');
+  h+=row('العنوان / النوع', REQ_TYPES[r.type]||r.type);
+  h+=row('الأولوية','<span style="color:'+(REQ_PRIORITY_COLOR[r.priority]||'#888')+';font-weight:800">'+prLabel+'</span>');
+  h+=row('الحالة','<span style="color:'+(REQ_STATUS_COLOR[r.status]||'#888')+';font-weight:800">'+stLabel+'</span>');
+  h+=row('مقدّم الطلب', escapeHtml(r.memberName||''));
+  h+=row('رقم الهوية','<span style="direction:ltr">'+escapeHtml(r.memberId||'')+'</span>');
+  h+=row('الجوال','<span style="direction:ltr">'+escapeHtml(r.memberPhone||v.phone||'—')+'</span>');
+  h+=row('الجنس', genLabel);
+  h+=row('الحالة الاجتماعية', marMap[mar]||'—');
+  h+=row('المنطقة / المحافظة', escapeHtml(loc||'—'));
+  h+=row('تاريخ التقديم', dt);
+  h+='</tbody></table>';
+  h+='<div style="border-top:2px solid #EFE7D2;padding-top:16px;margin-bottom:8px"><div style="font-size:14px;font-weight:800;color:#1a1a1a;margin-bottom:10px">✎ تعديل بيانات الطلب (تصحيح أخطاء الإدخال)</div>';
+  // Editable type
+  h+='<div style="margin-bottom:10px"><label style="font-size:12px;color:#888;font-weight:600;display:block;margin-bottom:4px">نوع الطلب</label><select id="adminReqTypeSel" style="width:100%;padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:Cairo,sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box">';
+  Object.keys(REQ_TYPES).forEach(function(k){ h+='<option value="'+k+'"'+(k===r.type?' selected':'')+'>'+REQ_TYPES[k]+'</option>'; });
+  h+='</select></div>';
+  // Editable priority
+  h+='<div style="margin-bottom:10px"><label style="font-size:12px;color:#888;font-weight:600;display:block;margin-bottom:4px">الأولوية</label><select id="adminReqPrioritySel" style="width:100%;padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:Cairo,sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box">';
+  Object.keys(REQ_PRIORITIES).forEach(function(k){ h+='<option value="'+k+'"'+(k===r.priority?' selected':'')+'>'+REQ_PRIORITIES[k]+'</option>'; });
+  h+='</select></div>';
+  // Editable details
+  h+='<div style="margin-bottom:6px"><label style="font-size:12px;color:#888;font-weight:600;display:block;margin-bottom:4px">تفاصيل الطلب (وصف)</label><textarea id="adminReqDetailsEdit" rows="4" style="width:100%;padding:11px;border:1px solid #D8D0BC;border-radius:10px;font-family:Cairo,sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box;resize:vertical">'+escapeHtml(r.details||'')+'</textarea></div>';
+  h+='</div>';
+
+  // Status update + committee note
+  h+='<div style="border-top:2px solid #EFE7D2;padding-top:16px"><div style="font-size:14px;font-weight:800;color:#1a1a1a;margin-bottom:10px">تحديث حالة الطلب</div>';
+  h+='<select id="adminReqStatusSel" style="width:100%;padding:11px;border:1px solid #D8D0BC;border-radius:10px;font-family:Cairo,sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box;margin-bottom:10px">';
+  Object.keys(REQ_STATUS).forEach(function(k){
+    h+='<option value="'+k+'"'+(k===r.status?' selected':'')+'>'+REQ_STATUS[k]+'</option>';
+  });
+  h+='</select>';
+  h+='<textarea id="adminReqNote" rows="3" placeholder="رد اللجنة / ملاحظة للمستفيد..." style="width:100%;padding:11px;border:1px solid #D8D0BC;border-radius:10px;font-family:Cairo,sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box;resize:vertical;margin-bottom:10px">'+escapeHtml(r.committeeNote||'')+'</textarea>';
+  h+='<button onclick="saveAdminReqUpdate(&quot;'+r.number+'&quot;)" style="width:100%;background:linear-gradient(135deg,#E5C158,#B8860B);border:none;border-radius:12px;padding:13px;font-family:Cairo,sans-serif;font-size:15px;font-weight:800;color:#1a1a1a;cursor:pointer">حفظ التحديث</button>';
+  h+='</div>';
+  body.innerHTML=h;
+  openReqModal('adminReqDetailModal');
+}
+window.openAdminReqDetail = openAdminReqDetail;
+
+function saveAdminReqUpdate(number){
+  var reqs=getRequests();
+  var idx=reqs.findIndex(function(x){return x.number===number;});
+  if(idx<0) return;
+  reqs[idx].status=document.getElementById('adminReqStatusSel').value;
+  reqs[idx].committeeNote=document.getElementById('adminReqNote').value.trim();
+  // Admin corrections to the request data (typos, wrong type/priority)
+  var typeSel=document.getElementById('adminReqTypeSel');
+  var prioritySel=document.getElementById('adminReqPrioritySel');
+  var detailsEdit=document.getElementById('adminReqDetailsEdit');
+  if(typeSel) reqs[idx].type=typeSel.value;
+  if(prioritySel) reqs[idx].priority=prioritySel.value;
+  if(detailsEdit) reqs[idx].details=detailsEdit.value.trim();
+  reqs[idx].updatedAt=Date.now();
+  saveRequests(reqs);
+  closeReqModal('adminReqDetailModal');
+  if(typeof toast==='function') toast('✅ تم تحديث الطلب','ok');
+  renderAdminReqStats();
+  renderAdminReqList();
+}
+window.saveAdminReqUpdate = saveAdminReqUpdate;
+
+
+// Reply to a contact message via SMS or Email
+function replyToMessage(msgId){
+  var msgs = getMsgs();
+  var m = msgs.find(function(x){ return x.id === msgId; });
+  if(!m) return;
+  var replyText = prompt('اكتب ردك على رسالة ' + (m.name||'') + ':', '');
+  if(replyText === null || replyText.trim() === '') return;
+  replyText = replyText.trim();
+
+  // Mark as read
+  m.read = true;
+  m.replied = true;
+  m.replyText = replyText;
+  m.repliedAt = Date.now();
+  setMsgs(msgs);
+
+  // Open SMS or email client
+  if(m.phone){
+    var smsUrl = 'sms:' + m.phone + '?body=' + encodeURIComponent(replyText);
+    window.open(smsUrl, '_blank');
+  } else if(m.email){
+    var subject = 'رد من لجنة عائلة أبو طه';
+    var mailUrl = 'mailto:' + m.email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(replyText);
+    window.open(mailUrl, '_blank');
+  }
+  if(typeof toast === 'function') toast('✅ تم فتح تطبيق الإرسال', 'ok');
+  if(typeof renderAdmin === 'function') renderAdmin();
+}
+window.replyToMessage = replyToMessage;
+
+  function renderMessagesBox(){
+  var ms = getMsgs();
+  const ml = $('#msgsList'); if(!ml) return;
+  ml.innerHTML = '';
+  if(ms.length === 0){ ml.innerHTML = `<div class="alert info small" style="margin:0">لا توجد رسائل واردة بعد.</div>`; }
+  else {
+    // Filter bar
+    var unreadCount = ms.filter(function(m){ return !m.read; }).length;
+    var filterBar = document.createElement('div');
+    filterBar.style.cssText = 'display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center';
+    filterBar.innerHTML = '<span style="font-size:12px;color:#888;font-weight:700">عدد غير المقروء: <b style="color:#dc2626">'+unreadCount+'</b></span>'+
+      '<button class="btn btn-ghost btn-sm" id="msgFilterAll" style="font-size:11px">الكل</button>'+
+      '<button class="btn btn-ghost btn-sm" id="msgFilterUnread" style="font-size:11px">غير مقروءة</button>'+
+      '<button class="btn btn-ghost btn-sm" id="msgFilterRead" style="font-size:11px">مقروءة</button>';
+    ml.appendChild(filterBar);
+
+    var listWrap = document.createElement('div');
+    ml.appendChild(listWrap);
+
+    function renderMsgCards(filter){
+      listWrap.innerHTML = '';
+      var shown = ms.slice().reverse().filter(function(m){
+        if(filter==='unread') return !m.read;
+        if(filter==='read') return m.read;
+        return true;
+      });
+      if(shown.length === 0){ listWrap.innerHTML = '<div class="alert info small" style="margin:0">لا توجد رسائل في هذا التصنيف.</div>'; return; }
+      shown.forEach(function(m){
+        const card = document.createElement('div'); card.className = 'msg-card';
+        card.style.cssText = 'border-right:3px solid '+(m.read?'#ccc':'#dc2626')+';opacity:'+(m.read?'0.75':'1');
+        var contact = m.phone ? ('📞 '+escapeHtml(m.phone)) : (m.email ? ('✉ '+escapeHtml(m.email)) : '');
+        card.innerHTML = `
+          <div class="meta">
+            <span><b>${escapeHtml(m.type||'رسالة')}</b> ${m.name?` - ${escapeHtml(m.name)}`:''} ${contact?` - ${contact}`:''} ${!m.read?'<span style="background:#dc2626;color:#fff;font-size:9px;padding:1px 7px;border-radius:999px;margin-right:4px">جديد</span>':''}</span>
+            <span>${new Date(m.ts).toLocaleString('ar-EG')}</span>
+          </div>
+          <div class="body">${escapeHtml(m.msg||m.message||'')}</div>
+          <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-start">
+            ${m.read
+              ? `<button class="btn btn-ghost btn-sm" data-unread-msg="${m.id}" style="font-size:11px">↩ تحديد كغير مقروءة</button>`
+              : `<button class="btn btn-ghost btn-sm" data-read-msg="${m.id}" style="font-size:11px;background:rgba(15,107,60,.12);color:var(--success)">✓ تمت القراءة</button>`}
+            ${(m.phone||m.email) ? `<button class="btn btn-ghost btn-sm" data-reply-msg="${m.id}" style="font-size:11px;background:rgba(212,175,55,.15);color:var(--primary-dark)">↪ الرد</button>` : ''}
+            <button class="btn btn-ghost btn-sm" data-del-msg="${m.id}" style="font-size:11px">🗑 حذف</button>
+          </div>`;
+        listWrap.appendChild(card);
+      });
+      // Wire buttons
+      $$('[data-read-msg]', listWrap).forEach(function(b){ b.addEventListener('click', function(){
+        var arr=getMsgs(); var mm=arr.find(function(x){return x.id===b.dataset.readMsg;}); if(mm){mm.read=true;setMsgs(arr);renderAdmin();}
+      });});
+      $$('[data-unread-msg]', listWrap).forEach(function(b){ b.addEventListener('click', function(){
+        var arr=getMsgs(); var mm=arr.find(function(x){return x.id===b.dataset.unreadMsg;}); if(mm){mm.read=false;setMsgs(arr);renderAdmin();}
+      });});
+      $$('[data-del-msg]', listWrap).forEach(function(b){ b.addEventListener('click', function(){
+        if(!confirm('حذف هذه الرسالة؟')) return;
+        var arr=getMsgs().filter(function(x){return x.id!==b.dataset.delMsg;}); setMsgs(arr); renderAdmin();
+      });});
+      $$('[data-reply-msg]', listWrap).forEach(function(b){ b.addEventListener('click', function(){
+        replyToMessage(b.dataset.replyMsg);
+      });});
+    }
+    renderMsgCards('all');
+    filterBar.querySelector('#msgFilterAll').addEventListener('click', function(){ renderMsgCards('all'); });
+    filterBar.querySelector('#msgFilterUnread').addEventListener('click', function(){ renderMsgCards('unread'); });
+    filterBar.querySelector('#msgFilterRead').addEventListener('click', function(){ renderMsgCards('read'); });
+  }
+}
+window.renderMessagesBox = renderMessagesBox;
+
+
+
+// Admin: full edit of any voter's data (all 3 stages)
+function adminEditVoter(voterId){
+  var voters = (typeof getVoters === 'function') ? getVoters() : [];
+  var v = voters.find(function(x){ return x.id === voterId; });
+  if(!v){ if(typeof toast==='function') toast('لم يتم العثور على المسجّل','err'); return; }
+  var f = v.family || {};
+  function set(id, val){ var el=document.getElementById(id); if(el) el.value = (val===undefined||val===null)?'':val; }
+  document.getElementById('afeMemberId').textContent = 'رقم الهوية: ' + (v.id||'');
+  set('afe_name', v.name);
+  set('afe_id', v.id);
+  set('afe_issue', v.issueYear || v.idIssueYear);
+  set('afe_gender', (v.gender==='female'||v.gender==='أنثى')?'female':'male');
+  set('afe_dob', v.dob);
+  set('afe_birthplace', v.birthplace);
+  set('afe_city', v.city);
+  set('afe_district', v.district);
+  set('afe_gov', v.gov);
+  set('afe_country', v.country);
+  set('afe_phone', v.phone);
+  set('afe_phone_alt', v.phoneAlt || v.phone_alt);
+  set('afe_email', v.email);
+  set('afe_marital', f.marital || 'single');
+  set('afe_sons', f.sonsUnder18 || 0);
+  set('afe_daughters', f.daughtersUnder18 || 0);
+  set('afe_education', f.education);
+  set('afe_profession', f.profession);
+  set('afe_work_status', f.workStatus);
+  set('afe_needs', (f.needs||[]).join(', '));
+  set('afe_aspirations', f.aspirationsDetails);
+  var err=document.getElementById('afeError'); if(err) err.style.display='none';
+  _adminEditingId = voterId;
+  openReqModal('adminFullEditModal');
+}
+window.adminEditVoter = adminEditVoter;
+
+
+// ══════════════════════════════════════════════════════════
+// ADMIN EDIT VIA REGISTRATION FORM (full edit, same as registration)
+// ══════════════════════════════════════════════════════════
+var _regEditMode = false;
+var _regEditId = null;
+
+function adminEditViaRegistration(voterId){
+  var voters = (typeof getVoters === 'function') ? getVoters() : [];
+  var v = voters.find(function(x){ return x.id === voterId; });
+  if(!v){ if(typeof toast==='function') toast('لم يتم العثور على المسجّل','err'); return; }
+
+  _regEditMode = true;
+  _regEditId = voterId;
+
+  // Open registration form (gate bypassed because _regEditMode is true)
+  if(typeof openRegister === 'function') openRegister();
+  else if(typeof openModal === 'function') openModal('modalRegister');
+
+  // Pre-fill after the modal opens & resets
+  setTimeout(function(){ prefillRegistrationForm(v); }, 300);
+}
+window.adminEditViaRegistration = adminEditViaRegistration;
+
+function prefillRegistrationForm(v){
+  var f = v.family || {};
+  function set(id, val){ var el=document.getElementById(id); if(el && val!==undefined && val!==null) el.value = val; }
+  set('r_id', v.id);
+  set('r_issue', v.issueYear || v.idIssueYear);
+  set('r_name', v.name);
+  set('r_dob', v.dob);
+  set('r_birthplace', v.birthplace);
+  set('r_city', v.city);
+  set('r_district', v.district);
+  set('r_gov', v.gov);
+  set('r_country', v.country);
+  set('r_phone_alt', v.phoneAlt);
+  set('r_email', v.email);
+  set('r_marital', f.marital);
+  set('r_education', f.education);
+  set('r_profession', f.profession);
+  set('r_work_status', f.workStatus);
+  set('r_aspirations_details', f.aspirationsDetails);
+  set('r_sons_count', f.sonsUnder18 || 0);
+  set('r_daughters_count', f.daughtersUnder18 || 0);
+  // Gender radio
+  var g = (v.gender==='female'||v.gender==='أنثى')?'female':'male';
+  var gEl = document.querySelector('input[name=r_gender][value="'+g+'"]') || document.querySelector('input[name=r_gender][value="'+(g==='male'?'ذكر':'أنثى')+'"]');
+  if(gEl){ gEl.checked = true; var pill=gEl.closest('.radio-pill'); if(pill) pill.classList.add('selected'); }
+  // Needs checkboxes
+  (f.needs||[]).forEach(function(n){
+    var cb = document.querySelector('input[name="r_need"][value="'+n+'"]');
+    if(cb) cb.checked = true;
+  });
+  // Phone: prefill into whichever field is visible
+  set('r_phone_pal', v.phone);
+  set('r_phone_free', v.phone);
+  // Mark existing image as present so the required-image check passes
+  if(v.imgData || v.idImage){
+    if(typeof OCR_STORE !== 'undefined'){ OCR_STORE.voter = OCR_STORE.voter || {}; OCR_STORE.voter.imgData = v.imgData || v.idImage; }
+  }
+  // Show an edit banner
+  var modal = document.getElementById('modalRegister');
+  if(modal && !modal.querySelector('.admin-edit-banner')){
+    var banner = document.createElement('div');
+    banner.className = 'admin-edit-banner';
+    banner.style.cssText = 'background:linear-gradient(135deg,#E5C158,#B8860B);color:#1a1a1a;padding:10px 16px;border-radius:10px;font-weight:800;font-size:13px;text-align:center;margin-bottom:12px';
+    banner.textContent = '✎ وضع التعديل الإداري — تعديل بيانات: ' + (v.name||'');
+    var body = modal.querySelector('.modal-body') || modal.querySelector('[data-step-pane]');
+    if(body && body.parentNode) body.parentNode.insertBefore(banner, body);
+  }
+  if(typeof toast === 'function') toast('✎ تم تحميل البيانات للتعديل', 'ok');
+}
+
+
+var _adminEditingId = null;
+function saveAdminFullEdit(){
+  var voters = getVoters();
+  var idx = voters.findIndex(function(x){ return x.id === _adminEditingId; });
+  if(idx < 0){ return; }
+  function g(id){ var el=document.getElementById(id); return el ? el.value.trim() : ''; }
+  var v = voters[idx];
+  v.family = v.family || {};
+
+  // Stage 1
+  v.name = g('afe_name');
+  var newId = g('afe_id');
+  v.issueYear = g('afe_issue');
+  v.gender = g('afe_gender');
+  v.dob = g('afe_dob');
+  v.birthplace = g('afe_birthplace');
+  v.city = g('afe_city');
+  v.district = g('afe_district');
+  v.gov = g('afe_gov');
+  v.country = g('afe_country');
+  v.phone = g('afe_phone');
+  v.phoneAlt = g('afe_phone_alt');
+  v.email = g('afe_email');
+  // Stage 2
+  v.family.marital = g('afe_marital');
+  v.family.sonsUnder18 = parseInt(g('afe_sons'))||0;
+  v.family.daughtersUnder18 = parseInt(g('afe_daughters'))||0;
+  v.family.education = g('afe_education');
+  v.family.profession = g('afe_profession');
+  v.family.workStatus = g('afe_work_status');
+  // Stage 3
+  var needsStr = g('afe_needs');
+  v.family.needs = needsStr ? needsStr.split(',').map(function(s){return s.trim();}).filter(Boolean) : [];
+  v.family.aspirationsDetails = g('afe_aspirations');
+
+  // If ID changed, update it
+  if(newId && newId !== v.id){ v.id = newId; }
+
+  // Log the admin edit
+  v.editLog = v.editLog || [];
+  v.editLog.push({ timestamp: Date.now(), reviewed: true, source: 'admin-full-edit' });
+
+  voters[idx] = v;
+  setVoters(voters);
+
+  closeReqModal('adminFullEditModal');
+  if(typeof toast === 'function') toast('✅ تم حفظ كل التعديلات', 'ok');
+  if(typeof renderAdmin === 'function') renderAdmin();
+}
+window.saveAdminFullEdit = saveAdminFullEdit;
+
+
+
+
+// REQUESTS EXPORT / KASHF — filtered printable report
+function openReqExport(){
+  var ov = document.getElementById('reqExportOverlay');
+  if(!ov) return;
+  var fS = document.getElementById('reqExpStatus');
+  if(fS && fS.options.length <= 1){
+    Object.keys(REQ_STATUS).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=REQ_STATUS[k]; fS.appendChild(o); });
+    var fT=document.getElementById('reqExpType');
+    Object.keys(REQ_TYPES).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=REQ_TYPES[k]; fT.appendChild(o); });
+    var fP=document.getElementById('reqExpPriority');
+    Object.keys(REQ_PRIORITIES).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=REQ_PRIORITIES[k]; fP.appendChild(o); });
+  }
+  ov.style.display='block'; document.body.style.overflow='hidden';
+  renderReqExportList();
+}
+window.openReqExport = openReqExport;
+function closeReqExport(){ var ov=document.getElementById('reqExportOverlay'); if(ov){ov.style.display='none';document.body.style.overflow='';} }
+window.closeReqExport = closeReqExport;
+function clearReqExportFilters(){
+  ['reqExpStatus','reqExpType','reqExpGender','reqExpMarital','reqExpPriority'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('reqExpSearch').value=''; document.getElementById('reqExpSort').value='newest';
+  renderReqExportList();
+}
+window.clearReqExportFilters = clearReqExportFilters;
+function getFilteredRequests(){
+  var reqs=getRequests();
+  var q=(document.getElementById('reqExpSearch').value||'').trim().toLowerCase();
+  var fS=document.getElementById('reqExpStatus').value, fT=document.getElementById('reqExpType').value;
+  var fG=document.getElementById('reqExpGender').value, fM=document.getElementById('reqExpMarital').value;
+  var fP=document.getElementById('reqExpPriority').value, sort=document.getElementById('reqExpSort').value;
+  var filtered=reqs.filter(function(r){
+    var v=getReqVoterInfo(r.memberId);
+    if(fS && r.status!==fS) return false;
+    if(fT && r.type!==fT) return false;
+    if(fP && r.priority!==fP) return false;
+    if(fG && (r.memberGender||v.gender)!==fG) return false;
+    if(fM){ var mar=r.memberMarital||(v.family&&v.family.marital); if(mar!==fM) return false; }
+    if(q){ var hay=((r.memberName||'')+' '+(r.memberId||'')+' '+(r.details||'')).toLowerCase(); if(hay.indexOf(q)<0) return false; }
+    return true;
+  });
+  var prOrder={emergency:0,urgent:1,high:2,medium:3,normal:4};
+  filtered.sort(function(a,b){
+    if(sort==='oldest') return a.submittedAt-b.submittedAt;
+    if(sort==='priority') return (prOrder[a.priority]||9)-(prOrder[b.priority]||9);
+    if(sort==='type') return (REQ_TYPES[a.type]||'').localeCompare(REQ_TYPES[b.type]||'','ar');
+    return b.submittedAt-a.submittedAt;
+  });
+  return filtered;
+}
+function renderReqExportList(){
+  var filtered=getFilteredRequests();
+  document.getElementById('reqExpCount').textContent=filtered.length;
+  var list=document.getElementById('reqExpList');
+  if(filtered.length===0){ list.innerHTML='<div style="text-align:center;padding:40px;color:#999">لا توجد طلبات مطابقة للفلاتر</div>'; return; }
+  var h='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#FBF8F0;border-bottom:2px solid #B8860B">'+
+     '<th style="padding:10px;text-align:right;color:#9A7D1A">#</th><th style="padding:10px;text-align:right;color:#9A7D1A">رقم الطلب</th>'+
+     '<th style="padding:10px;text-align:right;color:#9A7D1A">الاسم</th><th style="padding:10px;text-align:right;color:#9A7D1A">الهوية</th>'+
+     '<th style="padding:10px;text-align:right;color:#9A7D1A">النوع</th><th style="padding:10px;text-align:right;color:#9A7D1A">الأولوية</th>'+
+     '<th style="padding:10px;text-align:right;color:#9A7D1A">الحالة</th></tr></thead><tbody>';
+  filtered.forEach(function(r,i){
+    h+='<tr style="border-bottom:1px solid #F3EDDD"><td style="padding:9px 10px">'+(i+1)+'</td>'+
+      '<td style="padding:9px 10px;direction:ltr;font-weight:700">'+r.number+'</td>'+
+      '<td style="padding:9px 10px">'+escapeHtml(r.memberName||'')+'</td>'+
+      '<td style="padding:9px 10px;direction:ltr">'+escapeHtml(r.memberId||'')+'</td>'+
+      '<td style="padding:9px 10px;color:#B8860B;font-weight:600">'+(REQ_TYPES[r.type]||r.type)+'</td>'+
+      '<td style="padding:9px 10px;color:'+(REQ_PRIORITY_COLOR[r.priority]||'#888')+'">'+(REQ_PRIORITIES[r.priority]||'')+'</td>'+
+      '<td style="padding:9px 10px;color:'+(REQ_STATUS_COLOR[r.status]||'#888')+';font-weight:600">'+(REQ_STATUS[r.status]||r.status)+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  list.innerHTML=h;
+}
+window.renderReqExportList = renderReqExportList;
+function printReqKashf(){
+  var filtered=getFilteredRequests();
+  if(filtered.length===0){ if(typeof toast==='function')toast('لا توجد طلبات للطباعة','err'); return; }
+  var fS=document.getElementById('reqExpStatus'), fT=document.getElementById('reqExpType'), fP=document.getElementById('reqExpPriority');
+  var fd=[];
+  if(fT.value) fd.push('النوع: '+REQ_TYPES[fT.value]);
+  if(fS.value) fd.push('الحالة: '+REQ_STATUS[fS.value]);
+  if(fP.value) fd.push('الأولوية: '+REQ_PRIORITIES[fP.value]);
+  var filterText = fd.length ? fd.join(' — ') : 'كشف شامل لجميع الطلبات';
+  var now=new Date();
+  var dateStr=now.toLocaleDateString('ar-EG-u-nu-latn',{year:'numeric',month:'long',day:'numeric'});
+  var logoUrl='https://i.ibb.co/F4xfYJCp/FB-IMG-1777373548219.jpg';
+  var w=window.open('','_blank');
+  if(!w){ if(typeof toast==='function')toast('يرجى السماح بالنوافذ المنبثقة','err'); return; }
+  var rows='';
+  filtered.forEach(function(r,i){
+    var v=getReqVoterInfo(r.memberId);
+    var loc=r.memberLocation||[v.city,v.district,v.gov].filter(Boolean).join('، ')||'—';
+    var phone=r.memberPhone||v.phone||'—';
+    rows+='<tr><td>'+(i+1)+'</td><td class="ltr">'+r.number+'</td><td>'+escapeHtml(r.memberName||'')+'</td>'+
+      '<td class="ltr">'+escapeHtml(r.memberId||'')+'</td><td class="ltr">'+escapeHtml(phone)+'</td>'+
+      '<td>'+(REQ_TYPES[r.type]||r.type)+'</td><td>'+(REQ_PRIORITIES[r.priority]||'')+'</td>'+
+      '<td>'+(REQ_STATUS[r.status]||r.status)+'</td><td>'+escapeHtml(loc)+'</td></tr>';
+  });
+  var doc='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>كشف الطلبات</title><style>'+
+    '@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap");'+
+    '*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Cairo,sans-serif;padding:15mm;color:#1a1a1a;direction:rtl;}'+
+    '.head{display:flex;align-items:center;gap:14px;border-bottom:2.5px solid #B8860B;padding-bottom:12px;margin-bottom:6px;}'+
+    '.head img{width:56px;height:56px;border-radius:50%;border:2px solid #B8860B;object-fit:cover;}'+
+    '.head .t1{font-size:20px;font-weight:900;}.head .t2{font-size:14px;color:#B8860B;font-weight:700;}'+
+    '.kashf-title{text-align:center;font-size:18px;font-weight:900;margin:14px 0 4px;}'+
+    '.kashf-sub{text-align:center;font-size:12px;color:#666;margin-bottom:4px;}'+
+    '.meta{display:flex;justify-content:space-between;font-size:11px;color:#666;margin:10px 0;}'+
+    'table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;}'+
+    'th{background:#B8860B;color:#fff;padding:8px 6px;text-align:right;font-weight:700;}'+
+    'td{padding:7px 6px;border-bottom:1px solid #ddd;text-align:right;}'+
+    'tr:nth-child(even) td{background:#FBF8F0;}.ltr{direction:ltr;text-align:right;}'+
+    '.foot{margin-top:30px;display:flex;justify-content:space-between;padding-top:14px;}'+
+    '.foot-box{text-align:center;width:45%;}.foot-box .lbl{font-size:13px;font-weight:800;color:#B8860B;margin-bottom:40px;}'+
+    '.foot-box .line{border-top:1.5px solid #1a1a1a;padding-top:5px;font-size:11px;color:#666;}'+
+    '.gen-date{text-align:center;font-size:10px;color:#999;margin-top:20px;}'+
+    '@page{size:A4 landscape;margin:10mm;}@media print{.no-print{display:none;}body{padding:0;}}'+
+    '.print-btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#E5C158,#B8860B);color:#1a1a1a;border:none;padding:13px 32px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;box-shadow:0 4px 20px rgba(184,134,11,0.4);}'+
+    '</style></head><body>'+
+    '<div class="head"><img src="'+logoUrl+'" onerror="this.style.display=&quot;none&quot;" /><div><div class="t1">المنظومة الإلكترونية المركزية</div><div class="t2">لجنة عائلة أبو طه</div></div></div>'+
+    '<div class="kashf-title">كشف الطلبات والاحتياجات</div><div class="kashf-sub">'+filterText+'</div>'+
+    '<div class="meta"><span>عدد الطلبات: '+filtered.length+'</span><span>تاريخ الكشف: '+dateStr+'</span></div>'+
+    '<table><thead><tr><th>#</th><th>رقم الطلب</th><th>الاسم</th><th>الهوية</th><th>الجوال</th><th>النوع</th><th>الأولوية</th><th>الحالة</th><th>المنطقة</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="foot"><div class="foot-box"><div class="lbl">ختم اللجنة</div><div class="line">المنظومة الإلكترونية المركزية</div></div>'+
+    '<div class="foot-box"><div class="lbl">توقيع رئيس اللجنة</div><div class="line">الاسم والتوقيع</div></div></div>'+
+    '<div class="gen-date">حُرِّر هذا الكشف إلكترونياً بتاريخ '+dateStr+' — عدد ('+filtered.length+') طلب</div>'+
+    '<button class="print-btn no-print" onclick="window.print()">🖨 طباعة الكشف</button></body></html>';
+  w.document.write(doc); w.document.close();
+}
+window.printReqKashf = printReqKashf;
+
 </script>
 
 <!-- ══════════════════════════════════════════════════════════
@@ -16388,6 +17197,270 @@ if(document.readyState === 'loading'){
 
   </div>
 </div>
+
+
+<!-- REQUESTS SYSTEM MODALS -->
+<!-- Requests HUB modal (طلباتي - 2 buttons) -->
+<div id="reqHubModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;font-family:'Cairo',sans-serif;direction:rtl">
+  <div style="background:#fff;border-radius:18px;max-width:420px;width:100%;padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#E5C158,#B8860B);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px">📋</div>
+      <h3 style="font-size:21px;font-weight:800;color:#1a1a1a;margin:0">طلباتي</h3>
+      <p style="font-size:13px;color:#888;margin:6px 0 0">اختر الإجراء الذي تريده</p>
+    </div>
+    <button onclick="closeReqModal('reqHubModal');startNewRequest()" style="width:100%;background:linear-gradient(135deg,#E5C158,#B8860B);border:none;border-radius:14px;padding:16px;font-family:'Cairo',sans-serif;font-size:16px;font-weight:800;color:#1a1a1a;cursor:pointer;margin-bottom:12px">➕ طلب جديد</button>
+    <button onclick="closeReqModal('reqHubModal');startMyRequests()" style="width:100%;background:#fff;border:2px solid #B8860B;border-radius:14px;padding:16px;font-family:'Cairo',sans-serif;font-size:16px;font-weight:800;color:#B8860B;cursor:pointer;margin-bottom:16px">📂 متابعة طلباتي</button>
+    <button onclick="closeReqModal('reqHubModal')" style="width:100%;background:none;border:none;padding:8px;font-family:'Cairo',sans-serif;font-size:14px;color:#888;cursor:pointer">إغلاق</button>
+  </div>
+</div>
+
+<div id="reqVerifyModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;font-family:'Cairo',sans-serif;direction:rtl">
+  <div style="background:#fff;border-radius:18px;max-width:420px;width:100%;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#E5C158,#B8860B);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px">🔐</div>
+      <h3 style="font-size:19px;font-weight:800;color:#1a1a1a;margin:0">التحقق من العضوية</h3>
+      <p id="reqVerifyPurpose" style="font-size:13px;color:#888;margin:6px 0 0">للوصول إلى الطلبات، يرجى التحقق من بياناتك</p>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:13px;font-weight:700;color:#1a1a1a;display:block;margin-bottom:6px">رقم الهوية الوطنية</label>
+      <input type="text" id="reqVId" inputmode="numeric" maxlength="9" placeholder="9 أرقام" style="width:100%;padding:12px;border:1px solid #D8D0BC;border-radius:10px;font-family:'Cairo',sans-serif;font-size:15px;direction:ltr;text-align:right;background:#FBF8F0;box-sizing:border-box" />
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:13px;font-weight:700;color:#1a1a1a;display:block;margin-bottom:6px">سنة إصدار الهوية</label>
+      <input type="text" id="reqVYear" inputmode="numeric" maxlength="4" placeholder="مثال: 2015" style="width:100%;padding:12px;border:1px solid #D8D0BC;border-radius:10px;font-family:'Cairo',sans-serif;font-size:15px;direction:ltr;text-align:right;background:#FBF8F0;box-sizing:border-box" />
+    </div>
+    <div id="reqVerifyError" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#dc2626;border-radius:10px;padding:11px;font-size:13px;font-weight:600;text-align:center;margin-bottom:14px"></div>
+    <button onclick="doReqVerify()" style="width:100%;background:linear-gradient(135deg,#E5C158,#B8860B);border:none;border-radius:12px;padding:14px;font-family:'Cairo',sans-serif;font-size:15px;font-weight:800;color:#1a1a1a;cursor:pointer;margin-bottom:8px">تحقّق ومتابعة</button>
+    <button onclick="closeReqModal('reqVerifyModal')" style="width:100%;background:none;border:none;padding:10px;font-family:'Cairo',sans-serif;font-size:14px;color:#888;cursor:pointer">إلغاء</button>
+  </div>
+</div>
+<div id="reqFormModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;font-family:'Cairo',sans-serif;direction:rtl">
+  <div style="background:#fff;border-radius:18px;max-width:460px;width:100%;max-height:88vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <h3 style="font-size:19px;font-weight:800;color:#1a1a1a;margin:0 0 4px">تقديم طلب جديد</h3>
+    <p id="reqFormMember" style="font-size:13px;color:#B8860B;font-weight:700;margin:0 0 18px"></p>
+    <div style="margin-bottom:14px">
+      <label style="font-size:13px;font-weight:700;color:#1a1a1a;display:block;margin-bottom:6px">١. اختر نوع الطلب</label>
+      <select id="reqType" onchange="updateReqTitle()" style="width:100%;padding:12px;border:1px solid #D8D0BC;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box">
+        <option value="cash">المساعدة النقدية</option>
+        <option value="food">السلة الغذائية</option>
+        <option value="medical">المساعدة الطبية</option>
+        <option value="housing">تحسين السكن</option>
+        <option value="travel">السفر / لم الشمل</option>
+        <option value="education_support">الدعم التعليمي</option>
+        <option value="scholarship">منحة تعليمية</option>
+        <option value="fee_reduction">تخفيض رسوم</option>
+        <option value="mediation">وساطة / توصية</option>
+        <option value="employment">توظيف / فرصة عمل</option>
+        <option value="legal">استشارة قانونية</option>
+        <option value="psychological">الدعم النفسي / الإرشاد التربوي</option>
+        <option value="marriage">المساعدة في الزواج</option>
+        <option value="debt">مساعدة في الديون / تسوية مالية</option>
+        <option value="complaint">شكوى</option>
+        <option value="inquiry">استفسار</option>
+        <option value="suggestion">اقتراح</option>
+        <option value="other">أخرى</option>
+      </select>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:13px;font-weight:700;color:#1a1a1a;display:block;margin-bottom:6px">٢. تفاصيل الطلب — <span id="reqTitleLabel" style="color:#B8860B">المساعدة النقدية</span></label>
+      <textarea id="reqDetails" rows="4" placeholder="اشرح طلبك بالتفصيل..." style="width:100%;padding:12px;border:1px solid #D8D0BC;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;background:#FBF8F0;resize:vertical;box-sizing:border-box"></textarea>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:13px;font-weight:700;color:#1a1a1a;display:block;margin-bottom:6px">٣. مستوى الأولوية</label>
+      <select id="reqPriority" style="width:100%;padding:12px;border:1px solid #D8D0BC;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box">
+        <option value="normal">عادي</option>
+        <option value="medium">متوسط</option>
+        <option value="high">عالية</option>
+        <option value="urgent">عاجل</option>
+        <option value="emergency">طارئ</option>
+      </select>
+    </div>
+    <div id="reqFormError" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#dc2626;border-radius:10px;padding:11px;font-size:13px;font-weight:600;text-align:center;margin-bottom:14px"></div>
+    <button onclick="submitNewRequest()" style="width:100%;background:linear-gradient(135deg,#E5C158,#B8860B);border:none;border-radius:12px;padding:14px;font-family:'Cairo',sans-serif;font-size:15px;font-weight:800;color:#1a1a1a;cursor:pointer;margin-bottom:8px">إرسال الطلب</button>
+    <button onclick="closeReqModal('reqFormModal')" style="width:100%;background:none;border:none;padding:10px;font-family:'Cairo',sans-serif;font-size:14px;color:#888;cursor:pointer">إلغاء</button>
+  </div>
+</div>
+<div id="reqListModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;font-family:'Cairo',sans-serif;direction:rtl">
+  <div style="background:#fff;border-radius:18px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <h3 style="font-size:19px;font-weight:800;color:#1a1a1a;margin:0 0 4px">طلباتي</h3>
+    <p id="reqListMember" style="font-size:13px;color:#B8860B;font-weight:700;margin:0 0 18px"></p>
+    <div id="reqListContent"></div>
+    <button onclick="closeReqModal('reqListModal')" style="width:100%;background:none;border:1px solid #D8D0BC;border-radius:10px;padding:12px;font-family:'Cairo',sans-serif;font-size:14px;color:#6B6B6B;cursor:pointer;margin-top:14px;font-weight:700">إغلاق</button>
+  </div>
+</div>
+
+<!-- Request detail modal (for member) -->
+<div id="reqDetailModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;font-family:'Cairo',sans-serif;direction:rtl">
+  <div style="background:#fff;border-radius:18px;max-width:460px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div id="reqDetailHeader" style="background:linear-gradient(135deg,#B8860B,#9A7D1A);padding:18px 22px;text-align:center;border-radius:18px 18px 0 0">
+      <div style="font-size:18px;font-weight:800;color:#fff" id="reqDetailType"></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:4px;direction:ltr" id="reqDetailNum"></div>
+    </div>
+    <div style="padding:20px 22px" id="reqDetailBody"></div>
+    <div style="padding:0 22px 20px">
+      <button onclick="closeReqModal('reqDetailModal')" style="width:100%;background:none;border:1px solid #D8D0BC;border-radius:10px;padding:12px;font-family:'Cairo',sans-serif;font-size:14px;color:#6B6B6B;cursor:pointer;font-weight:700">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ══════════════════════════════════════════════════════════
+     ADMIN REQUESTS PANEL
+══════════════════════════════════════════════════════════ -->
+<div id="adminReqOverlay" style="display:none;position:fixed;inset:0;z-index:9998;background:#FBF8F0;overflow-y:auto;font-family:'Cairo',sans-serif;direction:rtl">
+  <div style="max-width:1000px;margin:0 auto;padding:20px 16px 40px">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <h2 style="font-size:22px;font-weight:900;color:#1a1a1a;margin:0">📋 إدارة الطلبات</h2>
+      <button onclick="closeAdminRequests()" style="background:#fff;border:1px solid #D8D0BC;border-radius:10px;padding:10px 20px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:#6B6B6B;cursor:pointer">← رجوع للوحة الإدارة</button>
+    </div>
+
+    <!-- Stat cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:20px" id="adminReqStats"></div>
+
+    <!-- Filters -->
+    <div style="background:#fff;border:1px solid #EFE7D2;border-radius:14px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:14px;font-weight:800;color:#1a1a1a">الفلترة والبحث</span>
+        <button onclick="clearReqFilters()" style="background:none;border:none;color:#B8860B;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer">مسح الفلاتر</button>
+      </div>
+      <input type="text" id="reqSearchInput" oninput="renderAdminReqList()" placeholder="بحث بالاسم / الهوية / الوصف" style="width:100%;padding:11px;border:1px solid #D8D0BC;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box;margin-bottom:10px" />
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+        <select id="reqFilterStatus" onchange="renderAdminReqList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="">كل الحالات</option></select>
+        <select id="reqFilterType" onchange="renderAdminReqList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="">كل الأنواع</option></select>
+        <select id="reqFilterGender" onchange="renderAdminReqList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="">كل الجنسين</option><option value="male">ذكر</option><option value="female">أنثى</option></select>
+        <select id="reqFilterMarital" onchange="renderAdminReqList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="">كل الحالات الاجتماعية</option><option value="single">أعزب</option><option value="married">متزوج</option><option value="divorced">مطلق</option><option value="widowed">أرمل</option></select>
+        <select id="reqFilterPriority" onchange="renderAdminReqList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="">كل الأولويات</option></select>
+        <select id="reqFilterSort" onchange="renderAdminReqList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="newest">ترتيب: الأحدث أولاً</option><option value="oldest">الأقدم أولاً</option><option value="priority">حسب الأولوية</option></select>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div id="adminReqList"></div>
+  </div>
+</div>
+
+<!-- Admin request detail modal -->
+<div id="adminReqDetailModal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;font-family:'Cairo',sans-serif;direction:rtl">
+  <div style="background:#fff;border-radius:18px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="background:linear-gradient(135deg,#B8860B,#9A7D1A);padding:18px 22px;border-radius:18px 18px 0 0">
+      <div style="font-size:18px;font-weight:800;color:#fff">تفاصيل الطلب</div>
+      <div id="adminReqDetailNum" style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:4px;direction:ltr"></div>
+    </div>
+    <div style="padding:20px 22px" id="adminReqDetailBody"></div>
+    <div style="padding:0 22px 20px;display:flex;gap:8px">
+      <button onclick="closeReqModal('adminReqDetailModal')" style="flex:1;background:none;border:1px solid #D8D0BC;border-radius:10px;padding:12px;font-family:'Cairo',sans-serif;font-size:14px;color:#6B6B6B;cursor:pointer;font-weight:700">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     REQUESTS EXPORT / KASHF PANEL (filtered + printable)
+══════════════════════════════════════════════════════════ -->
+<div id="reqExportOverlay" style="display:none;position:fixed;inset:0;z-index:9998;background:#FBF8F0;overflow-y:auto;font-family:'Cairo',sans-serif;direction:rtl">
+  <div style="max-width:1000px;margin:0 auto;padding:20px 16px 40px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <h2 style="font-size:22px;font-weight:900;color:#1a1a1a;margin:0">📋 كشف الطلبات للطباعة والاعتماد</h2>
+      <button onclick="closeReqExport()" style="background:#fff;border:1px solid #D8D0BC;border-radius:10px;padding:10px 20px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:#6B6B6B;cursor:pointer">← رجوع</button>
+    </div>
+
+    <!-- Filters -->
+    <div style="background:#fff;border:1px solid #EFE7D2;border-radius:14px;padding:16px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:14px;font-weight:800;color:#1a1a1a">الفلترة والبحث</span>
+        <button onclick="clearReqExportFilters()" style="background:none;border:none;color:#B8860B;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer">مسح الفلاتر</button>
+      </div>
+      <input type="text" id="reqExpSearch" oninput="renderReqExportList()" placeholder="بحث بالاسم / الهوية / الوصف" style="width:100%;padding:11px;border:1px solid #D8D0BC;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box;margin-bottom:10px" />
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+        <select id="reqExpStatus" onchange="renderReqExportList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="">كل الحالات</option></select>
+        <select id="reqExpType" onchange="renderReqExportList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="">كل الأنواع</option></select>
+        <select id="reqExpGender" onchange="renderReqExportList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="">كل الجنسين</option><option value="male">ذكر</option><option value="female">أنثى</option></select>
+        <select id="reqExpMarital" onchange="renderReqExportList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="">كل الحالات الاجتماعية</option><option value="single">أعزب</option><option value="married">متزوج</option><option value="divorced">مطلق</option><option value="widowed">أرمل</option></select>
+        <select id="reqExpPriority" onchange="renderReqExportList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="">كل الأولويات</option></select>
+        <select id="reqExpSort" onchange="renderReqExportList()" style="padding:10px;border:1px solid #D8D0BC;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;background:#FBF8F0"><option value="newest">ترتيب: الأحدث أولاً</option><option value="oldest">الأقدم أولاً</option><option value="priority">حسب الأولوية</option><option value="type">حسب النوع</option></select>
+      </div>
+    </div>
+
+    <!-- Count + actions -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div style="font-size:15px;font-weight:800;color:#1a1a1a">عدد الطلبات في الكشف: <span id="reqExpCount" style="color:#B8860B">0</span></div>
+      <button onclick="printReqKashf()" style="background:linear-gradient(135deg,#E5C158,#B8860B);border:none;border-radius:10px;padding:11px 24px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:800;color:#1a1a1a;cursor:pointer">🖨 طباعة الكشف</button>
+    </div>
+
+    <!-- Preview table -->
+    <div id="reqExpList" style="background:#fff;border:1px solid #EFE7D2;border-radius:14px;overflow:hidden"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     ADMIN FULL EDIT MODAL — all registration data
+══════════════════════════════════════════════════════════ -->
+<div id="adminFullEditModal" style="display:none;position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:20px;font-family:'Cairo',sans-serif;direction:rtl;overflow-y:auto">
+  <div style="background:#fff;border-radius:18px;max-width:560px;width:100%;margin:20px auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="background:linear-gradient(135deg,#B8860B,#9A7D1A);padding:18px 22px;border-radius:18px 18px 0 0;position:sticky;top:0;z-index:2">
+      <div style="font-size:18px;font-weight:800;color:#fff">تعديل بيانات المسجّل (صلاحية كاملة)</div>
+      <div id="afeMemberId" style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:4px;direction:ltr"></div>
+    </div>
+    <div style="padding:20px 22px">
+
+      <!-- Stage 1: Personal -->
+      <div style="font-size:14px;font-weight:800;color:#B8860B;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #EFE7D2">المرحلة ١: البيانات الشخصية</div>
+      <div class="afe-field"><label>الاسم الكامل</label><input type="text" id="afe_name" /></div>
+      <div class="afe-field"><label>رقم الهوية</label><input type="text" id="afe_id" inputmode="numeric" maxlength="9" style="direction:ltr;text-align:right" /></div>
+      <div class="afe-field"><label>سنة إصدار الهوية</label><input type="text" id="afe_issue" inputmode="numeric" maxlength="4" style="direction:ltr;text-align:right" /></div>
+      <div class="afe-row">
+        <div class="afe-field"><label>الجنس</label><select id="afe_gender"><option value="male">ذكر</option><option value="female">أنثى</option></select></div>
+        <div class="afe-field"><label>تاريخ الميلاد</label><input type="date" id="afe_dob" /></div>
+      </div>
+      <div class="afe-field"><label>مكان الميلاد</label><input type="text" id="afe_birthplace" /></div>
+      <div class="afe-row">
+        <div class="afe-field"><label>المدينة</label><input type="text" id="afe_city" /></div>
+        <div class="afe-field"><label>الحي / المنطقة</label><input type="text" id="afe_district" /></div>
+      </div>
+      <div class="afe-row">
+        <div class="afe-field"><label>المحافظة</label><input type="text" id="afe_gov" /></div>
+        <div class="afe-field"><label>الدولة</label><input type="text" id="afe_country" /></div>
+      </div>
+      <div class="afe-row">
+        <div class="afe-field"><label>الجوال</label><input type="text" id="afe_phone" style="direction:ltr;text-align:right" /></div>
+        <div class="afe-field"><label>جوال بديل</label><input type="text" id="afe_phone_alt" style="direction:ltr;text-align:right" /></div>
+      </div>
+      <div class="afe-field"><label>البريد الإلكتروني</label><input type="text" id="afe_email" style="direction:ltr;text-align:right" /></div>
+
+      <!-- Stage 2: Family & Social -->
+      <div style="font-size:14px;font-weight:800;color:#B8860B;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid #EFE7D2">المرحلة ٢: الوضع العائلي والاجتماعي</div>
+      <div class="afe-field"><label>الحالة الاجتماعية</label><select id="afe_marital"><option value="single">أعزب/عزباء</option><option value="married">متزوج/ة</option><option value="polygamous">متعدد الزوجات</option><option value="divorced">مطلق/ة</option><option value="widowed">أرمل/ة</option></select></div>
+      <div class="afe-row">
+        <div class="afe-field"><label>عدد الأبناء (ذكور)</label><input type="number" id="afe_sons" min="0" /></div>
+        <div class="afe-field"><label>عدد البنات</label><input type="number" id="afe_daughters" min="0" /></div>
+      </div>
+      <div class="afe-field"><label>المستوى التعليمي</label><input type="text" id="afe_education" /></div>
+      <div class="afe-field"><label>المهنة</label><input type="text" id="afe_profession" /></div>
+      <div class="afe-field"><label>حالة العمل</label><input type="text" id="afe_work_status" /></div>
+
+      <!-- Stage 3: Needs -->
+      <div style="font-size:14px;font-weight:800;color:#B8860B;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid #EFE7D2">المرحلة ٣: الاحتياجات</div>
+      <div class="afe-field"><label>الاحتياجات المسجّلة (مفصولة بفاصلة)</label><input type="text" id="afe_needs" placeholder="medical, education, housing..." style="direction:ltr;text-align:right" /></div>
+      <div class="afe-field"><label>تفاصيل الاحتياج / الطموحات</label><textarea id="afe_aspirations" rows="3"></textarea></div>
+
+      <div id="afeError" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#dc2626;border-radius:10px;padding:11px;font-size:13px;font-weight:600;text-align:center;margin:14px 0"></div>
+    </div>
+    <div style="padding:0 22px 20px;display:flex;gap:8px;position:sticky;bottom:0;background:#fff;padding-top:12px">
+      <button onclick="saveAdminFullEdit()" style="flex:2;background:linear-gradient(135deg,#E5C158,#B8860B);border:none;border-radius:12px;padding:14px;font-family:'Cairo',sans-serif;font-size:15px;font-weight:800;color:#1a1a1a;cursor:pointer">حفظ كل التعديلات</button>
+      <button onclick="closeReqModal('adminFullEditModal')" style="flex:1;background:none;border:1px solid #D8D0BC;border-radius:12px;padding:14px;font-family:'Cairo',sans-serif;font-size:14px;color:#6B6B6B;cursor:pointer;font-weight:700">إلغاء</button>
+    </div>
+  </div>
+</div>
+<style>
+#adminFullEditModal .afe-field{margin-bottom:12px;}
+#adminFullEditModal .afe-field label{display:block;font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:5px;}
+#adminFullEditModal .afe-field input,#adminFullEditModal .afe-field select,#adminFullEditModal .afe-field textarea{width:100%;padding:11px;border:1px solid #D8D0BC;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box;}
+#adminFullEditModal .afe-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+</style>
 
 </body>
 </html>
