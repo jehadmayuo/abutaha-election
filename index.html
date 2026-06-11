@@ -6792,47 +6792,50 @@ function showMaintenanceBanner(){
 
 function disableRegistrationDuringMaintenance(){
   if(!isMaintenanceActive()) return;
-  
-  // Disable the main register button
-  var ctaRegister = document.getElementById('ctaRegister');
-  if(ctaRegister){
-    ctaRegister.disabled = true;
-    ctaRegister.style.opacity = '0.5';
-    ctaRegister.style.cursor = 'not-allowed';
-    ctaRegister.title = 'التسجيل معطّل حالياً - الموقع تحت الصيانة';
-    // Replace click handler
-    ctaRegister.onclick = function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      toast('🛠 التسجيل معطّل حالياً - الموقع تحت الصيانة','warn');
-      return false;
-    };
-  }
-  
-  // Disable mobile menu register button
-  var menuRegister = document.querySelector('[data-menu="register"]');
-  if(menuRegister){
-    menuRegister.disabled = true;
-    menuRegister.style.opacity = '0.5';
-    menuRegister.style.cursor = 'not-allowed';
-  }
+
+  // Disable ALL front-facing interactive buttons (except admin access)
+  // Hero CTAs + section card buttons + nav buttons + quick links
+  var selectors = [
+    '#ctaRegister', '#ctaEditExisting', '#ctaContact', '#ctaCandidate', '#ctaCandidates',
+    '.section-card-btn', '[data-menu="register"]', '[data-go-tab]', '[data-nav]'
+  ];
+  var blockMsg = '🛠 الموقع تحت الصيانة حالياً - يرجى المحاولة لاحقاً';
+  selectors.forEach(function(sel){
+    document.querySelectorAll(sel).forEach(function(el){
+      // NEVER disable admin access
+      if(el.id === 'navAdmin' || el.closest('#navAdmin')) return;
+      if(el.dataset.maintDisabled === '1') return;
+      el.dataset.maintDisabled = '1';
+      // Save original onclick to restore later
+      el.dataset.hadOnclick = el.onclick ? '1' : '0';
+      el.style.opacity = '0.45';
+      el.style.cursor = 'not-allowed';
+      el.style.pointerEvents = 'auto';
+      el.setAttribute('data-maint-title', el.title || '');
+      el.title = 'الموقع تحت الصيانة';
+      if(el.tagName === 'BUTTON') el.disabled = true;
+      el.onclick = function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(typeof toast === 'function') toast(blockMsg, 'warn');
+        return false;
+      };
+    });
+  });
 }
 
 function enableRegistration(){
-  var ctaRegister = document.getElementById('ctaRegister');
-  if(ctaRegister){
-    ctaRegister.disabled = false;
-    ctaRegister.style.opacity = '';
-    ctaRegister.style.cursor = '';
-    ctaRegister.title = '';
-    ctaRegister.onclick = null;
-  }
-  var menuRegister = document.querySelector('[data-menu="register"]');
-  if(menuRegister){
-    menuRegister.disabled = false;
-    menuRegister.style.opacity = '';
-    menuRegister.style.cursor = '';
-  }
+  // Re-enable all previously-disabled front buttons
+  document.querySelectorAll('[data-maint-disabled="1"]').forEach(function(el){
+    el.dataset.maintDisabled = '';
+    el.style.opacity = '';
+    el.style.cursor = '';
+    el.style.pointerEvents = '';
+    var t = el.getAttribute('data-maint-title');
+    el.title = (t && t !== 'undefined') ? t : '';
+    el.removeAttribute('data-maint-title');
+    if(el.tagName === 'BUTTON') el.disabled = false;
+    el.onclick = null;
+  });
 }
 
 function applyMaintenanceState(){
@@ -6918,10 +6921,14 @@ if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', function(){
     setTimeout(applyMaintenanceState, 100);
     setTimeout(initMaintenanceControls, 300);
+    setTimeout(applyMaintenanceState, 800);
+    setTimeout(applyMaintenanceState, 1600);
   });
 } else {
   setTimeout(applyMaintenanceState, 100);
   setTimeout(initMaintenanceControls, 300);
+  setTimeout(applyMaintenanceState, 800);
+  setTimeout(applyMaintenanceState, 1600);
 }
 
 function save(key,val){ try{localStorage.setItem(key,JSON.stringify(val))}catch(e){} }
@@ -11561,7 +11568,7 @@ var _origBuildActions = null;
 
 // ── 10. Maintenance and counter controls wiring ──
 function updateMaintenancePanelUI(){
-  var active = localStorage.getItem('abutaha_maintenance') === 'true';
+  var active = (typeof isMaintenanceActive === 'function') ? isMaintenanceActive() : (localStorage.getItem('abutaha_maintenance') === 'on');
   var btn = document.getElementById('btnToggleMaintenance');
   var banner = document.getElementById('maintenanceBanner');
   if(btn){
@@ -11585,10 +11592,13 @@ document.addEventListener('DOMContentLoaded', function(){
   var btnMaint = document.getElementById('btnToggleMaintenance');
   if(btnMaint && !btnMaint.dataset.bound){
     btnMaint.addEventListener('click', function(){
-      var active = localStorage.getItem('abutaha_maintenance') === 'true';
-      localStorage.setItem('abutaha_maintenance', (!active).toString());
+      var active = isMaintenanceActive();
+      // Save the custom message if provided
       var msg = document.getElementById('maintenanceMsg');
-      if(msg) localStorage.setItem('abutaha_maintenance_message', msg.value);
+      if(msg && msg.value.trim()) setMaintenanceMessage(msg.value.trim());
+      // Toggle using the SAME system the visitor banner reads
+      setMaintenanceMode(!active);
+      applyMaintenanceState();
       updateMaintenancePanelUI();
       toast((!active ? '🛠 تم تفعيل' : '✅ تم إيقاف') + ' وضع الصيانة', (!active ? 'warn' : 'ok'));
     });
