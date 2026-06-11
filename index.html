@@ -6233,6 +6233,21 @@ document.addEventListener('DOMContentLoaded', function(){
             </div>
             <div class="ocr-badge idle" id="r_ocr_badge" style="display:none">⏳ سيتم تحليل الصورة تلقائياً بعد الرفع</div>
           </div>
+
+          <!-- Personal photo (optional) -->
+          <div class="field" style="margin-top:14px" id="f-personalimg">
+            <label>صورة شخصية <span class="small muted">(اختياري — تظهر في ملفك وحاملي الشهادات)</span></label>
+            <div class="id-upload-wrap" id="r_personalimg_wrap" onclick="document.getElementById('r_personalimg').click()">
+              <input type="file" id="r_personalimg" accept="image/*" onchange="handlePersonalImg(this)">
+              <div id="r_personalimg_txt" style="color:var(--text-muted);font-size:13px">
+                <div style="font-size:22px;margin-bottom:4px">📸</div>
+                ارفع صورتك الشخصية
+                <div class="small" style="margin-top:3px">JPG / PNG</div>
+              </div>
+              <img id="r_personalimg_thumb" class="id-thumb" alt="">
+            </div>
+          </div>
+
         </div>
 
         <div class="modal-foot">
@@ -6265,6 +6280,20 @@ document.addEventListener('DOMContentLoaded', function(){
               <option value="religious">شهادة دينية / حافظ</option>
               <option value="other">أخرى</option>
             </select>
+          </div>
+
+          <!-- Qualification certificate — shown only for higher education -->
+          <div class="field" style="margin-bottom:10px;display:none" id="f-qualimg">
+            <label>شهادة المؤهل العلمي <span style="color:var(--danger)">*</span> <span class="small muted">(تُعرض في حاملي الشهادات)</span></label>
+            <div class="id-upload-wrap" id="r_qualimg_wrap" onclick="document.getElementById('r_qualimg').click()">
+              <input type="file" id="r_qualimg" accept="image/*,application/pdf" onchange="handleQualImg(this)">
+              <div id="r_qualimg_txt" style="color:var(--text-muted);font-size:13px">
+                <div style="font-size:22px;margin-bottom:4px">🎓</div>
+                ارفع صورة شهادة المؤهل العلمي
+                <div class="small" style="margin-top:3px">JPG / PNG / PDF</div>
+              </div>
+              <img id="r_qualimg_thumb" class="id-thumb" alt="">
+            </div>
           </div>
 
           <div class="field" style="margin-bottom:10px">
@@ -7707,6 +7736,7 @@ var _ctaCon = document.getElementById('ctaContact'); if(_ctaCon) _ctaCon.addEven
 
 function openRegister(){
   if(!_regEditMode && !isActive('reg')){ toast('مرحلة التسجيل غير مفعّلة حالياً','err'); return; }
+  if(!_regEditMode){ window._personalPhotoData = null; window._qualCertData = null; }
   // Reset all input fields
   ['r_id','r_issue','r_name','r_phone_pal','r_phone_free','r_phone_alt','r_email','r_city48','r_country','r_city','r_district','r_dob','r_birthplace','r_father_id','r_father_name','r_mother_name','r_marital','r_education','r_profession','r_health_details','r_spouse_health_details','r_family_health_details','r_needs','r_aspirations_details','r_spouse_education','r_spouse_profession','r_sons_count','r_daughters_count'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value = (id==='r_sons_count'||id==='r_daughters_count') ? '0' : ''; });
   // Reset selects
@@ -7985,7 +8015,37 @@ var _n1=document.getElementById('btnNext1'); if(_n1) _n1.addEventListener('click
     // Not blocking — admin will review
   }
 
-  if(ok) regGo(2);
+  if(ok){
+    regGo(2);
+  } else {
+    // Build a list of what's missing so the user knows exactly what to fix
+    var missing = [];
+    var fieldNames = {
+      'f-name':'الاسم الرباعي (يحتوي أبو طه)', 'f-dob':'تاريخ الميلاد',
+      'f-id':'رقم الهوية', 'f-issue':'سنة إصدار الهوية', 'f-gender':'الجنس',
+      'f-loctype':'مكان الإقامة', 'f-gov':'المحافظة', 'f-city48':'المدينة',
+      'f-country':'الدولة', 'f-phone-pal':'رقم الجوال', 'f-phone-free':'رقم الجوال'
+    };
+    Object.keys(fieldNames).forEach(function(fid){
+      var el = document.getElementById(fid);
+      if(el && el.classList.contains('error')){ missing.push(fieldNames[fid]); }
+    });
+    var _dt = (document.getElementById('r_doctype')||{}).value || '';
+    if(!_dt) missing.push('نوع الوثيقة');
+
+    setTimeout(function(){
+      var firstErr = document.querySelector('[data-step-pane="1"] .field.error');
+      if(!firstErr && !_dt) firstErr = document.getElementById('r_doctype');
+      if(firstErr && firstErr.scrollIntoView){
+        firstErr.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+      if(missing.length){
+        toast('⚠️ يرجى إكمال: ' + missing.slice(0,3).join('، ') + (missing.length>3?' وغيرها':''), 'err');
+      } else {
+        toast('⚠️ يرجى مراجعة الحقول المطلوبة', 'err');
+      }
+    }, 50);
+  }
 });
 
 var _n2=document.getElementById('btnNext2'); if(_n2) _n2.addEventListener('click', function(){
@@ -8419,6 +8479,15 @@ var _sr=document.getElementById('btnSubmitReg'); if(_sr) _sr.addEventListener('c
       return;
     }
 
+    // Require qualification certificate if higher education selected
+    var eduVal = (document.getElementById('r_education')||{}).value || '';
+    var higherEdu = ['diploma','bachelor','master','phd','religious','other'];
+    if(higherEdu.indexOf(eduVal) >= 0 && !window._qualCertData && !_regEditMode){
+      toast('يرجى رفع صورة شهادة المؤهل العلمي','err');
+      regGo(2);
+      return;
+    }
+
     var voters = getVoters();
     if(!_regEditMode && voters.some(function(v){return v.id===id;})){
       toast('هذه الهوية مسجّلة مسبقاً','err');
@@ -8456,6 +8525,8 @@ var _sr=document.getElementById('btnSubmitReg'); if(_sr) _sr.addEventListener('c
       ocrExtracted: ocrData.ocrExtracted || {},
       docType: (document.getElementById('r_doctype') || {}).value || 'other',
       approved: false,
+      personalPhoto: window._personalPhotoData || null,
+      qualCert: window._qualCertData || null,
       family: getFamilyData()
     };
 
@@ -8471,6 +8542,8 @@ var _sr=document.getElementById('btnSubmitReg'); if(_sr) _sr.addEventListener('c
         // keep existing image if no new one uploaded
         if(!rec.imgData && existing.imgData) rec.imgData = existing.imgData;
         if(!rec.idImage && existing.idImage) rec.idImage = existing.idImage;
+        if(!rec.personalPhoto && existing.personalPhoto) rec.personalPhoto = existing.personalPhoto;
+        if(!rec.qualCert && existing.qualCert) rec.qualCert = existing.qualCert;
         rec.editLog = (existing.editLog||[]).concat([{timestamp:Date.now(),reviewed:true,source:'admin-reg-edit'}]);
         voters[eidx] = rec;
       } else {
@@ -9264,6 +9337,7 @@ function renderAdmin(){
       actions = '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(15,107,60,.15);color:var(--success)" onclick="window.printPersonReport(\''+v.id+'\')">🖨 طباعة</button>' +
         ((v.family && (v.family.needs||[]).filter(function(n){return n&&n!=='none';}).length) ? '<button class="btn btn-ghost btn-sm" style="background:rgba(212,175,55,.15);color:var(--primary-dark)" onclick="window.showNeedCertPicker(\''+v.id+'\')">📜 شهادة احتياج</button>' : '') +
+        '<button class="btn btn-ghost btn-sm" style="background:rgba(124,58,237,.15);color:#7c3aed" onclick="window.showVoterProfile(\''+v.id+'\')">👤 الملف</button>' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(8,145,178,.15);color:#0891b2" onclick="window.adminEditViaRegistration(\''+v.id+'\')">✎ تعديل</button>' +
         '<button class="btn btn-ghost btn-sm" style="background:rgba(185,28,28,.15);color:var(--danger)" data-reject-voter="' + v.id + '">✗ إلغاء الاعتماد</button>' +
         '<button class="btn btn-ghost btn-sm" data-del-voter="' + v.id + '">🗑 حذف</button>' +
@@ -11214,6 +11288,74 @@ async function compressImage(file, maxWidth, quality){
   });
 }
 
+
+
+// ── Personal photo + Qualification certificate upload handlers ──
+window._personalPhotoData = null;
+window._qualCertData = null;
+
+
+
+// Show qualification upload only for higher education degrees
+(function bindEducationQualToggle(){
+  function toggleQual(){
+    var edu = document.getElementById('r_education');
+    var qualField = document.getElementById('f-qualimg');
+    if(!edu || !qualField) return;
+    var higher = ['diploma','bachelor','master','phd','religious','other'];
+    if(higher.indexOf(edu.value) >= 0){
+      qualField.style.display = '';
+    } else {
+      qualField.style.display = 'none';
+    }
+  }
+  function bind(){
+    var edu = document.getElementById('r_education');
+    if(edu && !edu.dataset.qualBound){
+      edu.addEventListener('change', toggleQual);
+      edu.dataset.qualBound = '1';
+      toggleQual();
+    }
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', bind);
+  } else { bind(); }
+  // Re-bind after a delay in case the form renders later
+  setTimeout(bind, 1000);
+  window._toggleQualField = toggleQual;
+})();
+
+window.handlePersonalImg = function(inp){
+  var f = inp.files[0]; if(!f) return;
+  if(f.size > 15*1024*1024){ if(typeof toast==='function') toast('الصورة أكبر من 15 ميجابايت','err'); inp.value=''; return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    window._personalPhotoData = e.target.result;
+    var thumb = document.getElementById('r_personalimg_thumb');
+    var txt = document.getElementById('r_personalimg_txt');
+    if(thumb){ thumb.src = e.target.result; thumb.style.display = 'block'; }
+    if(txt) txt.style.display = 'none';
+    if(typeof toast==='function') toast('✅ تم رفع الصورة الشخصية','ok');
+  };
+  reader.readAsDataURL(f);
+};
+
+window.handleQualImg = function(inp){
+  var f = inp.files[0]; if(!f) return;
+  if(f.size > 15*1024*1024){ if(typeof toast==='function') toast('الملف أكبر من 15 ميجابايت','err'); inp.value=''; return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    window._qualCertData = e.target.result;
+    var thumb = document.getElementById('r_qualimg_thumb');
+    var txt = document.getElementById('r_qualimg_txt');
+    var isPdf = f.type === 'application/pdf';
+    if(thumb && !isPdf){ thumb.src = e.target.result; thumb.style.display = 'block'; if(txt) txt.style.display = 'none'; }
+    else if(txt){ txt.innerHTML = '<div style="font-size:22px;margin-bottom:4px">📄</div>تم رفع ملف PDF<div class="small" style="margin-top:3px;color:var(--success)">✅ ' + (f.name||'الشهادة') + '</div>'; }
+    if(typeof toast==='function') toast('✅ تم رفع شهادة المؤهل','ok');
+  };
+  reader.readAsDataURL(f);
+};
+
 window.handleVoterIDImg = async function(inp){
   const f = inp.files[0]; if(!f) return;
   if(f.size > 15*1024*1024){ toast('الصورة أكبر من 15 ميجابايت','err'); inp.value=''; return; }
@@ -13057,7 +13199,7 @@ function renderCerts(query){
     var f = v.family||{};
     var locMap = {gaza:'غزة',wb:'الضفة','48':'داخل',ab:'خارج',pal:'فلسطين'};
     return '<div class="cert-card">' +
-      '<div class="cert-avatar">' + (degreeIcons[f.education]||'🎓') + '</div>' +
+      '<div class="cert-avatar">' + (v.personalPhoto ? '<img src="'+v.personalPhoto+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">' : (degreeIcons[f.education]||'🎓')) + '</div>' +
       '<div class="cert-info" style="flex:1">' +
         '<h4>' + escapeHtml(v.name||'-') + '</h4>' +
         '<div class="cert-degree">' + (eduLabels[f.education]||f.education) + '</div>' +
@@ -15298,7 +15440,12 @@ window.addEventListener('load', function(){
 function setupWelcomePopup(){
   var backdrop = document.getElementById('welcomePopupBackdrop');
   if(!backdrop) return;
-  
+  // ── Welcome popup permanently disabled ──
+  backdrop.style.display = 'none';
+  if(backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+  document.body.style.overflow = '';
+  return;
+  // (unreachable legacy code kept for reference)
   var startBtn = document.getElementById('wpStartBtn');
   var laterBtn = document.getElementById('wpLaterBtn');
   var dontShow = document.getElementById('wpDontShow');
@@ -16666,6 +16813,61 @@ function adminEditViaRegistration(voterId){
 }
 window.adminEditViaRegistration = adminEditViaRegistration;
 
+
+// Admin: view voter profile with personal photo + qualification certificate
+function showVoterProfile(voterId){
+  var voters = (typeof getVoters === 'function') ? getVoters() : [];
+  var v = voters.find(function(x){ return x.id === voterId; });
+  if(!v){ if(typeof toast==='function') toast('لم يتم العثور على المسجّل','err'); return; }
+  var f = v.family || {};
+  var eduLabels = {primary:'ابتدائي',middle:'إعدادي',secondary:'ثانوي',diploma:'دبلوم',bachelor:'بكالوريوس',master:'ماجستير',phd:'دكتوراه',religious:'ديني',other:'أخرى'};
+  var marMap = {single:'أعزب',married:'متزوج',divorced:'مطلق',widowed:'أرمل',polygamous:'متعدد الزوجات'};
+
+  document.getElementById('vpName').textContent = v.name || '';
+  document.getElementById('vpId').textContent = v.id || '';
+  var photoEl = document.getElementById('vpPhoto');
+  if(v.personalPhoto){
+    photoEl.innerHTML = '<img src="'+v.personalPhoto+'" style="width:100%;height:100%;object-fit:cover" alt="">';
+  } else {
+    photoEl.innerHTML = '👤';
+  }
+
+  function row(k,val){ if(!val) return ''; return '<tr><td style="padding:9px 0;color:#888;font-weight:600;width:42%;border-bottom:1px solid #F3EDDD;font-size:13px">'+k+'</td><td style="padding:9px 0;font-weight:700;color:#1a1a1a;border-bottom:1px solid #F3EDDD;font-size:13px">'+val+'</td></tr>'; }
+
+  var loc = [v.city,v.district,v.gov].filter(Boolean).join('، ');
+  var h = '<table style="width:100%;border-collapse:collapse;margin-bottom:16px"><tbody>';
+  h += row('الجنس', v.gender==='female'?'أنثى':'ذكر');
+  h += row('تاريخ الميلاد', v.dob);
+  h += row('مكان الميلاد', v.birthplace ? escapeHtml(v.birthplace) : '');
+  h += row('المنطقة', loc ? escapeHtml(loc) : '');
+  h += row('الجوال', v.phone ? '<span style="direction:ltr">'+escapeHtml(v.phone)+'</span>' : '');
+  h += row('البريد', v.email ? '<span style="direction:ltr">'+escapeHtml(v.email)+'</span>' : '');
+  h += row('الحالة الاجتماعية', marMap[f.marital]||'');
+  h += row('المؤهل العلمي', eduLabels[f.education] ? '<span style="color:#B8860B;font-weight:800">'+eduLabels[f.education]+'</span>' : '');
+  h += row('المهنة', f.profession ? escapeHtml(f.profession) : '');
+  h += '</tbody></table>';
+
+  // Qualification certificate
+  if(v.qualCert){
+    var isPdf = v.qualCert.indexOf('application/pdf') >= 0 || v.qualCert.indexOf('data:application/pdf') >= 0;
+    h += '<div style="border-top:2px solid #EFE7D2;padding-top:14px"><div style="font-size:14px;font-weight:800;color:#B8860B;margin-bottom:10px">🎓 شهادة المؤهل العلمي</div>';
+    if(isPdf){
+      h += '<a href="'+v.qualCert+'" target="_blank" style="display:block;text-align:center;background:#FBF8F0;border:1px solid #E0D4A8;border-radius:10px;padding:16px;text-decoration:none;color:#B8860B;font-weight:700">📄 فتح ملف الشهادة (PDF)</a>';
+    } else {
+      h += '<img src="'+v.qualCert+'" style="width:100%;border-radius:10px;border:1px solid #E0D4A8;cursor:pointer" onclick="window.open(this.src,\'_blank\')" alt="شهادة">';
+      h += '<div style="text-align:center;font-size:11px;color:#999;margin-top:6px">اضغط على الصورة لعرضها بالحجم الكامل</div>';
+    }
+    h += '</div>';
+  } else {
+    h += '<div style="text-align:center;padding:12px;background:#FBF8F0;border-radius:10px;font-size:13px;color:#999">لم يتم رفع شهادة مؤهل علمي</div>';
+  }
+
+  document.getElementById('vpBody').innerHTML = h;
+  openReqModal('voterProfileModal');
+}
+window.showVoterProfile = showVoterProfile;
+
+
 function prefillRegistrationForm(v){
   var f = v.family || {};
   function set(id, val){ var el=document.getElementById(id); if(el && val!==undefined && val!==null) el.value = val; }
@@ -16682,6 +16884,11 @@ function prefillRegistrationForm(v){
   set('r_email', v.email);
   set('r_marital', f.marital);
   set('r_education', f.education);
+  // Trigger qualification field visibility based on education
+  setTimeout(function(){ if(typeof window._toggleQualField === 'function') window._toggleQualField(); }, 100);
+  // Mark existing personal photo and qual cert as present
+  if(v.personalPhoto){ window._personalPhotoData = v.personalPhoto; var pt=document.getElementById('r_personalimg_thumb'); var ptx=document.getElementById('r_personalimg_txt'); if(pt){pt.src=v.personalPhoto;pt.style.display='block';} if(ptx)ptx.style.display='none'; }
+  if(v.qualCert){ window._qualCertData = v.qualCert; }
   set('r_profession', f.profession);
   set('r_work_status', f.workStatus);
   set('r_aspirations_details', f.aspirationsDetails);
@@ -17471,6 +17678,22 @@ window.printReqKashf = printReqKashf;
 #adminFullEditModal .afe-field input,#adminFullEditModal .afe-field select,#adminFullEditModal .afe-field textarea{width:100%;padding:11px;border:1px solid #D8D0BC;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;background:#FBF8F0;box-sizing:border-box;}
 #adminFullEditModal .afe-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 </style>
+
+
+<!-- Admin voter profile modal (shows personal photo + qualification) -->
+<div id="voterProfileModal" style="display:none;position:fixed;inset:0;z-index:10004;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:20px;font-family:'Cairo',sans-serif;direction:rtl;overflow-y:auto">
+  <div style="background:#fff;border-radius:18px;max-width:480px;width:100%;margin:20px auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="background:linear-gradient(135deg,#B8860B,#9A7D1A);padding:20px 22px;border-radius:18px 18px 0 0;text-align:center">
+      <div id="vpPhoto" style="width:90px;height:90px;border-radius:50%;margin:0 auto 10px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden;border:3px solid rgba(255,255,255,0.5)">👤</div>
+      <div id="vpName" style="font-size:19px;font-weight:800;color:#fff"></div>
+      <div id="vpId" style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px;direction:ltr"></div>
+    </div>
+    <div style="padding:20px 22px" id="vpBody"></div>
+    <div style="padding:0 22px 20px">
+      <button onclick="closeReqModal('voterProfileModal')" style="width:100%;background:none;border:1px solid #D8D0BC;border-radius:10px;padding:12px;font-family:'Cairo',sans-serif;font-size:14px;color:#6B6B6B;cursor:pointer;font-weight:700">إغلاق</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
