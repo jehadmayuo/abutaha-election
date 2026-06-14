@@ -5666,7 +5666,7 @@ document.addEventListener('DOMContentLoaded', function(){
         </div>
 
         <!-- Messages -->
-        <div class="card" id="adminMsgsCard"><h3 style="font-family:var(--font-display);font-size:17px;font-weight:900;color:var(--text);margin-bottom:14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C8A646" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:6px"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg> صندوق الرسائل</h3><div id="msgsList"><div class="alert info small">لا توجد رسائل بعد.</div></div></div>
+        <div class="card" id="adminMsgsCard"><h3 style="font-family:var(--font-display);font-size:17px;font-weight:900;color:var(--text);margin-bottom:14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C8A646" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:6px"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg> صندوق الرسائل <span style="font-size:10px;background:#25D366;color:#fff;padding:2px 8px;border-radius:999px;font-weight:700">واتساب v2</span></h3><div id="msgsList"><div class="alert info small">لا توجد رسائل بعد.</div></div></div>
 
         <!-- Voters Table -->
         <div id="votersList">
@@ -6645,9 +6645,10 @@ document.addEventListener('DOMContentLoaded', function(){
           <div class="err">يرجى إدخال اسمك.</div>
         </div>
         <div class="field" id="f-c-phone">
-          <label>رقم تواصل <span style="color:var(--danger)">*</span></label>
+          <label>📱 رقم واتساب <span style="color:var(--danger)">*</span></label>
           <input type="tel" id="c_phone" maxlength="20" placeholder="مثال: 0599123456" />
-          <div class="err">يرجى إدخال رقم تواصل صالح.</div>
+          <div class="small muted" style="margin-top:4px">سيتم الرد عليك عبر الواتساب</div>
+          <div class="err">يرجى إدخال رقم واتساب صالح.</div>
         </div>
       </div>
       <div class="field" id="f-c-type" style="display:none">
@@ -7737,6 +7738,7 @@ var _ctaCon = document.getElementById('ctaContact'); if(_ctaCon) _ctaCon.addEven
 function openRegister(){
   if(!_regEditMode && !isActive('reg')){ toast('مرحلة التسجيل غير مفعّلة حالياً','err'); return; }
   if(!_regEditMode){ window._personalPhotoData = null; window._qualCertData = null; }
+  setTimeout(function(){ if(window._bindArabicFields) window._bindArabicFields(); }, 100);
   // Reset all input fields
   ['r_id','r_issue','r_name','r_phone_pal','r_phone_free','r_phone_alt','r_email','r_city48','r_country','r_city','r_district','r_dob','r_birthplace','r_father_id','r_father_name','r_mother_name','r_marital','r_education','r_profession','r_health_details','r_spouse_health_details','r_family_health_details','r_needs','r_aspirations_details','r_spouse_education','r_spouse_profession','r_sons_count','r_daughters_count'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value = (id==='r_sons_count'||id==='r_daughters_count') ? '0' : ''; });
   // Reset selects
@@ -7874,7 +7876,7 @@ var _n1=document.getElementById('btnNext1'); if(_n1) _n1.addEventListener('click
   if(words.length < 4){
     $('#f-name .err').textContent = 'يجب إدخال الاسم الرباعي (4 كلمات على الأقل).';
     setErr('f-name', true); ok = false;
-  } else if(!/أبو\s*طه|ابو\s*طه|أبوطه|ابوطه/.test(name)){
+  } else if(!/(أبو|ابو)\s*طه|أبوطه|ابوطه/.test(name.replace(/\s+/g,' '))){
     $('#f-name .err').textContent = 'يجب أن يحتوي الاسم على "أبو طه".';
     setErr('f-name', true); ok = false;
   } else setErr('f-name', false);
@@ -10821,10 +10823,19 @@ var _bsc=document.getElementById('btnSubmitContact'); if(_bsc) _bsc.addEventList
   if(!ok) return;
   const type = ($$('input[name=c_type]').find(r=>r.checked)||{}).value || 'اقتراح';
   const arr = getMsgs();
-  arr.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), type, name, phone, msg, ts: Date.now() });
+  arr.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), type, name, phone, whatsapp: phone, msg, ts: Date.now(), read:false, status:'new' });
   setMsgs(arr);
   closeModal('modalContact');
   toast('تم إرسال رسالتك. شكراً لك ✅','ok');
+  // Send WhatsApp confirmation to the sender's number
+  var waNum = phone.replace(/\D/g,'');
+  if(waNum.length >= 9){
+    // Normalize Palestinian numbers (05x → 9725x)
+    if(waNum.indexOf('0') === 0) waNum = '972' + waNum.slice(1);
+    var confirmMsg = 'مرحباً ' + name + '،\n\nشكراً لتواصلك مع لجنة عائلة أبو طه 🌿\nتم استلام رسالتك (' + type + ') وسيتم مراجعتها والرد عليك في أقرب وقت.\n\nالمنظومة الإلكترونية المركزية - عائلة أبو طه';
+    var waUrl = 'https://wa.me/' + waNum + '?text=' + encodeURIComponent(confirmMsg);
+    window.open(waUrl, '_blank');
+  }
   renderAdmin();
 });
 
@@ -11295,6 +11306,47 @@ window._personalPhotoData = null;
 window._qualCertData = null;
 
 
+
+
+
+// ── Arabic-only input filter (names, places, professions) ──
+(function setupArabicOnlyFields(){
+  // Allow: Arabic letters, Arabic spaces, common punctuation used in names
+  // Block: digits (Arabic & Latin), Latin letters, symbols
+  function filterArabic(val){
+    // Keep Arabic letters (U+0600–U+06FF), space, and a few name-safe chars
+    return val.replace(/[^\u0600-\u06FF\s]/g, '');
+  }
+  var arabicFieldIds = [
+    'r_name','r_birthplace','r_city','r_district','r_city48',
+    'r_father_name','r_mother_name','r_profession','r_spouse_profession'
+  ];
+  function bindField(id){
+    var el = document.getElementById(id);
+    if(!el || el.dataset.arabicBound) return;
+    el.dataset.arabicBound = '1';
+    el.addEventListener('input', function(){
+      var filtered = filterArabic(el.value);
+      if(filtered !== el.value){
+        var pos = el.selectionStart;
+        el.value = filtered;
+        try { el.setSelectionRange(pos-1, pos-1); } catch(e){}
+      }
+    });
+    // Helpful hint
+    if(!el.getAttribute('data-ar-hint')){
+      el.setAttribute('data-ar-hint','1');
+    }
+  }
+  function bindAll(){ arabicFieldIds.forEach(bindField); }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', bindAll);
+  } else { bindAll(); }
+  // Re-bind after delays (forms may render later)
+  setTimeout(bindAll, 1000);
+  setTimeout(bindAll, 2000);
+  window._bindArabicFields = bindAll;
+})();
 
 // Show qualification upload only for higher education degrees
 (function bindEducationQualToggle(){
@@ -16690,10 +16742,10 @@ window.replyToMessage = replyToMessage;
   if(ms.length === 0){ ml.innerHTML = `<div class="alert info small" style="margin:0">لا توجد رسائل واردة بعد.</div>`; }
   else {
     // Filter bar
-    var unreadCount = ms.filter(function(m){ return !m.read; }).length;
+    var unreadCount = ms.filter(function(m){ return (m.status||(m.read?'done':'new'))==='new'; }).length;
     var filterBar = document.createElement('div');
     filterBar.style.cssText = 'display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center';
-    filterBar.innerHTML = '<span style="font-size:12px;color:#888;font-weight:700">عدد غير المقروء: <b style="color:#dc2626">'+unreadCount+'</b></span>'+
+    filterBar.innerHTML = '<span style="font-size:12px;color:#888;font-weight:700">الرسائل الجديدة: <b style="color:#dc2626">'+unreadCount+'</b></span>'+
       '<button class="btn btn-ghost btn-sm" id="msgFilterAll" style="font-size:11px">الكل</button>'+
       '<button class="btn btn-ghost btn-sm" id="msgFilterUnread" style="font-size:11px">غير مقروءة</button>'+
       '<button class="btn btn-ghost btn-sm" id="msgFilterRead" style="font-size:11px">مقروءة</button>';
@@ -16714,34 +16766,43 @@ window.replyToMessage = replyToMessage;
         const card = document.createElement('div'); card.className = 'msg-card';
         card.style.cssText = 'border-right:3px solid '+(m.read?'#ccc':'#dc2626')+';opacity:'+(m.read?'0.75':'1');
         var contact = m.phone ? ('📞 '+escapeHtml(m.phone)) : (m.email ? ('✉ '+escapeHtml(m.email)) : '');
+        var statusMap = {new:'🔴 جديد', followup:'🟡 قيد المتابعة', done:'🟢 تمت المعالجة'};
+        var statusColors = {new:'#dc2626', followup:'#ca8a04', done:'#16a34a'};
+        var curStatus = m.status || (m.read ? 'done' : 'new');
+        var waNumber = (m.whatsapp || m.phone || '').replace(/\D/g,'');
+        if(waNumber.indexOf('0') === 0) waNumber = '972' + waNumber.slice(1);
         card.innerHTML = `
           <div class="meta">
-            <span><b>${escapeHtml(m.type||'رسالة')}</b> ${m.name?` - ${escapeHtml(m.name)}`:''} ${contact?` - ${contact}`:''} ${!m.read?'<span style="background:#dc2626;color:#fff;font-size:9px;padding:1px 7px;border-radius:999px;margin-right:4px">جديد</span>':''}</span>
+            <span><b>${escapeHtml(m.type||'رسالة')}</b> ${m.name?` - ${escapeHtml(m.name)}`:''} ${contact?` - ${contact}`:''} <span style="background:${statusColors[curStatus]};color:#fff;font-size:9px;padding:1px 8px;border-radius:999px;margin-right:4px">${statusMap[curStatus]}</span></span>
             <span>${new Date(m.ts).toLocaleString('ar-EG')}</span>
           </div>
           <div class="body">${escapeHtml(m.msg||m.message||'')}</div>
-          <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-start">
-            ${m.read
-              ? `<button class="btn btn-ghost btn-sm" data-unread-msg="${m.id}" style="font-size:11px">↩ تحديد كغير مقروءة</button>`
-              : `<button class="btn btn-ghost btn-sm" data-read-msg="${m.id}" style="font-size:11px;background:rgba(15,107,60,.12);color:var(--success)">✓ تمت القراءة</button>`}
-            ${(m.phone||m.email) ? `<button class="btn btn-ghost btn-sm" data-reply-msg="${m.id}" style="font-size:11px;background:rgba(212,175,55,.15);color:var(--primary-dark)">↪ الرد</button>` : ''}
+          <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-start;align-items:center">
+            ${waNumber ? `<a href="https://wa.me/${waNumber}?text=${encodeURIComponent('مرحباً ' + (m.name||'') + '، بخصوص رسالتك إلى لجنة عائلة أبو طه:')}" target="_blank" class="btn btn-sm" data-replied-msg="${m.id}" style="font-size:11px;background:#25D366;color:#fff;text-decoration:none">📱 الرد عبر واتساب</a>` : ''}
+            <select data-status-msg="${m.id}" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:#fff">
+              <option value="new" ${curStatus==='new'?'selected':''}>🔴 جديد</option>
+              <option value="followup" ${curStatus==='followup'?'selected':''}>🟡 قيد المتابعة</option>
+              <option value="done" ${curStatus==='done'?'selected':''}>🟢 تمت المعالجة</option>
+            </select>
             <button class="btn btn-ghost btn-sm" data-del-msg="${m.id}" style="font-size:11px">🗑 حذف</button>
           </div>`;
         listWrap.appendChild(card);
       });
       // Wire buttons
-      $$('[data-read-msg]', listWrap).forEach(function(b){ b.addEventListener('click', function(){
-        var arr=getMsgs(); var mm=arr.find(function(x){return x.id===b.dataset.readMsg;}); if(mm){mm.read=true;setMsgs(arr);renderAdmin();}
+      // Status change dropdown
+      $$('[data-status-msg]', listWrap).forEach(function(sel){ sel.addEventListener('change', function(){
+        var arr=getMsgs(); var mm=arr.find(function(x){return x.id===sel.dataset.statusMsg;});
+        if(mm){ mm.status=sel.value; mm.read = (sel.value!=='new'); setMsgs(arr); renderAdmin(); }
       });});
-      $$('[data-unread-msg]', listWrap).forEach(function(b){ b.addEventListener('click', function(){
-        var arr=getMsgs(); var mm=arr.find(function(x){return x.id===b.dataset.unreadMsg;}); if(mm){mm.read=false;setMsgs(arr);renderAdmin();}
+      // WhatsApp reply — mark as قيد المتابعة when clicked
+      $$('[data-replied-msg]', listWrap).forEach(function(b){ b.addEventListener('click', function(){
+        var arr=getMsgs(); var mm=arr.find(function(x){return x.id===b.dataset.repliedMsg;});
+        if(mm && (mm.status||'new')==='new'){ mm.status='followup'; mm.read=true; setMsgs(arr); setTimeout(renderAdmin, 400); }
       });});
+      // Delete
       $$('[data-del-msg]', listWrap).forEach(function(b){ b.addEventListener('click', function(){
         if(!confirm('حذف هذه الرسالة؟')) return;
         var arr=getMsgs().filter(function(x){return x.id!==b.dataset.delMsg;}); setMsgs(arr); renderAdmin();
-      });});
-      $$('[data-reply-msg]', listWrap).forEach(function(b){ b.addEventListener('click', function(){
-        replyToMessage(b.dataset.replyMsg);
       });});
     }
     renderMsgCards('all');
