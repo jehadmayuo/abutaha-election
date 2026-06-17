@@ -8594,6 +8594,7 @@ var _sr=document.getElementById('btnSubmitReg'); if(_sr) _sr.addEventListener('c
       }
       setVoters(voters);
       _regEditMode = false; _regEditId = null;
+      try { logAdminActivity('عدّل بيانات مسجّل'); } catch(e){}
       // Remove edit banner
       var banner = document.querySelector('.admin-edit-banner'); if(banner) banner.remove();
       closeModal('modalRegister');
@@ -9468,6 +9469,7 @@ function renderAdmin(){
       v.ocrStatus = 'verified';
       v.approved = true;
       v.approvedAt = Date.now();
+      try { logAdminActivity('اعتمد مسجّلاً'); } catch(e){}
       v.approvedBy = 'admin';
       // Direct save to localStorage (bypass any wrappers)
       save(K.voters, arr);
@@ -9603,6 +9605,7 @@ function renderAdmin(){
     if(!window.confirm('اعتماد المرشّح "'+c.name+'" وعرضه للجمهور؟')) return;
     c.approved = true;
     c.status = 'approved';
+    try { logAdminActivity('اعتمد مرشّحاً'); } catch(e){}
     c.approvedAt = Date.now();
     c.approvedBy = 'admin';
     save(K.cands, arr);
@@ -12187,6 +12190,15 @@ function hasPermission(perm){ return !!(ROLES_DEF[getCurrentRole()]||ROLES_DEF.v
 function applyRolePermissions(){
   if(typeof getCurrentRole !== 'function') return;
   var role = getCurrentRole();
+  // Super admin is never restricted — restore everything and exit
+  if(role === 'superadmin'){
+    document.querySelectorAll('[data-perm-blocked="1"]').forEach(function(el){
+      el.dataset.permBlocked=''; el.style.opacity=''; el.style.pointerEvents=''; el.style.cursor='';
+      if(el.tagName==='BUTTON'||el.tagName==='SELECT'||el.tagName==='INPUT') el.disabled=false;
+      el.title = el.getAttribute('data-perm-title')||'';
+    });
+    return;
+  }
   var def = ROLES_DEF[role] || ROLES_DEF.viewer;
   var perms = def.perms || {};
 
@@ -12233,8 +12245,17 @@ function applyRolePermissions(){
   if(permCard){
     var card = permCard.closest('.card');
     if(card){
+      // Delete buttons inside the users list are ALWAYS allowed for those with 'users' perm
       var inputs = card.querySelectorAll('input, select, button');
-      inputs.forEach(function(b){ setBlocked(b, !!perms.users); });
+      inputs.forEach(function(b){
+        if(b.dataset.noPermBlock === '1') return; // never block protected buttons
+        // Delete-user buttons: allowed if user has 'users' permission (superadmin always does)
+        if(b.getAttribute('onclick') && b.getAttribute('onclick').indexOf('removeAdminUser') >= 0){
+          setBlocked(b, !!perms.users);
+          return;
+        }
+        setBlocked(b, !!perms.users);
+      });
     }
   }
 
@@ -12275,14 +12296,41 @@ async function sendPresenceHeartbeat(){
   var role = (typeof getCurrentRole==='function') ? getCurrentRole() : 'superadmin';
   _presenceId = username;
   try {
-    await SUPA.from('admin_presence').upsert({
+    var payload = {
       username: username,
       role: role,
       device: getDeviceInfo(),
       last_seen: Date.now()
-    }, { onConflict: 'username' });
+    };
+    // Include login info + last action if available
+    if(window._adminLoginInfo){
+      payload.last_login = window._adminLoginInfo.lastLogin;
+      payload.login_count_today = window._adminLoginInfo.countToday;
+    }
+    if(window._adminLastAction){
+      payload.last_action = window._adminLastAction.action;
+      payload.last_action_at = window._adminLastAction.at;
+    }
+    await SUPA.from('admin_presence').upsert(payload, { onConflict: 'username' });
   } catch(e){ /* presence is optional */ }
 }
+
+// Track admin login count per day
+function trackAdminLogin(username){
+  var todayKey = 'abutaha_login_' + username + '_' + new Date().toLocaleDateString('en-CA');
+  var count = parseInt(localStorage.getItem(todayKey)||'0') + 1;
+  localStorage.setItem(todayKey, String(count));
+  window._adminLoginInfo = { lastLogin: Date.now(), countToday: count };
+}
+
+// Log the last action an admin performed (silent tracking)
+function logAdminActivity(action){
+  if(!window.isAdmin) return;
+  window._adminLastAction = { action: action, at: Date.now() };
+  // Push to Supabase immediately so it shows up fast
+  try { if(typeof sendPresenceHeartbeat === 'function') sendPresenceHeartbeat(); } catch(e){}
+}
+window.logAdminActivity = logAdminActivity;
 
 function startPresence(){
   sendPresenceHeartbeat();
@@ -12333,11 +12381,27 @@ async function renderActiveAdmins(){
         statusText = '<span style="color:#9ca3af">آخر ظهور ' + ago + '</span>';
       }
       var roleDef = (typeof ROLES_DEF!=='undefined' && ROLES_DEF[u.role]) ? ROLES_DEF[u.role] : {label:u.role||'',icon:'👤'};
-      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border)">' +
-        dot +
+      // Last login + count today
+      var loginLine = '';
+      if(u.last_login){
+        var ll = new Date(u.last_login);
+        var llStr = ll.toLocaleDateString('ar-EG-u-nu-latn') + ' ' + ll.toLocaleTimeString('ar-EG-u-nu-latn',{hour:'2-digit',minute:'2-digit'});
+        loginLine = '<div style="font-size:11px;color:#888;margin-top:3px">🕐 آخر دخول: ' + llStr + (u.login_count_today ? ' · دخل اليوم ' + u.login_count_today + ' مرة' : '') + '</div>';
+      }
+      // Last action
+      var actionLine = '';
+      if(u.last_action){
+        var aa = u.last_action_at ? new Date(u.last_action_at) : null;
+        var aaStr = aa ? (' (' + aa.toLocaleTimeString('ar-EG-u-nu-latn',{hour:'2-digit',minute:'2-digit'}) + ')') : '';
+        actionLine = '<div style="font-size:11px;color:#0891b2;margin-top:3px">⚡ آخر إجراء: ' + escapeHtml(u.last_action) + aaStr + '</div>';
+      }
+      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border-bottom:1px solid var(--border)">' +
+        '<div style="padding-top:3px">' + dot + '</div>' +
         '<div style="flex:1">' +
           '<div style="font-weight:700;font-size:14px">' + (roleDef.icon||'👤') + ' ' + escapeHtml(u.username||'') + ' <span style="font-size:11px;color:var(--text-muted);font-weight:400">(' + (roleDef.label||u.role||'') + ')</span></div>' +
-          '<div style="font-size:11px;color:var(--text-muted)">' + statusText + ' · ' + escapeHtml(u.device||'') + '</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + statusText + ' · ' + escapeHtml(u.device||'') + '</div>' +
+          loginLine + actionLine +
+          '<div style="display:none">' + statusText + ' · ' + escapeHtml(u.device||'') + '</div>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -12438,13 +12502,25 @@ function renderAdminUsersList(){
   box.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px">المستخدمون المضافون:</div>' +
     users.map(function(u,i){
       var def = ROLES_DEF[u.role]||ROLES_DEF.viewer;
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px">' +
-        '<div style="display:flex;align-items:center;gap:10px">' +
-          '<span style="font-size:18px">' + def.icon + '</span>' +
-          '<div><div style="font-size:13.5px;font-weight:600">' + escapeHtml(u.username) + '</div>' +
-          '<div style="font-size:11px;color:var(--text-muted)">' + def.label + '</div></div>' +
+      // Build permission chips showing what this user can do
+      var permLabels = {publish:'النشر',edit:'التعديل',review:'المراجعة',approve:'الاعتماد',print:'الطباعة',export:'التصدير',stats:'الإحصاء',users:'المستخدمين'};
+      // Show ALL permissions: enabled = green ✓, disabled = gray ✗
+      var chips = Object.keys(permLabels).map(function(k){
+        var on = !!def.perms[k];
+        return '<span style="display:inline-block;font-size:10px;padding:2px 8px;border-radius:999px;margin:2px;' +
+          (on ? 'background:rgba(15,107,60,.15);color:var(--success);font-weight:700' : 'background:rgba(150,150,150,.12);color:#aaa') + '">' +
+          (on ? '✓ ' : '✗ ') + permLabels[k] + '</span>';
+      }).join('');
+      return '<div style="padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between">' +
+          '<div style="display:flex;align-items:center;gap:10px">' +
+            '<span style="font-size:18px">' + def.icon + '</span>' +
+            '<div><div style="font-size:13.5px;font-weight:600">' + escapeHtml(u.username) + '</div>' +
+            '<div style="font-size:11px;color:var(--text-muted)">' + def.label + '</div></div>' +
+          '</div>' +
+          '<button class="btn btn-danger btn-sm" onclick="removeAdminUser(' + i + ')" type="button" data-no-perm-block="1">🗑 حذف</button>' +
         '</div>' +
-        '<button class="btn btn-danger btn-sm" onclick="removeAdminUser(' + i + ')" type="button">حذف</button>' +
+        '<div style="margin-top:6px">' + chips + '</div>' +
       '</div>';
     }).join('');
 }
@@ -12989,6 +13065,7 @@ function setupAdminLoginHandler(){
       window.currentAdminRole = loginRole;
       // CRITICAL: save the role so getCurrentRole() returns the correct role (fixes master = viewer bug)
       try { localStorage.setItem(K_CURRENT_ROLE, loginRole); } catch(e){}
+      try { if(typeof trackAdminLogin==='function') trackAdminLogin(window.currentAdminUsername||'admin'); } catch(e){}
       try { if(typeof startPresence==='function') startPresence(); } catch(e){}
       var modal = document.getElementById('modalAdminLogin');
       if(modal){ modal.classList.remove('active'); document.body.style.overflow=''; }
@@ -16997,6 +17074,7 @@ function saveAdminReqUpdate(number){
   if(prioritySel) reqs[idx].priority=prioritySel.value;
   if(detailsEdit) reqs[idx].details=detailsEdit.value.trim();
   reqs[idx].updatedAt=Date.now();
+  try { logAdminActivity('حدّث طلباً (' + (REQ_STATUS[reqs[idx].status]||reqs[idx].status) + ')'); } catch(e){}
   saveRequests(reqs);
   closeReqModal('adminReqDetailModal');
   if(typeof toast==='function') toast('✅ تم تحديث الطلب','ok');
@@ -17092,12 +17170,12 @@ window.replyToMessage = replyToMessage;
       // Status change dropdown
       $$('[data-status-msg]', listWrap).forEach(function(sel){ sel.addEventListener('change', function(){
         var arr=getMsgs(); var mm=arr.find(function(x){return x.id===sel.dataset.statusMsg;});
-        if(mm){ mm.status=sel.value; mm.read = (sel.value!=='new'); setMsgs(arr); renderAdmin(); }
+        if(mm){ mm.status=sel.value; mm.read = (sel.value!=='new'); setMsgs(arr); try { logAdminActivity('عالج رسالة'); } catch(e){} renderAdmin(); }
       });});
       // Delete
       $$('[data-del-msg]', listWrap).forEach(function(b){ b.addEventListener('click', function(){
         if(!confirm('حذف هذه الرسالة؟')) return;
-        var arr=getMsgs().filter(function(x){return x.id!==b.dataset.delMsg;}); setMsgs(arr); renderAdmin();
+        var arr=getMsgs().filter(function(x){return x.id!==b.dataset.delMsg;}); setMsgs(arr); try { logAdminActivity('حذف رسالة'); } catch(e){} renderAdmin();
       });});
     }
     renderMsgCards('all');
@@ -17385,6 +17463,7 @@ function saveAdminFullEdit(){
 
   voters[idx] = v;
   setVoters(voters);
+  try { logAdminActivity('عدّل بيانات مسجّل'); } catch(e){}
 
   closeReqModal('adminFullEditModal');
   if(typeof toast === 'function') toast('✅ تم حفظ كل التعديلات', 'ok');
