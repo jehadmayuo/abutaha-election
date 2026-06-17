@@ -5633,6 +5633,15 @@ body { padding-bottom: 0 !important; }
             <div style="display:grid;grid-template-columns:1fr auto;gap:8px"><select id="newAdminRole" class="input"><option value="admin">Admin</option><option value="reviewer">Reviewer</option><option value="editor">Editor</option><option value="viewer">Viewer</option></select><button class="btn btn-primary btn-sm" id="btnAddAdmin" type="button">إضافة</button></div>
           </div>
           <div id="adminUsersList" style="margin-top:12px"></div>
+          <!-- Active admins (online presence) -->
+          <div style="margin-top:18px;border-top:2px solid var(--border);padding-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <h4 style="font-size:14px;font-weight:800;margin:0">🟢 المشرفون والاتصال المباشر</h4>
+              <button class="btn btn-ghost btn-sm" onclick="renderActiveAdmins()" type="button" style="font-size:11px">🔄 تحديث</button>
+            </div>
+            <div id="activeAdminsList" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden"></div>
+            <div class="small muted" style="margin-top:6px">🟢 متصل الآن (آخر دقيقتين) · ⚪ غير متصل مع آخر ظهور</div>
+          </div>
         </div>
 
         <!-- Audit Log -->
@@ -9240,6 +9249,8 @@ document.addEventListener('click', e=>{
 
 function renderAdmin(){
   try { renderMessagesBox(); } catch(e){ console.warn("Msgs:", e); }
+  setTimeout(function(){ try { applyRolePermissions(); } catch(e){} }, 50);
+  try { renderActiveAdmins(); } catch(e){}
   if(!isAdmin) return;
   // Show admin-only tools in C sections
   ['newsAdminTools','jobsAdminTools','occasionsAdminTools'].forEach(function(id){
@@ -11063,6 +11074,7 @@ function initSupabaseRealtime(){
     if(window.isAdmin){
       loadVotersFromSupabase();
       loadRequestsFromSupabase();
+      try { renderActiveAdmins(); } catch(e){}
     }
   }, 60000);
   console.log('[Supabase] Polling initialized (60s)');
@@ -12154,6 +12166,177 @@ function saveAdminUsers(users){ localStorage.setItem(K_ROLES, JSON.stringify(use
 function getCurrentRole(){ return localStorage.getItem(K_CURRENT_ROLE) || 'superadmin'; }
 function hasPermission(perm){ return !!(ROLES_DEF[getCurrentRole()]||ROLES_DEF.viewer).perms[perm]; }
 
+
+// ══════════════════════════════════════════════════════════
+// APPLY ROLE PERMISSIONS TO THE UI (hide/disable by role)
+// ══════════════════════════════════════════════════════════
+function applyRolePermissions(){
+  if(typeof getCurrentRole !== 'function') return;
+  var role = getCurrentRole();
+  var def = ROLES_DEF[role] || ROLES_DEF.viewer;
+  var perms = def.perms || {};
+
+  function setBlocked(el, allowed){
+    if(!el) return;
+    if(allowed){
+      // restore
+      if(el.dataset.permBlocked === '1'){
+        el.dataset.permBlocked = '';
+        el.style.opacity=''; el.style.pointerEvents=''; el.style.cursor='';
+        if(el.tagName==='BUTTON'||el.tagName==='SELECT'||el.tagName==='INPUT') el.disabled=false;
+        el.title = el.getAttribute('data-perm-title')||'';
+      }
+    } else {
+      el.dataset.permBlocked = '1';
+      el.style.opacity='0.4'; el.style.cursor='not-allowed';
+      if(!el.getAttribute('data-perm-title')) el.setAttribute('data-perm-title', el.title||'');
+      el.title = 'ليس لديك صلاحية لهذا الإجراء';
+      if(el.tagName==='BUTTON'||el.tagName==='SELECT'||el.tagName==='INPUT'){
+        el.disabled = true;
+      } else {
+        el.style.pointerEvents='none';
+      }
+    }
+  }
+
+  // 1. EDIT buttons (تعديل) — needs 'edit' permission
+  document.querySelectorAll('[onclick*="adminEditViaRegistration"], [onclick*="adminEditVoter"]').forEach(function(b){ setBlocked(b, !!perms.edit); });
+
+  // 2. APPROVE / REJECT buttons — needs 'approve'
+  document.querySelectorAll('[data-approve-voter], [data-reject-voter]').forEach(function(b){ setBlocked(b, !!perms.approve); });
+
+  // 3. EXPORT buttons (تصدير، كشف) — needs 'export'
+  document.querySelectorAll('[onclick*="openReqExport"], [onclick*="printReqKashf"], [onclick*="exportData"], [onclick*="showFilteredPrintPicker"]').forEach(function(b){ setBlocked(b, !!perms.export || !!perms.print); });
+
+  // 4. REVIEW: request status change + committee note — needs 'review'
+  document.querySelectorAll('#adminReqStatusSel, #adminReqNote, [onclick*="saveAdminReqUpdate"]').forEach(function(b){ setBlocked(b, !!perms.review); });
+
+  // 5. DELETE buttons — needs 'edit' (or superadmin)
+  document.querySelectorAll('[data-del-msg], [data-del-voter], [onclick*="deleteVoter"]').forEach(function(b){ setBlocked(b, role==='superadmin' || !!perms.edit); });
+
+  // 6. USER MANAGEMENT (إدارة الصلاحيات) — needs 'users'
+  var permCard = document.getElementById('adminUsersList');
+  if(permCard){
+    var card = permCard.closest('.card');
+    if(card){
+      var inputs = card.querySelectorAll('input, select, button');
+      inputs.forEach(function(b){ setBlocked(b, !!perms.users); });
+    }
+  }
+
+  // 7. MAINTENANCE toggle — superadmin only
+  setBlocked(document.getElementById('btnToggleMaintenance'), role==='superadmin');
+  setBlocked(document.getElementById('maintenanceMsg'), role==='superadmin');
+}
+window.applyRolePermissions = applyRolePermissions;
+
+
+// ══════════════════════════════════════════════════════════
+// ADMIN PRESENCE — online/offline tracking (Messenger-style)
+// ══════════════════════════════════════════════════════════
+var _presenceTimer = null;
+var _presenceId = null;
+
+function getDeviceInfo(){
+  var ua = navigator.userAgent;
+  var device = 'جهاز غير معروف';
+  if(/Android/i.test(ua)) device = '📱 أندرويد';
+  else if(/iPhone|iPad|iPod/i.test(ua)) device = '📱 آيفون';
+  else if(/Windows/i.test(ua)) device = '💻 ويندوز';
+  else if(/Mac/i.test(ua)) device = '💻 ماك';
+  else if(/Linux/i.test(ua)) device = '💻 لينكس';
+  var browser = 'متصفح';
+  if(/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'Chrome';
+  else if(/Firefox/i.test(ua)) browser = 'Firefox';
+  else if(/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+  else if(/Edg/i.test(ua)) browser = 'Edge';
+  return device + ' · ' + browser;
+}
+
+// Send heartbeat to Supabase every minute while admin is logged in
+async function sendPresenceHeartbeat(){
+  if(typeof SUPA === 'undefined' || !SUPA) return;
+  if(!window.isAdmin) return;
+  var username = window.currentAdminUsername || 'admin123';
+  var role = (typeof getCurrentRole==='function') ? getCurrentRole() : 'superadmin';
+  _presenceId = username;
+  try {
+    await SUPA.from('admin_presence').upsert({
+      username: username,
+      role: role,
+      device: getDeviceInfo(),
+      last_seen: Date.now()
+    }, { onConflict: 'username' });
+  } catch(e){ /* presence is optional */ }
+}
+
+function startPresence(){
+  sendPresenceHeartbeat();
+  if(_presenceTimer) clearInterval(_presenceTimer);
+  _presenceTimer = setInterval(sendPresenceHeartbeat, 60000); // every minute
+}
+
+function stopPresence(){
+  if(_presenceTimer){ clearInterval(_presenceTimer); _presenceTimer = null; }
+  // Mark offline immediately
+  if(typeof SUPA !== 'undefined' && SUPA && _presenceId){
+    try { SUPA.from('admin_presence').upsert({ username:_presenceId, last_seen: Date.now()-999999 }, { onConflict:'username' }); } catch(e){}
+  }
+}
+
+// Render the active-admins list with green dots
+async function renderActiveAdmins(){
+  var box = document.getElementById('activeAdminsList');
+  if(!box) return;
+  if(typeof SUPA === 'undefined' || !SUPA){
+    box.innerHTML = '<div class="small muted">يتطلب الاتصال بقاعدة البيانات</div>';
+    return;
+  }
+  try {
+    var res = await SUPA.from('admin_presence').select('*').order('last_seen', { ascending: false });
+    if(res.error){
+      if(res.error.message && res.error.message.indexOf('does not exist')>=0){
+        box.innerHTML = '<div class="small" style="color:#ca8a04">⚠️ جدول التتبع (admin_presence) غير موجود — يجب إنشاؤه في قاعدة البيانات</div>';
+      } else {
+        box.innerHTML = '<div class="small muted">'+res.error.message+'</div>';
+      }
+      return;
+    }
+    var now = Date.now();
+    var rows = (res.data||[]).map(function(u){
+      var diff = now - (u.last_seen||0);
+      var online = diff < 120000; // online if seen in last 2 min
+      var dot = online ? '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e"></span>'
+                       : '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#9ca3af"></span>';
+      var statusText;
+      if(online){ statusText = '<span style="color:#16a34a;font-weight:700">متصل الآن</span>'; }
+      else {
+        var mins = Math.floor(diff/60000);
+        var ago;
+        if(mins < 60) ago = 'قبل ' + mins + ' دقيقة';
+        else if(mins < 1440) ago = 'قبل ' + Math.floor(mins/60) + ' ساعة';
+        else ago = 'قبل ' + Math.floor(mins/1440) + ' يوم';
+        statusText = '<span style="color:#9ca3af">آخر ظهور ' + ago + '</span>';
+      }
+      var roleDef = (typeof ROLES_DEF!=='undefined' && ROLES_DEF[u.role]) ? ROLES_DEF[u.role] : {label:u.role||'',icon:'👤'};
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border)">' +
+        dot +
+        '<div style="flex:1">' +
+          '<div style="font-weight:700;font-size:14px">' + (roleDef.icon||'👤') + ' ' + escapeHtml(u.username||'') + ' <span style="font-size:11px;color:var(--text-muted);font-weight:400">(' + (roleDef.label||u.role||'') + ')</span></div>' +
+          '<div style="font-size:11px;color:var(--text-muted)">' + statusText + ' · ' + escapeHtml(u.device||'') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    box.innerHTML = rows || '<div class="small muted">لا يوجد مشرفون مسجّلون بعد</div>';
+  } catch(e){ box.innerHTML = '<div class="small muted">'+e.message+'</div>'; }
+}
+window.renderActiveAdmins = renderActiveAdmins;
+
+// Logout cleanup
+window.addEventListener('beforeunload', function(){ try { stopPresence(); } catch(e){} });
+
+
+
 function renderRolesPanel(){
   // Roles table
   var tbody = document.getElementById('rolesTableBody');
@@ -12706,7 +12889,7 @@ function setupAdminLoginHandler(){
     // Check master credentials
     if(u==='admin123' && p==='admin2008'){
       loginOK = true;
-      loginRole = 'super_admin';
+      loginRole = 'superadmin';
     } else {
       // Check users in localStorage (registered admins)
       try {
@@ -12728,6 +12911,9 @@ function setupAdminLoginHandler(){
     if(loginOK){
       isAdmin = true;
       window.isAdmin = true;  // CRITICAL: for renderNews/Jobs/Occasions to show delete buttons
+      window.currentAdminUsername = (u==='admin123') ? 'admin123' : u;
+      window.currentAdminRole = loginRole;
+      try { if(typeof startPresence==='function') startPresence(); } catch(e){}
       var modal = document.getElementById('modalAdminLogin');
       if(modal){ modal.classList.remove('active'); document.body.style.overflow=''; }
       var ap = document.getElementById('adminPanel');
