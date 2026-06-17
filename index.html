@@ -11105,11 +11105,15 @@ function initSupabaseRealtime(){
     document.addEventListener('DOMContentLoaded', function(){
       loadVotersFromSupabase();
       loadRequestsFromSupabase();
+      loadAdminUsersFromSupabase();
+      loadMasterCredsFromSupabase();
       initSupabaseRealtime();
     });
   } else {
     loadVotersFromSupabase();
     loadRequestsFromSupabase();
+    loadAdminUsersFromSupabase();
+    loadMasterCredsFromSupabase();
     initSupabaseRealtime();
   }
 })();
@@ -12179,7 +12183,47 @@ var K_CURRENT_ROLE = 'abutaha_current_role';
 function getAdminUsers(){
   try { return JSON.parse(localStorage.getItem(K_ROLES)||'[]'); } catch(e){ return []; }
 }
-function saveAdminUsers(users){ localStorage.setItem(K_ROLES, JSON.stringify(users)); }
+function saveAdminUsers(users){
+  localStorage.setItem(K_ROLES, JSON.stringify(users));
+  // Sync to Supabase so all devices share the same admin accounts
+  if(typeof SUPA !== 'undefined' && SUPA){
+    try {
+      SUPA.from('settings').upsert({ key:'admin_users', value: JSON.stringify(users) }, { onConflict:'key' }).then(function(res){
+        if(res && res.error){ console.warn('[Supabase] admin_users save:', res.error.message); }
+      });
+    } catch(e){ console.warn('[Supabase] admin_users save failed:', e.message); }
+  }
+}
+
+// Load admin users from Supabase (central) on startup
+async function loadAdminUsersFromSupabase(){
+  if(typeof SUPA === 'undefined' || !SUPA) return;
+  try {
+    const { data, error } = await SUPA.from('settings').select('*').eq('key','admin_users').limit(1);
+    if(error){ console.warn('[Supabase] admin_users load:', error.message); return; }
+    if(data && data.length && data[0].value){
+      try {
+        var users = JSON.parse(data[0].value);
+        localStorage.setItem(K_ROLES, JSON.stringify(users));
+        if(typeof renderAdminUsersList === 'function') renderAdminUsersList();
+      } catch(e){}
+    }
+  } catch(e){ console.warn('[Supabase] admin_users load failed:', e.message); }
+}
+window.loadAdminUsersFromSupabase = loadAdminUsersFromSupabase;
+
+// Load master credentials from Supabase (so new password works on all devices)
+async function loadMasterCredsFromSupabase(){
+  if(typeof SUPA === 'undefined' || !SUPA) return;
+  try {
+    const { data, error } = await SUPA.from('settings').select('*').eq('key','master_creds').limit(1);
+    if(error){ return; }
+    if(data && data.length && data[0].value){
+      try { localStorage.setItem('abutaha_master_creds', data[0].value); } catch(e){}
+    }
+  } catch(e){}
+}
+window.loadMasterCredsFromSupabase = loadMasterCredsFromSupabase;
 function getCurrentRole(){ return localStorage.getItem(K_CURRENT_ROLE) || 'superadmin'; }
 function hasPermission(perm){ return !!(ROLES_DEF[getCurrentRole()]||ROLES_DEF.viewer).perms[perm]; }
 
@@ -13024,9 +13068,12 @@ function masterInit(){
 function setupAdminLoginHandler(){
   var btn = document.getElementById('btnAdminLogin');
   if(!btn || btn.dataset.masterBound) return;
-  btn.addEventListener('click', function(){
+  btn.addEventListener('click', async function(){
     var u = ((document.getElementById('al_user')||{}).value||'').trim();
     var p  = (document.getElementById('al_pass')||{}).value||'';
+    // Refresh admin data from cloud before checking (so new accounts/passwords work on any device)
+    try { if(typeof loadMasterCredsFromSupabase==='function') await loadMasterCredsFromSupabase(); } catch(e){}
+    try { if(typeof loadAdminUsersFromSupabase==='function') await loadAdminUsersFromSupabase(); } catch(e){}
     
     var loginOK = false;
     var loginRole = null;
