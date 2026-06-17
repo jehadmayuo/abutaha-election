@@ -5642,6 +5642,19 @@ body { padding-bottom: 0 !important; }
             <div id="activeAdminsList" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden"></div>
             <div class="small muted" style="margin-top:6px">🟢 متصل الآن (آخر دقيقتين) · ⚪ غير متصل مع آخر ظهور</div>
           </div>
+
+          <!-- My Account (super admin only) — change username/password -->
+          <div id="myAccountCard" style="margin-top:18px;border-top:2px solid var(--border);padding-top:14px">
+            <h4 style="font-size:14px;font-weight:800;margin:0 0 4px">🔑 حسابي (المدير العام)</h4>
+            <p class="small muted" style="margin-bottom:10px">يمكنك تغيير اسم المستخدم وكلمة المرور الخاصة بك</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <input type="text" id="myAccUser" class="input" placeholder="اسم المستخدم الجديد" />
+              <input type="password" id="myAccPass" class="input" placeholder="كلمة المرور الجديدة" />
+            </div>
+            <input type="password" id="myAccPassConfirm" class="input" placeholder="تأكيد كلمة المرور" style="margin-bottom:8px" />
+            <button class="btn btn-primary btn-sm" onclick="saveMasterCredentials()" type="button">💾 حفظ التغييرات</button>
+            <div id="myAccMsg" style="margin-top:8px;font-size:13px"></div>
+          </div>
         </div>
 
         <!-- Audit Log -->
@@ -9251,6 +9264,7 @@ function renderAdmin(){
   try { renderMessagesBox(); } catch(e){ console.warn("Msgs:", e); }
   setTimeout(function(){ try { applyRolePermissions(); } catch(e){} }, 50);
   try { renderActiveAdmins(); } catch(e){}
+  try { prefillMyAccount(); } catch(e){}
   if(!isAdmin) return;
   // Show admin-only tools in C sections
   ['newsAdminTools','jobsAdminTools','occasionsAdminTools'].forEach(function(id){
@@ -12332,6 +12346,61 @@ async function renderActiveAdmins(){
 }
 window.renderActiveAdmins = renderActiveAdmins;
 
+
+// Super admin: change own username + password
+function saveMasterCredentials(){
+  var msg = document.getElementById('myAccMsg');
+  function show(t, color){ if(msg){ msg.textContent = t; msg.style.color = color; } }
+
+  // Only super admin can do this
+  if(typeof getCurrentRole === 'function' && getCurrentRole() !== 'superadmin'){
+    show('⚠️ هذه الميزة للمدير العام فقط', '#dc2626');
+    return;
+  }
+
+  var user = (document.getElementById('myAccUser').value||'').trim();
+  var pass = (document.getElementById('myAccPass').value||'').trim();
+  var passConfirm = (document.getElementById('myAccPassConfirm').value||'').trim();
+
+  if(user.length < 3){ show('⚠️ اسم المستخدم يجب أن يكون 3 أحرف على الأقل', '#dc2626'); return; }
+  if(pass.length < 4){ show('⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل', '#dc2626'); return; }
+  if(pass !== passConfirm){ show('⚠️ كلمة المرور وتأكيدها غير متطابقين', '#dc2626'); return; }
+
+  if(!confirm('سيتم تغيير بيانات دخولك إلى:\nاسم المستخدم: ' + user + '\nكلمة المرور: ' + pass + '\n\nاحفظها جيداً! هل أنت متأكد؟')) return;
+
+  try {
+    localStorage.setItem('abutaha_master_creds', JSON.stringify({ username: user, password: pass }));
+    // Also sync to Supabase so it works across devices
+    if(typeof SUPA !== 'undefined' && SUPA){
+      try { SUPA.from('settings').upsert({ key:'master_creds', value: JSON.stringify({username:user,password:pass}) }, { onConflict:'key' }).then(function(){}); } catch(e){}
+    }
+    window.currentAdminUsername = user;
+    show('✅ تم حفظ بياناتك الجديدة. استخدمها في الدخول القادم', '#16a34a');
+    document.getElementById('myAccPass').value = '';
+    document.getElementById('myAccPassConfirm').value = '';
+  } catch(e){
+    show('⚠️ حدث خطأ: ' + e.message, '#dc2626');
+  }
+}
+window.saveMasterCredentials = saveMasterCredentials;
+
+// Prefill the current master username when the panel renders
+function prefillMyAccount(){
+  var userInput = document.getElementById('myAccUser');
+  if(!userInput) return;
+  var savedMaster = null;
+  try { savedMaster = JSON.parse(localStorage.getItem('abutaha_master_creds')||'null'); } catch(e){}
+  userInput.value = (savedMaster && savedMaster.username) ? savedMaster.username : 'admin123';
+  // Hide the whole card if not super admin
+  var card = document.getElementById('myAccountCard');
+  if(card){
+    var isSuper = (typeof getCurrentRole==='function' && getCurrentRole()==='superadmin');
+    card.style.display = isSuper ? '' : 'none';
+  }
+}
+window.prefillMyAccount = prefillMyAccount;
+
+
 // Logout cleanup
 window.addEventListener('beforeunload', function(){ try { stopPresence(); } catch(e){} });
 
@@ -12886,10 +12955,15 @@ function setupAdminLoginHandler(){
     var loginOK = false;
     var loginRole = null;
     
-    // Check master credentials
-    if(u==='admin123' && p==='admin2008'){
+    // Check master credentials (default OR custom saved by the super admin)
+    var savedMaster = null;
+    try { savedMaster = JSON.parse(localStorage.getItem('abutaha_master_creds')||'null'); } catch(e){}
+    var masterUser = (savedMaster && savedMaster.username) ? savedMaster.username : 'admin123';
+    var masterPass = (savedMaster && savedMaster.password) ? savedMaster.password : 'admin2008';
+    if(u===masterUser && p===masterPass){
       loginOK = true;
       loginRole = 'superadmin';
+      window.currentAdminUsername = masterUser;
     } else {
       // Check users in localStorage (registered admins)
       try {
@@ -12913,6 +12987,8 @@ function setupAdminLoginHandler(){
       window.isAdmin = true;  // CRITICAL: for renderNews/Jobs/Occasions to show delete buttons
       window.currentAdminUsername = (u==='admin123') ? 'admin123' : u;
       window.currentAdminRole = loginRole;
+      // CRITICAL: save the role so getCurrentRole() returns the correct role (fixes master = viewer bug)
+      try { localStorage.setItem(K_CURRENT_ROLE, loginRole); } catch(e){}
       try { if(typeof startPresence==='function') startPresence(); } catch(e){}
       var modal = document.getElementById('modalAdminLogin');
       if(modal){ modal.classList.remove('active'); document.body.style.overflow=''; }
