@@ -11062,6 +11062,7 @@ function initSupabaseRealtime(){
   setInterval(function(){
     if(window.isAdmin){
       loadVotersFromSupabase();
+      loadRequestsFromSupabase();
     }
   }, 60000);
   console.log('[Supabase] Polling initialized (60s)');
@@ -11074,10 +11075,12 @@ function initSupabaseRealtime(){
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', function(){
       loadVotersFromSupabase();
+      loadRequestsFromSupabase();
       initSupabaseRealtime();
     });
   } else {
     loadVotersFromSupabase();
+    loadRequestsFromSupabase();
     initSupabaseRealtime();
   }
 })();
@@ -16342,10 +16345,30 @@ function getRequests(){
   try { return JSON.parse(localStorage.getItem(REQ_KEY) || '[]'); }
   catch(e){ return []; }
 }
+
+// Load requests from Supabase (central cloud) and merge into localStorage
+async function loadRequestsFromSupabase(){
+  try {
+    if(typeof SUPA === 'undefined' || !SUPA){ return; }
+    const { data, error } = await SUPA.from('requests').select('*').order('submittedAt', { ascending: false }).limit(2000);
+    if(error){ console.warn('[Supabase] requests load:', error.message); return; }
+    if(data && data.length){
+      // Save cloud data to localStorage so the admin sees everything
+      try { localStorage.setItem(REQ_KEY, JSON.stringify(data)); } catch(e){}
+      if(window.isAdmin && typeof renderAdmin === 'function') renderAdmin();
+    }
+  } catch(e){ console.warn('[Supabase] requests load failed:', e.message); }
+}
+window.loadRequestsFromSupabase = loadRequestsFromSupabase;
+
 function saveRequests(arr){
   try { localStorage.setItem(REQ_KEY, JSON.stringify(arr)); } catch(e){}
   if(typeof SUPA !== 'undefined' && SUPA){
-    try { SUPA.from('requests').upsert(arr).then(function(){}); } catch(e){}
+    try {
+      SUPA.from('requests').upsert(arr, { onConflict: 'number' }).then(function(res){
+        if(res && res.error){ console.warn('[Supabase] requests save:', res.error.message); }
+      });
+    } catch(e){ console.warn('[Supabase] requests save failed:', e.message); }
   }
 }
 function verifyMember(nationalId, issueYear){
