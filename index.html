@@ -11110,6 +11110,8 @@ function initSupabaseRealtime(){
       loadRequestsFromSupabase();
       loadAdminUsersFromSupabase();
       loadMasterCredsFromSupabase();
+      loadContentFromSupabase();
+      setTimeout(handleContentDeepLink, 800);
       initSupabaseRealtime();
     });
   } else {
@@ -11117,6 +11119,8 @@ function initSupabaseRealtime(){
     loadRequestsFromSupabase();
     loadAdminUsersFromSupabase();
     loadMasterCredsFromSupabase();
+    loadContentFromSupabase();
+    setTimeout(handleContentDeepLink, 800);
     initSupabaseRealtime();
   }
 })();
@@ -13272,7 +13276,12 @@ document.addEventListener('DOMContentLoaded', function(){
 var K_NEWS = 'abutaha_news';
 
 function getNews(){ try{ return JSON.parse(localStorage.getItem(K_NEWS)||'[]'); }catch(e){return[];} }
-function saveNews(items){ localStorage.setItem(K_NEWS, JSON.stringify(items)); }
+function saveNews(items){
+  localStorage.setItem(K_NEWS, JSON.stringify(items));
+  if(typeof SUPA !== 'undefined' && SUPA){
+    try { SUPA.from('settings').upsert({ key:'content_news', value: JSON.stringify(items) }, { onConflict:'key' }).then(function(r){ if(r&&r.error) console.warn('[news sync]', r.error.message); }); } catch(e){}
+  }
+}
 
 function addNewsItem(item){
   var news = getNews();
@@ -13460,7 +13469,12 @@ function showAddNewsModal(){
 // ══════════════════════════════════════════════════════════════
 var K_JOBS = 'abutaha_jobs';
 function getJobs(){ try{ return JSON.parse(localStorage.getItem(K_JOBS)||'[]'); }catch(e){return[];} }
-function saveJobs(j){ localStorage.setItem(K_JOBS, JSON.stringify(j)); }
+function saveJobs(j){
+  localStorage.setItem(K_JOBS, JSON.stringify(j));
+  if(typeof SUPA !== 'undefined' && SUPA){
+    try { SUPA.from('settings').upsert({ key:'content_jobs', value: JSON.stringify(j) }, { onConflict:'key' }).then(function(r){ if(r&&r.error) console.warn('[jobs sync]', r.error.message); }); } catch(e){}
+  }
+}
 
 function addJob(item){
   var jobs = getJobs();
@@ -13503,14 +13517,14 @@ function renderJobs(filter){
 
   list.innerHTML = items.map(function(item){
     var imgHTML = item.image ? '<img src="'+item.image+'" style="width:100%;height:140px;object-fit:cover;border-radius:var(--r-sm);margin-bottom:10px" loading="lazy" />' : '';
-    return '<div class="job-card">' +
+    return '<div class="job-card" data-item-id="'+item.id+'">' +
       imgHTML +
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">' +
         '<div>' +
           '<div class="job-title">' + escapeHtml(item.title||'') + '</div>' +
           '<div class="job-company" style="margin-top:3px">' + escapeHtml(item.company||'') + (item.location ? ' · '+escapeHtml(item.location) : '') + '</div>' +
         '</div>' +
-        (window.isAdmin ? '<div style="display:flex;gap:6px;flex-shrink:0"><button class="btn btn-ghost btn-sm" data-edit-job="' + item.id + '" type="button" style="font-size:11px;padding:4px 10px">✏️ تعديل</button><button class="btn btn-danger btn-sm" data-del-job="' + item.id + '" type="button" style="font-size:11px;padding:4px 10px">🗑 حذف</button></div>' : '') +
+        (window.isAdmin ? '<div style="display:flex;gap:6px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="copyContentLink(\'job\','+item.id+')" type="button" style="font-size:11px;padding:4px 10px" title="نسخ رابط المشاركة">🔗 رابط</button><button class="btn btn-ghost btn-sm" data-edit-job="' + item.id + '" type="button" style="font-size:11px;padding:4px 10px">✏️ تعديل</button><button class="btn btn-danger btn-sm" data-del-job="' + item.id + '" type="button" style="font-size:11px;padding:4px 10px">🗑 حذف</button></div>' : '') +
       '</div>' +
       '<div class="job-tags">' +
         (item.jobType ? '<span class="job-tag">' + (typeLabels[item.jobType]||item.jobType) + '</span>' : '') +
@@ -13686,7 +13700,105 @@ document.addEventListener('DOMContentLoaded', function(){
 // ══════════════════════════════════════════════════════════════
 var K_OCC = 'abutaha_occasions';
 function getOccasions(){ try{ return JSON.parse(localStorage.getItem(K_OCC)||'[]'); }catch(e){return[];} }
-function saveOccasions(o){ localStorage.setItem(K_OCC, JSON.stringify(o)); }
+
+// Load published content (jobs/news/occasions) from Supabase on startup
+async function loadContentFromSupabase(){
+  if(typeof SUPA === 'undefined' || !SUPA) return;
+  var map = [
+    { key:'content_jobs', storage:K_JOBS, render:'renderJobs' },
+    { key:'content_news', storage:K_NEWS, render:'renderNews' },
+    { key:'content_occasions', storage:K_OCC, render:'renderOccasions' }
+  ];
+  for(var i=0;i<map.length;i++){
+    (function(m){
+      try {
+        SUPA.from('settings').select('*').eq('key', m.key).limit(1).then(function(res){
+          if(res && !res.error && res.data && res.data.length && res.data[0].value){
+            try {
+              localStorage.setItem(m.storage, res.data[0].value);
+              if(typeof window[m.render] === 'function') window[m.render]();
+            } catch(e){}
+          }
+        });
+      } catch(e){}
+    })(map[i]);
+  }
+}
+window.loadContentFromSupabase = loadContentFromSupabase;
+
+// ══════════════════════════════════════════════════════════
+// Deep links: ?job=ID / ?news=ID / ?event=ID open a specific item
+// ══════════════════════════════════════════════════════════
+function handleContentDeepLink(){
+  var params = new URLSearchParams(window.location.search);
+  var jobId = params.get('job');
+  var newsId = params.get('news');
+  var eventId = params.get('event') || params.get('occasion');
+  var target = null;
+  if(jobId){ target = { tab:'jobs', id:jobId, getList:getJobs, render:'renderJobs' }; }
+  else if(newsId){ target = { tab:'news', id:newsId, getList:getNews, render:'renderNews' }; }
+  else if(eventId){ target = { tab:'occasions', id:eventId, getList:getOccasions, render:'renderOccasions' }; }
+  if(!target) return;
+
+  function tryOpen(attempt){
+    var items = target.getList ? target.getList() : [];
+    var item = items.find(function(x){ return String(x.id) === String(target.id); });
+    if(!item){
+      // data may still be loading from Supabase; retry a few times
+      if(attempt < 6){ setTimeout(function(){ tryOpen(attempt+1); }, 600); }
+      return;
+    }
+    // Navigate to the section
+    var tabBtn = document.querySelector('.section-tab[data-tab="'+target.tab+'"]');
+    if(tabBtn) tabBtn.click();
+    setTimeout(function(){
+      var section = document.getElementById(target.tab+'Section');
+      if(section){
+        var rect = section.getBoundingClientRect();
+        window.scrollTo({ top: window.scrollY + rect.top - 70, behavior:'smooth' });
+      }
+      // Highlight the specific card
+      setTimeout(function(){
+        var card = document.querySelector('[data-item-id="'+target.id+'"]') || document.querySelector('[data-news-id="'+target.id+'"]') || document.querySelector('[data-job-id="'+target.id+'"]');
+        if(card){
+          card.scrollIntoView({ behavior:'smooth', block:'center' });
+          card.style.transition = 'box-shadow .4s, transform .4s';
+          card.style.boxShadow = '0 0 0 3px #D4AF37, 0 8px 30px rgba(212,175,55,.3)';
+          card.style.transform = 'scale(1.02)';
+          setTimeout(function(){ card.style.boxShadow=''; card.style.transform=''; }, 2600);
+        }
+      }, 500);
+    }, 200);
+  }
+  tryOpen(0);
+}
+window.handleContentDeepLink = handleContentDeepLink;
+
+// Copy a direct share link for a content item
+function copyContentLink(type, id){
+  var base = location.origin + location.pathname;
+  var param = (type === 'job') ? 'job' : (type === 'news') ? 'news' : 'event';
+  var url = base + '?' + param + '=' + id;
+  // Try modern clipboard, fallback to prompt
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){
+      if(typeof toast === 'function') toast('✅ تم نسخ الرابط! الصقه على فيسبوك أو واتساب', 'ok');
+    }).catch(function(){
+      window.prompt('انسخ الرابط:', url);
+    });
+  } else {
+    window.prompt('انسخ الرابط:', url);
+  }
+}
+window.copyContentLink = copyContentLink;
+
+
+function saveOccasions(o){
+  localStorage.setItem(K_OCC, JSON.stringify(o));
+  if(typeof SUPA !== 'undefined' && SUPA){
+    try { SUPA.from('settings').upsert({ key:'content_occasions', value: JSON.stringify(o) }, { onConflict:'key' }).then(function(r){ if(r&&r.error) console.warn('[occ sync]', r.error.message); }); } catch(e){}
+  }
+}
 
 function addOccasion(item){
   var occs = getOccasions();
@@ -13765,7 +13877,7 @@ function renderOccasions(typeFilter){
     var day = dt ? dt.getDate() : '--';
     var mon = dt ? MONTHS_AR[dt.getMonth()].slice(0,3) : '---';
     var imgHTML = o.image ? '<img src="'+o.image+'" style="width:64px;height:64px;object-fit:cover;border-radius:var(--r-sm);flex-shrink:0" loading="lazy" />' : '';
-    return '<div class="occasion-card">' +
+    return '<div class="occasion-card" data-item-id="'+item.id+'">' +
       '<div class="occasion-date"><div class="day">' + day + '</div><div class="month">' + mon + '</div></div>' +
       imgHTML +
       '<div style="flex:1">' +
